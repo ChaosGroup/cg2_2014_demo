@@ -9,7 +9,9 @@ Project Tree
 The demo itself is in prob\_6; it shares a good deal of code (read: identical headers and translation units) with prob\_4, which is a game of sorts, built using the technology from the demo. Its unofficial name is 'An Occlusion Game Unlike No 0ther', for short - aogun0.
 
 `common\ - various shared functionality, not specific to prob\_4 or prob\_6
+
 prob\_4\ - aogun0
+
 prob\_6\ - CG2 2014 invitation demo`
 
 How to Build
