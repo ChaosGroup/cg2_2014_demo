@@ -11,7 +11,7 @@ The demo itself is in prob_6; it shares a good deal of code (read: identical hea
 
 * common - various shared functionality, not specific to prob_4 or prob_6
 * prob_4 - aogun0
-* prob_6 - CG2 2014 invitation demo`
+* prob_6 - CG2 2014 invitation demo
 
 How to Build
 ------------
@@ -25,7 +25,7 @@ Linux with glibc 2.2.5, glibcxx 3.4.11 and X11; OpenGL 3.1, GLX 1.3
 
 clang++, preferably 3.5, still 3.4 works fine. Older versions might do as well, but have not been tested.
 
-Default build options are set for link-time optimisations (-flto), which require the presence of a gold linker and LLVMGold.so module. To disable thisoptimisation just comment out -flto from the build script.
+Default build options are set for link-time optimisations (-flto), which require the presence of a gold linker and LLVMGold.so module. To disable this optimisation just comment out -flto from the build script.
 
 Many things are controlled at build time, via macro definitions in the build script. Here are a few defines one might want to adjust:
 
