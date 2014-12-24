@@ -179,70 +179,9 @@ Ray::deflatten(
 }
 
 
-bool
-Timeslice::set_payload_array(
-	const Array< Voxel >& payload)
-{
-	m_root_bbox = BBox();
-	m_root = Octet();
-
-	const size_t item_count = payload.getCount();
-
-	if (item_count == 0)
-	{
-		m_payload.resetCount();
-		return true;
-	}
-
-	if (item_count > PayloadId(-1))
-		return false;
-
-	for (size_t i = 0; i < item_count; ++i)
-	{
-		const Voxel& item = payload.getElement(i);
-
-		m_root_bbox.grow(item.get_bbox());
-	}
-
-	if (!m_root_bbox.is_valid())
-		return false;
-
-	if (!m_interior.setCapacity(octree_interior_count))
-		return false;
-
-	if (!m_leaf.setCapacity(octree_leaf_count))
-		return false;
-
-	if (!m_payload.setCapacity(octree_cell_count * cell_capacity))
-		return false;
-
-	// feed payload item by item to the tree, building up the tree in the process
-	for (size_t i = 0; i < item_count; ++i)
-	{
-		const Voxel item = Voxel(payload.getElement(i).get_bbox(), i);
-
-		if (!add_payload(0, m_root, m_root_bbox, item))
-			return false;
-	}
-
-	// compact payload for better locality
-	const size_t leaf_count = m_leaf.getCount();
-	size_t cursor = 0;
-
-	for (size_t i = 0; i < leaf_count; ++i)
-		m_leaf.getMutable(i).compact(cursor, m_payload);
-
-	// check if duplicates cause payload overflow
-	if (cursor > PayloadId(-1))
-		return false;
-
-	return true;
-}
-
-
+template < unsigned OCTREE_LEVEL_T >
 bool
 Timeslice::add_payload(
-	const unsigned level,
 	Octet& octet,
 	const BBox& bbox,
 	const Voxel& payload)
@@ -265,53 +204,81 @@ Timeslice::add_payload(
 		BBox(          bbox_mid,                                          bbox_max,                                BBox::flag_direct())
 	};
 
-	if (level == octree_level_last_but_one)
-		for (size_t i = 0; i < 8; ++i)
+	for (size_t i = 0; i < 8; ++i)
+	{
+		if (!child_bbox[i].has_overlap_open(payload.get_bbox()))
+			continue;
+
+		OctetId child_id = octet.get(i);
+
+		if (OctetId(-1) == child_id)
 		{
-			if (!child_bbox[i].has_overlap_open(payload.get_bbox()))
-				continue;
+			child_id = OctetId(m_interior.getCount());
 
-			OctetId child_id = octet.get(i);
-
-			if (OctetId(-1) == child_id)
-			{
-				child_id = OctetId(m_leaf.getCount());
-
-				if (!m_leaf.addElement())
-					return false;
-
-				m_leaf.getMutable(child_id).init(m_payload.getCount());
-
-				if (!m_payload.addMultiElement(8 * cell_capacity))
-					return false;
-
-				octet.set(i, child_id);
-			}
-
-			if (!add_payload(m_leaf.getMutable(child_id), child_bbox[i], payload))
+			if (!m_interior.addElement())
 				return false;
+
+			octet.set(i, child_id);
 		}
-	else
-		for (size_t i = 0; i < 8; ++i)
+
+		if (!add_payload< OCTREE_LEVEL_T + 1 >(m_interior.getMutable(child_id), child_bbox[i], payload))
+			return false;
+	}
+
+	return true;
+}
+
+
+template <>
+bool
+Timeslice::add_payload< octree_level_last_but_one >(
+	Octet& octet,
+	const BBox& bbox,
+	const Voxel& payload)
+{
+	const __m128 bbox_min = bbox.get_min();
+	const __m128 bbox_max = bbox.get_max();
+	const __m128 bbox_mid = _mm_mul_ps(
+		_mm_add_ps(bbox_min, bbox_max),
+		_mm_set1_ps(.5f));
+
+	const BBox child_bbox[8] __attribute__ ((aligned(64))) =
+	{
+		BBox(          bbox_min,                                          bbox_mid,                                BBox::flag_direct()),
+		BBox((__m128){ bbox_mid[0], bbox_min[1], bbox_min[2] }, (__m128){ bbox_max[0], bbox_mid[1], bbox_mid[2] }, BBox::flag_direct()),
+		BBox((__m128){ bbox_min[0], bbox_mid[1], bbox_min[2] }, (__m128){ bbox_mid[0], bbox_max[1], bbox_mid[2] }, BBox::flag_direct()),
+		BBox((__m128){ bbox_mid[0], bbox_mid[1], bbox_min[2] }, (__m128){ bbox_max[0], bbox_max[1], bbox_mid[2] }, BBox::flag_direct()),
+		BBox((__m128){ bbox_min[0], bbox_min[1], bbox_mid[2] }, (__m128){ bbox_mid[0], bbox_mid[1], bbox_max[2] }, BBox::flag_direct()),
+		BBox((__m128){ bbox_mid[0], bbox_min[1], bbox_mid[2] }, (__m128){ bbox_max[0], bbox_mid[1], bbox_max[2] }, BBox::flag_direct()),
+		BBox((__m128){ bbox_min[0], bbox_mid[1], bbox_mid[2] }, (__m128){ bbox_mid[0], bbox_max[1], bbox_max[2] }, BBox::flag_direct()),
+		BBox(          bbox_mid,                                          bbox_max,                                BBox::flag_direct())
+	};
+
+	for (size_t i = 0; i < 8; ++i)
+	{
+		if (!child_bbox[i].has_overlap_open(payload.get_bbox()))
+			continue;
+
+		OctetId child_id = octet.get(i);
+
+		if (OctetId(-1) == child_id)
 		{
-			if (!child_bbox[i].has_overlap_open(payload.get_bbox()))
-				continue;
+			child_id = OctetId(m_leaf.getCount());
 
-			OctetId child_id = octet.get(i);
-
-			if (OctetId(-1) == child_id)
-			{
-				child_id = OctetId(m_interior.getCount());
-
-				if (!m_interior.addElement())
-					return false;
-
-				octet.set(i, child_id);
-			}
-
-			if (!add_payload(level + 1, m_interior.getMutable(child_id), child_bbox[i], payload))
+			if (!m_leaf.addElement())
 				return false;
+
+			m_leaf.getMutable(child_id).init(m_payload.getCount());
+
+			if (!m_payload.addMultiElement(8 * cell_capacity))
+				return false;
+
+			octet.set(i, child_id);
 		}
+
+		if (!add_payload(m_leaf.getMutable(child_id), child_bbox[i], payload))
+			return false;
+	}
 
 	return true;
 }
@@ -355,6 +322,68 @@ Timeslice::add_payload(
 
 	return true;
 }
+
+
+bool
+Timeslice::set_payload_array(
+	const Array< Voxel >& payload)
+{
+	m_root_bbox = BBox();
+	m_root = Octet();
+
+	const size_t item_count = payload.getCount();
+
+	if (item_count == 0)
+	{
+		m_payload.resetCount();
+		return true;
+	}
+
+	if (item_count > PayloadId(-1))
+		return false;
+
+	for (size_t i = 0; i < item_count; ++i)
+	{
+		const Voxel& item = payload.getElement(i);
+
+		m_root_bbox.grow(item.get_bbox());
+	}
+
+	if (!m_root_bbox.is_valid())
+		return false;
+
+	if (!m_interior.setCapacity(octree_interior_count))
+		return false;
+
+	if (!m_leaf.setCapacity(octree_leaf_count))
+		return false;
+
+	if (!m_payload.setCapacity(octree_cell_count * cell_capacity))
+		return false;
+
+	// feed payload item by item to the tree, building up the tree in the process
+	for (size_t i = 0; i < item_count; ++i)
+	{
+		const Voxel item = Voxel(payload.getElement(i).get_bbox(), i);
+
+		if (!add_payload< 0 >(m_root, m_root_bbox, item))
+			return false;
+	}
+
+	// compact payload for better locality
+	const size_t leaf_count = m_leaf.getCount();
+	size_t cursor = 0;
+
+	for (size_t i = 0; i < leaf_count; ++i)
+		m_leaf.getMutable(i).compact(cursor, m_payload);
+
+	// check if duplicates cause payload overflow
+	if (cursor > PayloadId(-1))
+		return false;
+
+	return true;
+}
+
 
 #if CLANG_QUIRK_0001 != 0
 bool

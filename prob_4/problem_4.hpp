@@ -1218,9 +1218,9 @@ class Timeslice
 		const Leaf& leaf,
 		const BBox& bbox) const;
 
+	template < unsigned OCTREE_LEVEL_T >
 	bool
 	add_payload(
-		const unsigned level,
 		Octet& octet,
 		const BBox& bbox,
 		const Voxel& payload);
