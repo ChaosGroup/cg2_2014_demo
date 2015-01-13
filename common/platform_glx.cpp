@@ -8,7 +8,6 @@
 #error Missing required extension GLX_ARB_create_context.
 #endif 
 
-#include <iostream>
 #include <assert.h>
 #include <string.h>
 
@@ -17,6 +16,7 @@
 #endif
 
 #include "testbed.hpp"
+#include "stream.hpp"
 
 
 static Display* display;
@@ -56,7 +56,7 @@ initGL(
 
 	if (0 == display)
 	{
-		std::cerr << "failed to open display" << std::endl;
+		stream::cerr << "failed to open display\n";
 		return 1;
 	}
 
@@ -77,7 +77,7 @@ initGL(
 
 		if (0 == vinfo || 0 == vinfo_count)
 		{
-			std::cerr << "failed to retrieve visual info" << std::endl;
+			stream::cerr << "failed to retrieve visual info\n";
 			return 1;
 		}
 
@@ -88,10 +88,10 @@ initGL(
 
 		XFree(vinfo);
 
-		std::cout << "using screen RGB bitness: " <<
+		stream::cout << "using screen RGB bitness: " <<
 			bitness[0] << ' ' <<
 			bitness[1] << ' ' <<
-			bitness[2] << std::endl;
+			bitness[2] << '\n';
 	}
 
 	const Window root = XDefaultRootWindow(display);
@@ -101,7 +101,7 @@ initGL(
 #endif
 
 	const char* const extensions = glXQueryExtensionsString(display, DefaultScreen(display));
-	std::cout << extensions << std::endl;
+	stream::cout << extensions << '\n';
 
 	int visual_attr[64];
 	unsigned na = 0;
@@ -148,7 +148,7 @@ initGL(
 
 	if (0 == fbc || 0 == fbc_count)
 	{
-		std::cerr << "failed to retrieve a framebuffer config" << std::endl;
+		stream::cerr << "failed to retrieve framebuffer config\n";
 		return 1;
 	}
 
@@ -167,7 +167,7 @@ initGL(
 
 	if (0 == window)
 	{
-		std::cerr << "failed to create a window" << std::endl;
+		stream::cerr << "failed to create window\n";
 		return 1;
 	}
 
@@ -208,7 +208,7 @@ initGL(
 
 	if (0 == context)
 	{
-		std::cerr << "failed to create GL context" << std::endl;
+		stream::cerr << "failed to create GL context\n";
 		return 1;
 	}
 
@@ -216,7 +216,7 @@ initGL(
 
 	if (util::reportGLError())
 	{
-		std::cerr << "warning: gl context started with errors; wiping the slate clean" << std::endl;
+		stream::cerr << "warning: gl context started with errors; wiping the slate clean\n";
 		while (GL_NO_ERROR != glGetError());
 	}
 

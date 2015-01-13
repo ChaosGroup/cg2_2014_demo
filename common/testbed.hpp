@@ -3,14 +3,14 @@
 
 #include <GL/gl.h>
 #include <string>
-#include <iostream>
 #include "pure_macro.hpp"
 #include "scoped.hpp"
+#include "stream.hpp"
 
 #define DEBUG_GL_ERR()												\
 	if (DEBUG_LITERAL && testbed::util::reportGLError())			\
 	{																\
-		std::cerr << __FILE__ ":" XQUOTE(__LINE__) << std::endl;	\
+		stream::cerr << __FILE__ ":" XQUOTE(__LINE__) "\n";			\
 		return false;												\
 	}
 
@@ -61,8 +61,7 @@ namespace util
 {
 
 bool
-reportGLError(
-	std::ostream& stream = std::cerr);
+reportGLError();
 
 bool
 reportGLCaps();

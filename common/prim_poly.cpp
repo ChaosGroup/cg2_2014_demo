@@ -5,11 +5,11 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "cmath_fix"
-#include <iostream>
 
 #include "vectsimd.hpp"
 #include "testbed.hpp"
 #include "scoped.hpp"
+#include "stream.hpp"
 #include "prim_poly.hpp"
 
 #include "rendVertAttr.hpp"
@@ -136,7 +136,7 @@ init_resources(
 
 	if (!util::setupShader(g_shader_vert[PROG_BASIC], "basic.glslv"))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupShader" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupShader\n";
 		return false;
 	}
 
@@ -145,7 +145,7 @@ init_resources(
 
 	if (!util::setupShader(g_shader_frag[PROG_BASIC], "basic.glslf"))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupShader" << std::endl;
+		stream::cerr << __FUNCTION__ <<  " failed at setupShader\n";
 		return false;
 	}
 
@@ -157,7 +157,7 @@ init_resources(
 			g_shader_vert[PROG_BASIC],
 			g_shader_frag[PROG_BASIC]))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupProgram" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupProgram\n";
 		return false;
 	}
 
@@ -175,7 +175,7 @@ init_resources(
 
 	if (!util::setupShader(g_shader_vert[PROG_STRIPED], "basic.glslv"))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupShader" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupShader\n";
 		return false;
 	}
 
@@ -184,7 +184,7 @@ init_resources(
 
 	if (!util::setupShader(g_shader_frag[PROG_STRIPED], "striped.glslf"))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupShader" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupShader\n";
 		return false;
 	}
 
@@ -196,7 +196,7 @@ init_resources(
 			g_shader_vert[PROG_STRIPED],
 			g_shader_frag[PROG_STRIPED]))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupProgram" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupProgram\n";
 		return false;
 	}
 
@@ -227,8 +227,7 @@ init_resources(
 
 	if (util::reportGLError())
 	{
-		std::cerr << __FUNCTION__ <<
-			" failed at glBufferData" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at glBufferData\n";
 		return false;
 	}
 
@@ -239,8 +238,7 @@ init_resources(
 		if (!setupVertexAttrPointers< Vertex >(g_active_attr_semantics[i]) ||
 			0 == DEBUG_LITERAL && util::reportGLError())
 		{
-			std::cerr << __FUNCTION__ <<
-				" failed at setupVertexAttrPointers" << std::endl;
+			stream::cerr << __FUNCTION__ << " failed at setupVertexAttrPointers\n";
 			return false;
 		}
 	}
@@ -265,8 +263,7 @@ init_resources(
 
 	if (util::reportGLError())
 	{
-		std::cerr << __FUNCTION__ <<
-			" failed at glBindBuffer" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at glBindBuffer\n";
 		return false;
 	}
 
@@ -277,8 +274,7 @@ init_resources(
 
 	if (util::reportGLError())
 	{
-		std::cerr << __FUNCTION__ <<
-			" failed at glBufferSubData" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at glBufferSubData\n";
 		return false;
 	}
 

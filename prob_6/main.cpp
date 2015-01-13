@@ -1,14 +1,11 @@
 #include <GL/gl.h>
 #include <unistd.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <time.h>
 #include <string>
 #include <cstring>
-#include <iostream>
 #include <sstream>
-#include <fstream>
 #include <iomanip>
 #include <pthread.h>
 
@@ -18,9 +15,24 @@
 
 #include "sse_mathfun.h"
 #include "testbed.hpp"
+#include "stream.hpp"
 #include "vectsimd_sse.hpp"
 #include "prim_rgb_view.hpp"
 #include "problem_4.hpp"
+
+// verify iostream-free status
+#if _GLIBCXX_IOSTREAM
+#error rogue iostream acquired
+#endif
+
+namespace stream {
+
+// deferred initialization by main()
+in cin;
+out cout;
+out cerr;
+
+} // namespace stream
 
 static const char arg_prefix[]		= "-";
 static const char arg_screen[]		= "screen";
@@ -508,8 +520,7 @@ report_err(
 	const size_t counter,
 	const int err)
 {
-	std::cerr << func << ':' << line << ", i: "
-		<< counter << ", err: " << err << std::endl;
+	stream::cerr << func << ':' << line << ", i: " << counter << ", err: " << err << '\n';
 }
 
 
@@ -519,7 +530,7 @@ workforce_t::workforce_t(
 	const unsigned h)
 : successfully_init(false)
 {
-	// before actually creating them barrier and thread handles must all be zeros
+	// before actually creating them barrier and thread handles must be zero-initialized
 	for (size_t i = 0; i < sizeof(barrier) / sizeof(barrier[0]); ++i)
 	{
 		const int r = pthread_barrier_init(barrier + i, 0, nthreads);
@@ -837,16 +848,12 @@ parse_cli(
 
 	if (!success)
 	{
-		std::cerr << "usage: " << argv[0] << " [<option> ...]\n"
+		stream::cerr << "usage: " << argv[0] << " [<option> ...]\n"
 			"options (multiple args to an option must constitute a single string, eg. -foo \"a b c\"):\n"
-			"\t" << arg_prefix << arg_screen <<
-			" <width> <height> <Hz>\t\t: set fullscreen output of specified geometry and refresh\n"
-			"\t" << arg_prefix << arg_bitness <<
-			" <r> <g> <b> <a>\t\t: set GLX config of specified RGBA bitness; default is screen's bitness\n"
-			"\t" << arg_prefix << arg_fsaa <<
-			" <positive_integer>\t\t: set GL fullscreen antialiasing; default is none\n"
-			"\t" << arg_prefix << arg_nframes <<
-			" <unsigned_integer>\t\t: set number of frames to run; default is max unsigned int" << std::endl;
+			"\t" << arg_prefix << arg_screen << " <width> <height> <Hz>\t\t: set fullscreen output of specified geometry and refresh\n"
+			"\t" << arg_prefix << arg_bitness << " <r> <g> <b> <a>\t\t: set GLX config of specified RGBA bitness; default is screen's bitness\n"
+			"\t" << arg_prefix << arg_fsaa << " <positive_integer>\t\t: set GL fullscreen antialiasing; default is none\n"
+			"\t" << arg_prefix << arg_nframes << " <unsigned_integer>\t\t: set number of frames to run; default is max unsigned int\n";
 
 		return 1;
 	}
@@ -958,13 +965,13 @@ saveViewport(
 	sprintf(name, "%s%05d%s",
 		nameBase, index, nameExt);
 
-	std::cout << "saving framegrab as '" << name << "'" << std::endl;
+	stream::cout << "saving framegrab as '" << name << "'\n";
 
 	const testbed::scoped_ptr< FILE, testbed::scoped_functor > file(fopen(name, "wb"));
 
 	if (0 == file())
 	{
-		std::cerr << "failure opening framegrab file '" << name << "'" << std::endl;
+		stream::cerr << "failure opening framegrab file '" << name << "'\n";
 		return false;
 	}
 
@@ -985,7 +992,7 @@ saveViewport(
 
 	if (!write_png(grayscale, viewport_w, viewport_h, pixels(), file()))
 	{
-		std::cerr << "failure writing framegrab file '" << name << "'" << std::endl;
+		stream::cerr << "failure writing framegrab file '" << name << "'\n";
 		return false;
 	}
 
@@ -2098,6 +2105,10 @@ int main(
 	int argc,
 	char** argv)
 {
+	stream::cin.open(stdin);
+	stream::cout.open(stdout);
+	stream::cerr.open(stderr);
+
 	const unsigned default_w = 512;
 	const unsigned default_h = 512;
 
@@ -2122,14 +2133,14 @@ int main(
 #if DIVISION_OF_LABOR_VER == 2
 	if (w * h % (nthreads * batch))
 	{
-		std::cerr << "error: screen resolution product must be multiple of " << nthreads * batch << std::endl;
+		stream::cerr << "error: screen resolution product must be multiple of " << nthreads * batch << '\n';
 		return -1;
 	}
 
 #elif DIVISION_OF_LABOR_VER == 1
 	if (w * h % batch)
 	{
-		std::cerr << "error: screen resolution product must be multiple of " << batch << std::endl;
+		stream::cerr << "error: screen resolution product must be multiple of " << batch << '\n';
 		return -1;
 	}
 
@@ -2150,7 +2161,7 @@ int main(
 	if (!testbed::util::reportGLCaps() ||
 		!testbed::rgbv::init_resources(w, h))
 	{
-		std::cerr << "failed to initialise GL or resources; bailing out" << std::endl;
+		stream::cerr << "failed to initialise GL or resources; bailing out\n";
 		return 1;
 	}
 
@@ -2255,7 +2266,7 @@ int main(
 
 	if (!workforce.is_successfully_init())
 	{
-		std::cerr << "failed to raise workforce; bailing out" << std::endl;
+		stream::cerr << "failed to raise workforce; bailing out\n";
 		return -1;
 	}
 
@@ -2298,7 +2309,7 @@ int main(
 			{
 				if (action_count == sizeof(action) / sizeof(action[0]))
 				{
-					std::cerr << "error: too many pending actions" << std::endl;
+					stream::cerr << "error: too many pending actions\n";
 					return 999;
 				}
 
@@ -2410,16 +2421,16 @@ int main(
 
 	const uint64_t dt = timer_nsec() - t0;
 
-	std::cout << "compute_arg size: " << sizeof(compute_arg) <<
+	stream::cout << "compute_arg size: " << sizeof(compute_arg) <<
 		"\nworker threads: " << nthreads << "\nambient occlusion rays per pixel: " << ao_probe_count <<
-		"\ntotal frames rendered: " << nframes << std::endl;
+		"\ntotal frames rendered: " << nframes << '\n';
 
 	if (dt)
 	{
 		const double sec = double(dt) * 1e-9;
 
-		std::cout << "elapsed time: " << sec << " s"
-			"\naverage FPS: " << (double(nframes) / sec) << std::endl;
+		stream::cout << "elapsed time: " << sec << " s"
+			"\naverage FPS: " << nframes / sec << '\n';
 	}
 
 	return 0;

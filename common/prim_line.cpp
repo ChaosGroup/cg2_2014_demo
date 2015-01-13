@@ -5,11 +5,11 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "cmath_fix"
-#include <iostream>
 
 #include "vectsimd.hpp"
 #include "testbed.hpp"
 #include "scoped.hpp"
+#include "stream.hpp"
 #include "prim_line.hpp"
 
 #include "rendVertAttr.hpp"
@@ -135,7 +135,7 @@ init_resources()
 
 	if (!util::setupShader(g_shader_vert[PROG_LINE], "line.glslv"))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupShader" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupShader\n";
 		return false;
 	}
 
@@ -144,7 +144,7 @@ init_resources()
 
 	if (!util::setupShader(g_shader_frag[PROG_LINE], "basic.glslf"))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupShader" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupShader\n";
 		return false;
 	}
 
@@ -156,7 +156,7 @@ init_resources()
 			g_shader_vert[PROG_LINE],
 			g_shader_frag[PROG_LINE]))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupProgram" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupProgram\n";
 		return false;
 	}
 
@@ -198,8 +198,7 @@ init_resources()
 
 	if (util::reportGLError())
 	{
-		std::cerr << __FUNCTION__ <<
-			" failed at glBufferData" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at glBufferData\n";
 		return false;
 	}
 
@@ -208,8 +207,7 @@ init_resources()
 	if (!setupVertexAttrPointers< Vertex >(g_active_attr_semantics[PROG_LINE]) ||
 		0 == DEBUG_LITERAL && util::reportGLError())
 	{
-		std::cerr << __FUNCTION__ <<
-			" failed at setupVertexAttrPointers" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupVertexAttrPointers\n";
 		return false;
 	}
 

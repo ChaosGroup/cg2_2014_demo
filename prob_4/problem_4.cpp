@@ -1,9 +1,16 @@
-#include <iostream>
+#include <istream>
+#include <ostream>
 #include <limits>
 #include "vectsimd_sse.hpp"
 #include "array.hpp"
 #include "isfinite.hpp"
+#include "stream.hpp"
 #include "problem_4.hpp"
+
+// verify iostream-free status
+#if _GLIBCXX_IOSTREAM
+#error rogue iostream acquired
+#endif
 
 __thread const Ray* Timeslice::m_ray;
 __thread HitInfo* Timeslice::m_hit;
@@ -315,7 +322,7 @@ Timeslice::add_payload(
 
 		if (!leaf.add(i, m_payload, payload))
 		{
-			std::cerr << "failure adding content to leaf: insufficient cell capacity?" << std::endl;
+			stream::cerr << "failure adding content to leaf: insufficient cell capacity?\n";
 			return false;
 		}
 	}

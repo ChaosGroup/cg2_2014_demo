@@ -1,22 +1,34 @@
 #include <GL/gl.h>
 #include <unistd.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <time.h>
 #include <string>
 #include <cstring>
-#include <iostream>
 #include <sstream>
-#include <fstream>
 #include <iomanip>
 #include <pthread.h>
 
 #include "sse_mathfun.h"
 #include "testbed.hpp"
+#include "stream.hpp"
 #include "vectsimd_sse.hpp"
 #include "prim_rgb_view.hpp"
 #include "problem_4.hpp"
+
+// verify iostream-free status
+#if _GLIBCXX_IOSTREAM
+#error rogue iostream acquired
+#endif
+
+namespace stream {
+
+// deferred initialization by main()
+in cin;
+out cout;
+out cerr;
+
+} // namespace stream
 
 static const char arg_prefix[]		= "-";
 static const char arg_screen[]		= "screen";
@@ -508,8 +520,7 @@ report_err(
 	const size_t counter,
 	const int err)
 {
-	std::cerr << func << ':' << line << ", i: "
-		<< counter << ", err: " << err << std::endl;
+	stream::cerr << func << ':' << line << ", i: " << counter << ", err: " << err << '\n';
 }
 
 
@@ -519,7 +530,7 @@ workforce_t::workforce_t(
 	const unsigned h)
 : successfully_init(false)
 {
-	// before actually creating them barrier and thread handles must all be zeros
+	// before actually creating them barrier and thread handles must be zero-initialized
 	for (size_t i = 0; i < sizeof(barrier) / sizeof(barrier[0]); ++i)
 	{
 		const int r = pthread_barrier_init(barrier + i, 0, nthreads);
@@ -851,20 +862,14 @@ parse_cli(
 
 	if (!success)
 	{
-		std::cerr << "usage: " << argv[0] << " [<option> ...]\n"
+		stream::cerr << "usage: " << argv[0] << " [<option> ...]\n"
 			"options (multiple args to an option must constitute a single string, eg. -foo \"a b c\"):\n"
-			"\t" << arg_prefix << arg_screen <<
-			" <width> <height> <Hz>\t\t: set fullscreen output of specified geometry and refresh\n"
-			"\t" << arg_prefix << arg_bitness <<
-			" <r> <g> <b> <a>\t\t: set GLX config of specified RGBA bitness; default is screen's bitness\n"
-			"\t" << arg_prefix << arg_fsaa <<
-			" <positive_integer>\t\t: set GL fullscreen antialiasing; default is none\n"
-			"\t" << arg_prefix << arg_nframes <<
-			" <unsigned_integer>\t\t: set number of frames to run; default is max unsigned int\n"
-			"\t" << arg_prefix << arg_seed <<
-			" <unsigned_integer>\t\t: set game's PRNG seed\n"
-			"\t" << arg_prefix << arg_smooth <<
-			"\t\t\t\t\t: align pieces, forming a smooth wall" << std::endl;
+			"\t" << arg_prefix << arg_screen << " <width> <height> <Hz>\t\t: set fullscreen output of specified geometry and refresh\n"
+			"\t" << arg_prefix << arg_bitness << " <r> <g> <b> <a>\t\t: set GLX config of specified RGBA bitness; default is screen's bitness\n"
+			"\t" << arg_prefix << arg_fsaa << " <positive_integer>\t\t: set GL fullscreen antialiasing; default is none\n"
+			"\t" << arg_prefix << arg_nframes << " <unsigned_integer>\t\t: set number of frames to run; default is max unsigned int\n"
+			"\t" << arg_prefix << arg_seed << " <unsigned_integer>\t\t: set game's PRNG seed\n"
+			"\t" << arg_prefix << arg_smooth << "\t\t\t\t\t: align pieces, forming a smooth wall\n";
 
 		return 1;
 	}
@@ -893,7 +898,7 @@ static const compile_assert< playfield_cols % 2 == 0 > assert_playfield_cols_eve
 
 struct Shape
 {
-	uint8_t shape_width[4]; // fragment_count * 16 + shape_width_i
+	uint8_t shape_width[4]; // fragment_count * 16 + shape_width
 	int8_t correction[4 * 2]; // rotational correction
 	Voxel fragment[4 * 2];
 };
@@ -1219,7 +1224,7 @@ game_frame(
 
 			if (!pileup.addElement(piece))
 			{
-				std::cerr << "game error: out of pileup capacity" << std::endl;
+				stream::cerr << "game error: out of pileup capacity\n";
 				return;
 			}
 		}
@@ -1233,7 +1238,7 @@ game_frame(
 		{
 			if (!payload.addElement(projection[i]))
 			{
-				std::cerr << "game error: out of payload capacity" << std::endl;
+				stream::cerr << "game error: out of payload capacity\n";
 				return;
 			}
 		}
@@ -1244,19 +1249,19 @@ game_frame(
 	for (size_t i = 0; i < pileup.getCount(); ++i)
 		if (!payload.addElement(pileup.getElement(i)))
 		{
-			std::cerr << "game error: out of payload capacity" << std::endl;
+			stream::cerr << "game error: out of payload capacity\n";
 			return;
 		}
 
 	for (size_t i = 0; i < static_scene.getCount(); ++i)
 		if (!payload.addElement(static_scene.getElement(i)))
 		{
-			std::cerr << "game error: out of payload capacity" << std::endl;
+			stream::cerr << "game error: out of payload capacity\n";
 			return;
 		}
 
 	if (!ts.set_payload_array(payload))
-		std::cerr << "game error: failed setting tree payload" << std::endl;
+		stream::cerr << "game error: failed setting tree payload\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1274,6 +1279,10 @@ int main(
 	int argc,
 	char** argv)
 {
+	stream::cin.open(stdin);
+	stream::cout.open(stdout);
+	stream::cerr.open(stderr);
+
 	const unsigned default_w = 512;
 	const unsigned default_h = 512;
 
@@ -1298,14 +1307,14 @@ int main(
 #if DIVISION_OF_LABOR_VER == 2
 	if (w * h % (nthreads * batch))
 	{
-		std::cerr << "error: screen resolution product must be multiple of " << nthreads * batch << std::endl;
+		stream::cerr << "error: screen resolution product (H x W) must be multiple of " << nthreads * batch << '\n';
 		return -1;
 	}
 
 #elif DIVISION_OF_LABOR_VER == 1
 	if (w * h % batch)
 	{
-		std::cerr << "error: screen resolution product must be multiple of " << batch << std::endl;
+		stream::cerr << "error: screen resolution product (H x W) must be multiple of " << batch << '\n';
 		return -1;
 	}
 
@@ -1326,7 +1335,7 @@ int main(
 	if (!testbed::util::reportGLCaps() ||
 		!testbed::rgbv::init_resources(w, h))
 	{
-		std::cerr << "failed to initialise GL or resources; bailing out" << std::endl;
+		stream::cerr << "failed to initialise GL or resources; bailing out\n";
 		return 1;
 	}
 
@@ -1389,7 +1398,7 @@ int main(
 
 	if (!workforce.is_successfully_init())
 	{
-		std::cerr << "failed to raise workforce; bailing out" << std::endl;
+		stream::cerr << "failed to raise workforce; bailing out\n";
 		return -1;
 	}
 
@@ -1397,7 +1406,7 @@ int main(
 
 	if (!pileup.setCapacity(64))
 	{
-		std::cerr << "failed to allocate pileup; bailing out" << std::endl;
+		stream::cerr << "failed to allocate pileup; bailing out\n";
 		return -1;
 	}
 
@@ -1405,7 +1414,7 @@ int main(
 
 	if (!payload.setCapacity(128))
 	{
-		std::cerr << "failed to allocate payload; bailing out" << std::endl;
+		stream::cerr << "failed to allocate payload; bailing out\n";
 		return -1;
 	}
 
@@ -1503,16 +1512,16 @@ int main(
 
 	const uint64_t dt = timer_nsec() - t0;
 
-	std::cout << "compute_arg size: " << sizeof(compute_arg) <<
+	stream::cout << "compute_arg size: " << sizeof(compute_arg) <<
 		"\nworker threads: " << nthreads << "\nambient occlusion rays per pixel: " << ao_probe_count <<
-		"\ntotal frames rendered: " << nframes << std::endl;
+		"\ntotal frames rendered: " << nframes << '\n';
 
 	if (dt)
 	{
 		const double sec = double(dt) * 1e-9;
 
-		std::cout << "elapsed time: " << sec << " s"
-			"\naverage FPS: " << (double(nframes) / sec) << std::endl;
+		stream::cout << "elapsed time: " << sec << " s"
+			"\naverage FPS: " << nframes / sec << '\n';
 	}
 
 	return 0;

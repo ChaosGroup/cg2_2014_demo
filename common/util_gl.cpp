@@ -9,6 +9,7 @@
 #include "testbed.hpp"
 #include "get_file_size.hpp"
 #include "scoped.hpp"
+#include "stream.hpp"
 
 static std::string
 string_from_GL_error(
@@ -53,8 +54,7 @@ setupShaderFromString(
 
 	if (GL_FALSE == glIsShader(shader_name))
 	{
-		std::cerr << __FUNCTION__ <<
-			" argument is not a valid shader object" << std::endl;
+		stream::cerr << __FUNCTION__ << " argument is not a valid shader object\n";
 		return false;
 	}
 
@@ -84,7 +84,7 @@ setupShaderFromString(
 	glGetShaderInfoLog(shader_name, log_max_len, &log_len, log);
 
 	log[log_len] = '\0';
-	std::cerr << "shader compile log: " << log << std::endl;
+	stream::cerr << "shader compile log: " << log << '\n';
 
 	GLint success = GL_FALSE;
 	glGetShaderiv(shader_name, GL_COMPILE_STATUS, &success);
@@ -111,16 +111,14 @@ namespace util
 {
 
 bool
-reportGLError(
-	std::ostream& stream)
+reportGLError()
 {
 	const GLenum error = glGetError();
 
 	if (GL_NO_ERROR == error)
 		return false;
 
-	stream << "GL error: " << string_from_GL_error(error) << std::endl;
-
+	stream::cerr << "GL error: " << string_from_GL_error(error) << '\n';
 	return true;
 }
 
@@ -133,9 +131,9 @@ reportGLCaps()
 	const GLubyte* str_renderer	= glGetString(GL_RENDERER);
 	const GLubyte* str_glsl_ver	= glGetString(GL_SHADING_LANGUAGE_VERSION);
 
-	std::cout << "gl version, vendor, renderer, glsl version, extensions:"
+	stream::cout << "gl version, vendor, renderer, glsl version, extensions:"
 		"\n\t" << (const char*) str_version <<
-		"\n\t" << (const char*) str_vendor << 
+		"\n\t" << (const char*) str_vendor <<
 		"\n\t" << (const char*) str_renderer <<
 		"\n\t" << (const char*) str_glsl_ver <<
 		"\n\t";
@@ -145,55 +143,53 @@ reportGLCaps()
 
 	if (0 != num_extensions)
 	{
-		std::cout << (const char*) glGetStringi(GL_EXTENSIONS, 0);
+		stream::cout << (const char*) glGetStringi(GL_EXTENSIONS, 0);
 
 		for (GLuint i = 1; i != (GLuint) num_extensions; ++i)
-			std::cout << ' ' << (const char*) glGetStringi(GL_EXTENSIONS, i);
+			stream::cout << ' ' << (const char*) glGetStringi(GL_EXTENSIONS, i);
 
-		std::cout << '\n' << std::endl;
+		stream::cout << "\n\n";
 	}
 	else
-		std::cout << "nil\n" << std::endl;
+		stream::cout << "nil\n\n";
 
 	GLint params[2]; // we won't need more than 2
 
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, params);
-	std::cout << "GL_MAX_TEXTURE_SIZE: " << params[0] << std::endl;
+	stream::cout << "GL_MAX_TEXTURE_SIZE: " << params[0] << '\n';
 
 	glGetIntegerv(GL_MAX_CUBE_MAP_TEXTURE_SIZE, params);
-	std::cout << "GL_MAX_CUBE_MAP_TEXTURE_SIZE: " << params[0] << std::endl;
+	stream::cout << "GL_MAX_CUBE_MAP_TEXTURE_SIZE: " << params[0] << '\n';
 
 	glGetIntegerv(GL_MAX_VIEWPORT_DIMS, params);
-	std::cout << "GL_MAX_VIEWPORT_DIMS: " << params[0] << ", " << params[1] << std::endl;
+	stream::cout << "GL_MAX_VIEWPORT_DIMS: " << params[0] << ", " << params[1] << '\n';
 
 	glGetIntegerv(GL_MAX_RENDERBUFFER_SIZE, params);
-	std::cout << "GL_MAX_RENDERBUFFER_SIZE: " << params[0] << std::endl;
+	stream::cout << "GL_MAX_RENDERBUFFER_SIZE: " << params[0] << '\n';
 
 	glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, params);
-	std::cout << "GL_MAX_VERTEX_ATTRIBS: " << params[0] << std::endl;
+	stream::cout << "GL_MAX_VERTEX_ATTRIBS: " << params[0] << '\n';
 
 	glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, params);
-	std::cout << "GL_MAX_VERTEX_UNIFORM_COMPONENTS: " << params[0] << std::endl;
+	stream::cout << "GL_MAX_VERTEX_UNIFORM_COMPONENTS: " << params[0] << '\n';
 
 	// for forward-compatible contexts we have to give up the next pname
 #if 0
 	glGetIntegerv(GL_MAX_VARYING_COMPONENTS, params);
-	std::cout << "GL_MAX_VARYING_COMPONENTS: " << params[0] << std::endl;
+	stream::cout << "GL_MAX_VARYING_COMPONENTS: " << params[0] << '\n';
 #endif
 
 	glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_COMPONENTS, params);
-	std::cout << "GL_MAX_FRAGMENT_UNIFORM_COMPONENTS: " << params[0] << std::endl;
+	stream::cout << "GL_MAX_FRAGMENT_UNIFORM_COMPONENTS: " << params[0] << '\n';
 
 	glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, params);
-	std::cout << "GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS: " << params[0] << std::endl;
+	stream::cout << "GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS: " << params[0] << '\n';
 
 	glGetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, params);
-	std::cout << "GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS: " << params[0] << std::endl;
+	stream::cout << "GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS: " << params[0] << '\n';
 
 	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, params);
-	std::cout << "GL_MAX_TEXTURE_IMAGE_UNITS: " << params[0] << std::endl;
-
-	std::cout << std::endl;
+	stream::cout << "GL_MAX_TEXTURE_IMAGE_UNITS: " << params[0] << "\n\n";
 
 	return true;
 }
@@ -212,8 +208,7 @@ setupShader(
 
 	if (0 == source())
 	{
-		std::cerr << __FUNCTION__ <<
-			" failed to read shader file '" << filename << "'" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed to read shader file '" << filename << "'\n";
 		return false;
 	}
 
@@ -236,8 +231,7 @@ setupShaderWithPatch(
 
 	if (0 == source())
 	{
-		std::cerr << __FUNCTION__ <<
-			" failed to read shader file '" << filename << "'" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed to read shader file '" << filename << "'\n";
 		return false;
 	}
 
@@ -248,7 +242,7 @@ setupShaderWithPatch(
 	const size_t len_out = patch_out.length();
 	const size_t len_in = patch_in.length();
 
-	std::cout << "turn: " << patch_out << "\ninto: " << patch_in;
+	stream::cout << "turn: " << patch_out << "\ninto: " << patch_in;
 
 	bool patched = false;
 
@@ -261,9 +255,9 @@ setupShaderWithPatch(
 	}
 
 	if (patched)
-		std::cout << "\npatched" << std::endl;
+		stream::cout << "\npatched\n";
 	else
-		std::cout << "\nnot patched" << std::endl;
+		stream::cout << "\nnot patched\n";
 
 	return setupShaderFromString(shader_name, src_final.c_str(), src_final.length());
 }
@@ -277,16 +271,14 @@ setupProgram(
 {
 	if (GL_FALSE == glIsProgram(prog))
 	{
-		std::cerr << __FUNCTION__ <<
-			" argument is not a valid program object" << std::endl;
+		stream::cerr << __FUNCTION__ << " argument is not a valid program object\n";
 		return false;
 	}
 
 	if (GL_FALSE == glIsShader(shader_vert) ||
 		GL_FALSE == glIsShader(shader_frag))
 	{
-		std::cerr << __FUNCTION__ <<
-			" argument is not a valid shader object" << std::endl;
+		stream::cerr << __FUNCTION__ << " argument is not a valid shader object\n";
 		return false;
 	}
 
@@ -302,7 +294,7 @@ setupProgram(
 	glGetProgramInfoLog(prog, log_max_len, &log_len, log);
 
 	log[log_len] = '\0';
-	std::cerr << "shader link log: " << log << std::endl;
+	stream::cerr << "shader link log: " << log << '\n';
 
 	GLint success = GL_FALSE;
 	glGetProgramiv(prog, GL_LINK_STATUS, &success);

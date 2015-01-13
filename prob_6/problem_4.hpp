@@ -10,7 +10,8 @@
 #endif
 #include <assert.h>
 #include <stdint.h>
-#include <iostream>
+#include <istream>
+#include <ostream>
 #include <limits>
 #include "vectsimd_sse.hpp"
 #include "array.hpp"

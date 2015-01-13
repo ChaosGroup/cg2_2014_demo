@@ -5,11 +5,11 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "cmath_fix"
-#include <iostream>
 
 #include "vectsimd.hpp"
 #include "testbed.hpp"
 #include "scoped.hpp"
+#include "stream.hpp"
 #include "prim_sphere.hpp"
 
 #include "rendVertAttr.hpp"
@@ -254,8 +254,8 @@ createIndexedPolarSphere(
 
 	assert(ii == sizeof_idx / sizeof(idx()[0]));
 
-	std::cout << "number of vertices: " << num_verts <<
-		"\nnumber of indices: " << num_indes << std::endl;
+	stream::cout << "number of vertices: " << num_verts <<
+		"\nnumber of indices: " << num_indes << '\n';
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_arr);
 	glBufferData(GL_ARRAY_BUFFER, sizeof_arr, arr(), GL_STATIC_DRAW);
@@ -263,8 +263,7 @@ createIndexedPolarSphere(
 
 	if (util::reportGLError())
 	{
-		std::cerr << __FUNCTION__ <<
-			" failed at glBindBuffer/glBufferData for ARRAY_BUFFER" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at glBindBuffer/glBufferData for ARRAY_BUFFER\n";
 		return false;
 	}
 
@@ -274,8 +273,7 @@ createIndexedPolarSphere(
 
 	if (util::reportGLError())
 	{
-		std::cerr << __FUNCTION__ <<
-			" failed at glBindBuffer/glBufferData for ELEMENT_ARRAY_BUFFER" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at glBindBuffer/glBufferData for ELEMENT_ARRAY_BUFFER\n";
 		return false;
 	}
 
@@ -330,7 +328,7 @@ init_resources()
 
 	if (!util::setupShader(g_shader_vert[PROG_SPHERE], "phong.glslv"))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupShader" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupShader\n";
 		return false;
 	}
 
@@ -339,7 +337,7 @@ init_resources()
 
 	if (!util::setupShader(g_shader_frag[PROG_SPHERE], "phong.glslf"))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupShader" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupShader\n";
 		return false;
 	}
 
@@ -351,7 +349,7 @@ init_resources()
 			g_shader_vert[PROG_SPHERE],
 			g_shader_frag[PROG_SPHERE]))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupProgram" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupProgram\n";
 		return false;
 	}
 
@@ -393,7 +391,7 @@ init_resources()
 			g_vbo[VBO_SPHERE_IDX],
 			g_num_faces[MESH_SPHERE]))
 	{
-		std::cerr << __FUNCTION__ << " failed at createIndexedPolarSphere" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at createIndexedPolarSphere\n";
 		return false;
 	}
 
@@ -404,8 +402,7 @@ init_resources()
 	if (!setupVertexAttrPointers< Vertex >(g_active_attr_semantics[PROG_SPHERE]) ||
 		0 == DEBUG_LITERAL && util::reportGLError())
 	{
-		std::cerr << __FUNCTION__ <<
-			" failed at setupVertexAttrPointers" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupVertexAttrPointers\n";
 		return false;
 	}
 

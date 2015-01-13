@@ -5,12 +5,12 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "cmath_fix"
-#include <iostream>
 #include <sstream>
 
 #include "vectsimd_sse.hpp"
 #include "testbed.hpp"
 #include "scoped.hpp"
+#include "stream.hpp"
 #include "prim_rgb_view.hpp"
 
 #include "rendVertAttr.hpp"
@@ -156,7 +156,7 @@ init_resources(
 	for (size_t i = 0; i < sizeof(g_tex) / sizeof(g_tex[0]); ++i)
 		if (0 == g_tex[i])
 		{
-			std::cerr << __FUNCTION__ << " failed at glGenTextures" << std::endl;
+			stream::cerr << __FUNCTION__ << " failed at glGenTextures\n";
 			return false;
 		}
 
@@ -174,7 +174,7 @@ init_resources(
 
 	if (util::reportGLError())
 	{
-		std::cerr << __FUNCTION__ << " failed at texture setup" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at texture setup\n";
 		return false;
 	}
 
@@ -189,7 +189,7 @@ init_resources(
 
 	if (!util::setupShader(g_shader_vert[PROG_RGB_VIEW], "basic.glslv"))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupShader" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupShader\n";
 		return false;
 	}
 
@@ -198,7 +198,7 @@ init_resources(
 
 	if (!util::setupShader(g_shader_frag[PROG_RGB_VIEW], "texture_rgba.glslf"))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupShader" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupShader\n";
 		return false;
 	}
 
@@ -210,7 +210,7 @@ init_resources(
 			g_shader_vert[PROG_RGB_VIEW],
 			g_shader_frag[PROG_RGB_VIEW]))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupProgram" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupProgram\n";
 		return false;
 	}
 
@@ -226,7 +226,7 @@ init_resources(
 
 	if (!util::setupShader(g_shader_vert[PROG_RGB_VIEW_VERTICAL], "basic.glslv"))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupShader" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupShader\n";
 		return false;
 	}
 
@@ -235,7 +235,7 @@ init_resources(
 
 	if (!util::setupShader(g_shader_frag[PROG_RGB_VIEW_VERTICAL], "texture_rgba_v.glslf"))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupShader" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupShader\n";
 		return false;
 	}
 
@@ -247,7 +247,7 @@ init_resources(
 			g_shader_vert[PROG_RGB_VIEW_VERTICAL],
 			g_shader_frag[PROG_RGB_VIEW_VERTICAL]))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupProgram" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupProgram\n";
 		return false;
 	}
 
@@ -263,7 +263,7 @@ init_resources(
 
 	if (!util::setupShader(g_shader_vert[PROG_RGB_VIEW_HORIZONTAL], "basic.glslv"))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupShader" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupShader\n";
 		return false;
 	}
 
@@ -276,7 +276,7 @@ init_resources(
 	if (!util::setupShaderWithPatch(g_shader_frag[PROG_RGB_VIEW_HORIZONTAL], "texture_rgba_h.glslf",
 		" 256.0 ", patch.str()))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupShader" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupShader\n";
 		return false;
 	}
 
@@ -288,7 +288,7 @@ init_resources(
 			g_shader_vert[PROG_RGB_VIEW_HORIZONTAL],
 			g_shader_frag[PROG_RGB_VIEW_HORIZONTAL]))
 	{
-		std::cerr << __FUNCTION__ << " failed at setupProgram" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at setupProgram\n";
 		return false;
 	}
 
@@ -310,7 +310,7 @@ init_resources(
 	for (size_t i = 0; i < sizeof(g_vao) / sizeof(g_vao[0]); ++i)
 		if (0 == g_vao[i])
 		{
-			std::cerr << __FUNCTION__ << " failed at glGenVertexArrays" << std::endl;
+			stream::cerr << __FUNCTION__ << " failed at glGenVertexArrays\n";
 			return false;
 		}
 
@@ -319,7 +319,7 @@ init_resources(
 	for (size_t i = 0; i < sizeof(g_vbo) / sizeof(g_vbo[0]); ++i)
 		if (0 == g_vbo[i])
 		{
-			std::cerr << __FUNCTION__ << " failed at glGenBuffers" << std::endl;
+			stream::cerr << __FUNCTION__ << " failed at glGenBuffers\n";
 			return false;
 		}
 
@@ -339,7 +339,7 @@ init_resources(
 
 	if (util::reportGLError())
 	{
-		std::cerr << __FUNCTION__ << " failed at glBufferData" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at glBufferData\n";
 		return false;
 	}
 
@@ -350,7 +350,7 @@ init_resources(
 		if (!setupVertexAttrPointers< Vertex >(g_active_attr_semantics[i]) ||
 			0 == DEBUG_LITERAL && util::reportGLError())
 		{
-			std::cerr << __FUNCTION__ << " failed at setupVertexAttrPointers" << std::endl;
+			stream::cerr << __FUNCTION__ << " failed at setupVertexAttrPointers\n";
 			return false;
 		}
 	}
@@ -376,7 +376,7 @@ init_resources(
 
 	if (util::reportGLError())
 	{
-		std::cerr << __FUNCTION__ << " failed at TEX_FBO creation" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at TEX_FBO creation\n";
 		return false;
 	}
 
@@ -390,7 +390,7 @@ init_resources(
 
 	if (GL_FRAMEBUFFER_COMPLETE != fbo_success)
 	{
-		std::cerr << __FUNCTION__ << " failed at glCheckFramebufferStatus" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed at glCheckFramebufferStatus\n";
 		return false;
 	}
 
@@ -536,6 +536,8 @@ render(
 
 		glUniform1i(g_uni[prog][UNI_SAMPLER_BILLBOARD], 0);
 	}
+
+	DEBUG_GL_ERR()
 
 	glBindVertexArray(g_vao[prog]);
 

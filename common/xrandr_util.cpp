@@ -1,7 +1,7 @@
-#include <iostream>
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrandr.h>
 #include "xrandr_util.hpp"
+#include "stream.hpp"
 
 namespace util
 {
@@ -17,7 +17,7 @@ set_screen_config(
 
 	if (!XQueryExtension(display, "RANDR", &dummy, &dummy, &dummy))
 	{
-		std::cerr << "XRANDR not found" << std::endl;
+		stream::cerr << "XRANDR not found\n";
 		return false;
 	}
 
@@ -31,21 +31,21 @@ set_screen_config(
 
 	if (0 == config || 0 == nsizes)
 	{
-		std::cerr << "failed to obtain screen configs through XRANDR" << std::endl;
+		stream::cerr << "failed to obtain screen configs through XRANDR\n";
 		return false;
 	}
 
 	XRRConfigCurrentConfiguration(config, &current_rotation);
 
-	std::cout << "XRR screen config 0: " <<
-		sizes[0].width << " x " << sizes[0].height << std::endl;
+	stream::cout << "XRR screen config 0: " <<
+		sizes[0].width << " x " << sizes[0].height << '\n';
 
 	int mode = 0;
 
 	for (int i = 1; i < nsizes; ++i)
 	{
-		std::cout << "XRR screen config " << i << ": " <<
-			sizes[i].width << " x " << sizes[i].height << std::endl;
+		stream::cout << "XRR screen config " << i << ": " <<
+			sizes[i].width << " x " << sizes[i].height << '\n';
 
 		if (sizes[i].width >= width &&
 			sizes[i].height >= height &&
@@ -58,11 +58,11 @@ set_screen_config(
 
 	if (sizes[mode].width < width || sizes[mode].height < height)
 	{
-		std::cerr << "failed to find a suitable screen config through XRANDR" << std::endl;
+		stream::cerr << "failed to find a suitable screen config through XRANDR\n";
 		return false;
 	}
 
-	std::cout << "chosen XRR screen config: " << mode << std::endl;
+	stream::cout << "chosen XRR screen config: " << mode << "\n";
 
 	XRRSetScreenConfig(display, config, root, mode, current_rotation, CurrentTime);
 	XRRFreeScreenConfigInfo(config);

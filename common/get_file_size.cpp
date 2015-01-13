@@ -3,9 +3,9 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <iostream>
 
 #include "scoped.hpp"
+#include "stream.hpp"
 #include "get_file_size.hpp"
 
 namespace testbed
@@ -48,15 +48,13 @@ get_file_size(
 
 	if (-1 == stat(filename, &filestat))
 	{
-		std::cerr << __FUNCTION__ << " failed to stat file '" <<
-			filename << "'" << std::endl;
+		stream::cerr << __FUNCTION__ << " failed to stat file '" << filename << "'\n";
 		return false;
 	}
 
 	if (!S_ISREG(filestat.st_mode))
 	{
-		std::cerr << __FUNCTION__ << " encountered a non-regular file '" <<
-			filename << "'" << std::endl;
+		stream::cerr << __FUNCTION__ << " encountered non-regular file '" << filename << "'\n";
 		return false;
 	}
 
@@ -74,8 +72,7 @@ get_buffer_from_file(
 
 	if (!get_file_size(filename, length))
 	{
-		std::cerr << __FUNCTION__ <<
-			" cannot get size of file '" << filename << "'" << std::endl;
+		stream::cerr << __FUNCTION__ << " cannot get size of file '" << filename << "'\n";
 		return 0;
 	}
 
@@ -83,8 +80,7 @@ get_buffer_from_file(
 
 	if (0 == file())
 	{
-		std::cerr << __FUNCTION__ <<
-			" cannot open file '" << filename << "'" << std::endl;
+		stream::cerr << __FUNCTION__ << " cannot open file '" << filename << "'\n";
 		return 0;
 	}
 
@@ -93,15 +89,13 @@ get_buffer_from_file(
 
 	if (0 == source())
 	{
-		std::cerr << __FUNCTION__ <<
-			" cannot allocate memory for file '" << filename << "'" << std::endl;
+		stream::cerr << __FUNCTION__ << " cannot allocate memory for file '" << filename << "'\n";
 		return 0;
 	}
 
 	if (1 != fread(source(), length, 1, file()))
 	{
-		std::cerr << __FUNCTION__ <<
-			" cannot read from file '" << filename << "'" << std::endl;
+		stream::cerr << __FUNCTION__ << " cannot read from file '" << filename << "'\n";
 		return 0;
 	}
 
