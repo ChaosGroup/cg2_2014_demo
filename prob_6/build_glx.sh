@@ -1,7 +1,7 @@
 #!/bin/bash
 
 CC=clang++-3.5
-TARGET=problem_4
+BINARY=problem_4
 COMMON=../common
 SOURCE=(
 	$COMMON/platform_glx.cpp
@@ -20,29 +20,6 @@ CFLAGS=(
 	-pipe
 	-fno-exceptions
 	-fno-rtti
-	-march=native
-	-mtune=native
-# For non-native or tweaked architecture targets, uncomment the correct target architecture
-# AMD Bobcat:
-#	-march=btver1
-#	-mtune=btver1
-# AMD Jaguar:
-#	-march=btver2
-#	-mtune=btver2
-# note: Jaguars have 4-wide SIMD, so our avx256 code is not beneficial to them
-#	-mno-avx
-# Intel Core2
-#	-march=core2
-#	-mtune=core2
-# Intel Nehalem
-#	-march=corei7
-#	-mtune=corei7
-# Intel Sandy Bridge
-#	-march=corei7-avx
-#	-mtune=corei7-avx
-# Intel Ivy Bridge
-#	-march=core-avx-i
-#	-mtune=core-avx-i
 # Instruct GL headers to properly define their prototypes
 	-DGLX_GLXEXT_PROTOTYPES
 	-DGLCOREARB_PROTOTYPES
@@ -60,9 +37,9 @@ CFLAGS=(
 # Use a linear distribution of directions across the hemisphere rather than proper angular such
 #	-DCHEAP_LINEAR_DISTRIBUTION=1
 # Number of workforce threads (normally equating the number of logical cores)
-	-DWORKFORCE_NUM_THREADS=8
+	-DWORKFORCE_NUM_THREADS=`lscpu | grep ^"CPU(s)" | sed s/^[^[:digit:]]*//`
 # Make workforce threads sticky (NUMA, etc)
-#	-DWORKFORCE_THREADS_STICKY=1
+	-DWORKFORCE_THREADS_STICKY=`lscpu | grep ^"NUMA node(s)" | echo "\`sed s/^[^[:digit:]]*//\` > 1" | bc`
 # Colorize the output of individual threads
 #	-DCOLORIZE_THREADS=1
 # Threading model 'division of labor' alternatives: 0, 1, 2
@@ -78,6 +55,24 @@ CFLAGS=(
 # Clang static code analysis:
 #	--analyze
 	-DCLANG_QUIRK_0001=1
+)
+# For non-native or tweaked architecture targets, comment out 'native' and uncomment the correct target architecture and flags
+TARGET=(
+	native
+# AMD Bobcat:
+#	btver1
+# AMD Jaguar:
+#	btver2
+# note: Jaguars have 4-wide SIMD, so our avx256 code is not beneficial to them
+#	-mno-avx
+# Intel Core2
+#	core2
+# Intel Nehalem
+#	corei7
+# Intel Sandy Bridge
+#	corei7-avx
+# Intel Ivy Bridge
+#	core-avx-i
 )
 LFLAGS=(
 # Alias some glibc6 symbols to older ones for better portability
@@ -99,6 +94,7 @@ if [[ $1 == "debug" ]]; then
 		-Wall
 		-O0
 		-g
+		-fstandalone-debug
 		-DDEBUG
 	)
 else
@@ -115,6 +111,6 @@ else
 	)
 fi
 
-BUILD_CMD=$CC" -o "$TARGET" "${CFLAGS[@]}" "${SOURCE[@]}" "${LFLAGS[@]}
+BUILD_CMD=$CC" -o "$BINARY" "${CFLAGS[@]}" -march="${TARGET[0]}" -mtune="${TARGET[@]}" "${SOURCE[@]}" "${LFLAGS[@]}
 echo $BUILD_CMD
 CCC_ANALYZER_CPLUSPLUS=1 $BUILD_CMD

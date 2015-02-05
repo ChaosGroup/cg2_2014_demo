@@ -7,10 +7,10 @@
 
 #include "aligned_ptr.hpp"
 
-template < typename ELEMENT_T >
+template < typename ELEMENT_T, size_t ALIGNMENT_T = 64 >
 class Array
 {
-	enum { alignment = 64 };
+	enum { alignment = ALIGNMENT_T };
 
 protected:
 	uint32_t m_capacity;
@@ -24,17 +24,15 @@ public:
 	{
 	}
 
+	template < size_t SRC_ALIGNMENT_T >
 	Array(
-		const Array& src);
+		const Array< ELEMENT_T, SRC_ALIGNMENT_T >& src);
 
 	~Array();
 
+	template < size_t SRC_ALIGNMENT_T >
 	Array& operator =(
-		const Array& src);
-
-	Array&
-	move(
-		Array& src);
+		const Array< ELEMENT_T, SRC_ALIGNMENT_T >& src);
 
 	bool
 	setCapacity(
@@ -78,9 +76,10 @@ public:
 		const size_t i);
 };
 
-template< typename ELEMENT_T >
-inline Array< ELEMENT_T >::Array(
-	const Array< ELEMENT_T >& src)
+template < typename ELEMENT_T, size_t ALIGNMENT_T >
+template < size_t SRC_ALIGNMENT_T >
+inline Array< ELEMENT_T, ALIGNMENT_T >::Array(
+	const Array< ELEMENT_T, SRC_ALIGNMENT_T >& src)
 : m_capacity(0)
 , m_count(0)
 {
@@ -101,8 +100,8 @@ inline Array< ELEMENT_T >::Array(
 	m_count = src.m_count;
 }
 
-template< typename ELEMENT_T >
-inline Array< ELEMENT_T >::~Array()
+template < typename ELEMENT_T, size_t ALIGNMENT_T >
+inline Array< ELEMENT_T, ALIGNMENT_T >::~Array()
 {
 	assert(0 == m_capacity || !m_elem.is_null());
 
@@ -116,10 +115,11 @@ inline Array< ELEMENT_T >::~Array()
 #endif
 }
 
-template< typename ELEMENT_T >
-inline Array< ELEMENT_T >&
-Array< ELEMENT_T >::operator =(
-	const Array< ELEMENT_T>& src)
+template < typename ELEMENT_T, size_t ALIGNMENT_T >
+template < size_t SRC_ALIGNMENT_T >
+inline Array< ELEMENT_T, ALIGNMENT_T >&
+Array< ELEMENT_T, ALIGNMENT_T >::operator =(
+	const Array< ELEMENT_T, SRC_ALIGNMENT_T >& src)
 {
 	if (setCapacity(src.m_capacity))
 	{
@@ -132,25 +132,9 @@ Array< ELEMENT_T >::operator =(
 	return *this;
 }
 
-template< typename ELEMENT_T >
-inline Array< ELEMENT_T >&
-Array< ELEMENT_T >::move(
-	Array< ELEMENT_T>& src)
-{
-	m_capacity = src.m_capacity;
-	m_count = src.m_count;
-
-	m_elem.move(src.m_elem);
-
-	src.m_capacity = 0;
-	src.m_count = 0;
-
-	return *this;
-}
-
-template< typename ELEMENT_T >
+template < typename ELEMENT_T, size_t ALIGNMENT_T >
 inline bool
-Array< ELEMENT_T >::setCapacity(
+Array< ELEMENT_T, ALIGNMENT_T >::setCapacity(
 	const size_t n)
 {
 	// setting the capacity resets the content
@@ -180,9 +164,9 @@ Array< ELEMENT_T >::setCapacity(
 	return true;
 }
 
-template< typename ELEMENT_T >
+template < typename ELEMENT_T, size_t ALIGNMENT_T >
 inline bool
-Array< ELEMENT_T >::addElement()
+Array< ELEMENT_T, ALIGNMENT_T >::addElement()
 {
 	if (m_count == m_capacity)
 		return false;
@@ -194,9 +178,9 @@ Array< ELEMENT_T >::addElement()
 	return true;
 }
 
-template< typename ELEMENT_T >
+template < typename ELEMENT_T, size_t ALIGNMENT_T >
 inline bool
-Array< ELEMENT_T >::addElement(
+Array< ELEMENT_T, ALIGNMENT_T >::addElement(
 	const ELEMENT_T& e)
 {
 	if (m_count == m_capacity)
@@ -209,9 +193,9 @@ Array< ELEMENT_T >::addElement(
 	return true;
 }
 
-template< typename ELEMENT_T >
+template < typename ELEMENT_T, size_t ALIGNMENT_T >
 inline bool
-Array< ELEMENT_T >::addMultiElement(
+Array< ELEMENT_T, ALIGNMENT_T >::addMultiElement(
 	const size_t count)
 {
 	if (m_count + count > m_capacity)
@@ -227,9 +211,9 @@ Array< ELEMENT_T >::addMultiElement(
 	return true;
 }
 
-template< typename ELEMENT_T >
+template < typename ELEMENT_T, size_t ALIGNMENT_T >
 inline const ELEMENT_T&
-Array< ELEMENT_T >::getElement(
+Array< ELEMENT_T, ALIGNMENT_T >::getElement(
 	const size_t i) const
 {
 	assert(i < m_count);
@@ -238,9 +222,9 @@ Array< ELEMENT_T >::getElement(
 	return m_elem[i];
 }
 
-template< typename ELEMENT_T >
+template < typename ELEMENT_T, size_t ALIGNMENT_T >
 inline ELEMENT_T&
-Array< ELEMENT_T >::getMutable(
+Array< ELEMENT_T, ALIGNMENT_T >::getMutable(
 	const size_t i)
 {
 	assert(i < m_count);
