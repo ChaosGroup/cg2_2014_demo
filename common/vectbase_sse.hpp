@@ -14,8 +14,7 @@
 #include <cassert>
 #include "vectbase.hpp"
 
-namespace base
-{
+namespace base {
 
 inline static float get(
 	const __m128 v,
@@ -162,30 +161,27 @@ inline static __m128i set(
 }
 
 //
-// partial specialization for SCALTYPE_T = float, NATIVE_T = __m128
+// partial specialization for SCALAR_T = float, NATIVE_T = __m128
 //
 
-template < size_t DIMENSION_T >
-class vect< float, DIMENSION_T, __m128 >
-{
+template < size_t DIMENSION >
+class vect< float, DIMENSION, __m128 > {
 public:
 
-	typedef float scaltype;
-	typedef __m128 native;
+	typedef float scalar_t;
+	typedef __m128 native_t;
 	typedef int32_t bitmask;
 
-	enum
-	{
-		dimension = DIMENSION_T,
-		native_count = (sizeof(float) * DIMENSION_T + sizeof(__m128) - 1) / sizeof(__m128),
-		native_dimension = native_count * sizeof(__m128) / sizeof(float),
-		scalars_per_native = sizeof(__m128) / sizeof(float),
+	enum {
+		dimension = DIMENSION,
+		native_count = (sizeof(scalar_t) * DIMENSION + sizeof(native_t) - 1) / sizeof(native_t),
+		native_dimension = native_count * sizeof(native_t) / sizeof(scalar_t),
+		scalars_per_native = sizeof(native_t) / sizeof(scalar_t),
 		full_mask = ~(bitmask(-1) << scalars_per_native),
 		tail_mask = ~(bitmask(-1) << dimension % scalars_per_native),
 	};
 
-	vect()
-	{
+	vect() {
 	}
 
 	// element mutator
@@ -244,9 +240,9 @@ private:
 };
 
 
-template < size_t DIMENSION_T >
+template < size_t DIMENSION >
 inline void
-vect< float, DIMENSION_T, __m128 >::set(
+vect< float, DIMENSION, __m128 >::set(
 	const size_t i,
 	const float c)
 {
@@ -262,9 +258,9 @@ vect< float, DIMENSION_T, __m128 >::set(
 }
 
 
-template < size_t DIMENSION_T >
+template < size_t DIMENSION >
 inline void
-vect< float, DIMENSION_T, __m128 >::set_native(
+vect< float, DIMENSION, __m128 >::set_native(
 	const size_t i,
 	const float c)
 {
@@ -280,9 +276,9 @@ vect< float, DIMENSION_T, __m128 >::set_native(
 }
 
 
-template < size_t DIMENSION_T >
+template < size_t DIMENSION >
 inline float
-vect< float, DIMENSION_T, __m128 >::get(
+vect< float, DIMENSION, __m128 >::get(
 	const size_t i) const
 {
 	assert(i < dimension);
@@ -297,18 +293,18 @@ vect< float, DIMENSION_T, __m128 >::get(
 }
 
 
-template < size_t DIMENSION_T >
+template < size_t DIMENSION >
 inline float
-vect< float, DIMENSION_T, __m128 >::operator [](
+vect< float, DIMENSION, __m128 >::operator [](
 	const size_t i) const
 {
 	return this->get(i);
 }
 
 
-template < size_t DIMENSION_T >
-inline vect< float, DIMENSION_T, __m128 >&
-vect< float, DIMENSION_T, __m128 >::setn(
+template < size_t DIMENSION >
+inline vect< float, DIMENSION, __m128 >&
+vect< float, DIMENSION, __m128 >::setn(
 	const size_t i,
 	const __m128 src)
 {
@@ -320,9 +316,9 @@ vect< float, DIMENSION_T, __m128 >::setn(
 }
 
 
-template < size_t DIMENSION_T >
+template < size_t DIMENSION >
 inline __m128
-vect< float, DIMENSION_T, __m128 >::getn(
+vect< float, DIMENSION, __m128 >::getn(
 	const size_t i) const
 {
 	assert(i < native_count);
@@ -331,10 +327,10 @@ vect< float, DIMENSION_T, __m128 >::getn(
 }
 
 
-template < size_t DIMENSION_T >
+template < size_t DIMENSION >
 inline bool
-vect< float, DIMENSION_T, __m128 >::operator ==(
-	const vect< float, DIMENSION_T, __m128 >& src) const
+vect< float, DIMENSION, __m128 >::operator ==(
+	const vect< float, DIMENSION, __m128 >& src) const
 {
 	for (size_t i = 0; i < dimension / scalars_per_native; ++i)
 		if (full_mask != _mm_movemask_ps(_mm_cmpeq_ps(n[i], src.n[i])))
@@ -350,10 +346,10 @@ vect< float, DIMENSION_T, __m128 >::operator ==(
 }
 
 
-template < size_t DIMENSION_T >
+template < size_t DIMENSION >
 inline bool
-vect< float, DIMENSION_T, __m128 >::operator !=(
-	const vect< float, DIMENSION_T, __m128 >& src) const
+vect< float, DIMENSION, __m128 >::operator !=(
+	const vect< float, DIMENSION, __m128 >& src) const
 {
 	for (size_t i = 0; i < dimension / scalars_per_native; ++i)
 		if (full_mask != _mm_movemask_ps(_mm_cmpeq_ps(n[i], src.n[i])))
@@ -369,10 +365,10 @@ vect< float, DIMENSION_T, __m128 >::operator !=(
 }
 
 
-template < size_t DIMENSION_T >
+template < size_t DIMENSION >
 inline bool
-vect< float, DIMENSION_T, __m128 >::operator >(
-	const vect< float, DIMENSION_T, __m128 >& src) const
+vect< float, DIMENSION, __m128 >::operator >(
+	const vect< float, DIMENSION, __m128 >& src) const
 {
 	for (size_t i = 0; i < dimension / scalars_per_native; ++i)
 		if (full_mask != _mm_movemask_ps(_mm_cmpgt_ps(n[i], src.n[i])))
@@ -388,10 +384,10 @@ vect< float, DIMENSION_T, __m128 >::operator >(
 }
 
 
-template < size_t DIMENSION_T >
+template < size_t DIMENSION >
 inline bool
-vect< float, DIMENSION_T, __m128 >::operator >=(
-	const vect< float, DIMENSION_T, __m128 >& src) const
+vect< float, DIMENSION, __m128 >::operator >=(
+	const vect< float, DIMENSION, __m128 >& src) const
 {
 	for (size_t i = 0; i < dimension / scalars_per_native; ++i)
 		if (full_mask != _mm_movemask_ps(_mm_cmpge_ps(n[i], src.n[i])))
@@ -407,30 +403,27 @@ vect< float, DIMENSION_T, __m128 >::operator >=(
 }
 
 //
-// partial specialization for SCALTYPE_T = int32_t, NATIVE_T = __m128i
+// partial specialization for SCALAR_T = int32_t, NATIVE_T = __m128i
 //
 
-template < size_t DIMENSION_T >
-class vect< int32_t, DIMENSION_T, __m128i >
-{
+template < size_t DIMENSION >
+class vect< int32_t, DIMENSION, __m128i > {
 public:
 
-	typedef int32_t scaltype;
-	typedef __m128i native;
+	typedef int32_t scalar_t;
+	typedef __m128i native_t;
 	typedef int32_t bitmask;
 
-	enum
-	{
-		dimension = DIMENSION_T,
-		native_count = (sizeof(int32_t) * DIMENSION_T + sizeof(__m128i) - 1) / sizeof(__m128i),
-		native_dimension = native_count * sizeof(__m128i) / sizeof(int32_t),
-		scalars_per_native = sizeof(__m128i) / sizeof(int32_t),
+	enum {
+		dimension = DIMENSION,
+		native_count = (sizeof(scalar_t) * DIMENSION + sizeof(native_t) - 1) / sizeof(native_t),
+		native_dimension = native_count * sizeof(native_t) / sizeof(scalar_t),
+		scalars_per_native = sizeof(native_t) / sizeof(scalar_t),
 		full_mask = ~(bitmask(-1) << scalars_per_native * 4),
 		tail_mask = ~(bitmask(-1) << dimension % scalars_per_native * 4)
 	};
 
-	vect()
-	{
+	vect() {
 	}
 
 	// element mutator
@@ -489,9 +482,9 @@ private:
 };
 
 
-template < size_t DIMENSION_T >
+template < size_t DIMENSION >
 inline void
-vect< int32_t, DIMENSION_T, __m128i >::set(
+vect< int32_t, DIMENSION, __m128i >::set(
 	const size_t i,
 	const int32_t c)
 {
@@ -507,9 +500,9 @@ vect< int32_t, DIMENSION_T, __m128i >::set(
 }
 
 
-template < size_t DIMENSION_T >
+template < size_t DIMENSION >
 inline void
-vect< int32_t, DIMENSION_T, __m128i >::set_native(
+vect< int32_t, DIMENSION, __m128i >::set_native(
 	const size_t i,
 	const int32_t c)
 {
@@ -525,9 +518,9 @@ vect< int32_t, DIMENSION_T, __m128i >::set_native(
 }
 
 
-template < size_t DIMENSION_T >
+template < size_t DIMENSION >
 inline int32_t
-vect< int32_t, DIMENSION_T, __m128i >::get(
+vect< int32_t, DIMENSION, __m128i >::get(
 	const size_t i) const
 {
 	assert(i < dimension);
@@ -542,18 +535,18 @@ vect< int32_t, DIMENSION_T, __m128i >::get(
 }
 
 
-template < size_t DIMENSION_T >
+template < size_t DIMENSION >
 inline int32_t
-vect< int32_t, DIMENSION_T, __m128i >::operator [](
+vect< int32_t, DIMENSION, __m128i >::operator [](
 	const size_t i) const
 {
 	return this->get(i);
 }
 
 
-template < size_t DIMENSION_T >
-inline vect< int32_t, DIMENSION_T, __m128i >&
-vect< int32_t, DIMENSION_T, __m128i >::setn(
+template < size_t DIMENSION >
+inline vect< int32_t, DIMENSION, __m128i >&
+vect< int32_t, DIMENSION, __m128i >::setn(
 	const size_t i,
 	const __m128i src)
 {
@@ -565,9 +558,9 @@ vect< int32_t, DIMENSION_T, __m128i >::setn(
 }
 
 
-template < size_t DIMENSION_T >
+template < size_t DIMENSION >
 inline __m128i
-vect< int32_t, DIMENSION_T, __m128i >::getn(
+vect< int32_t, DIMENSION, __m128i >::getn(
 	const size_t i) const
 {
 	assert(i < native_count);
@@ -576,10 +569,10 @@ vect< int32_t, DIMENSION_T, __m128i >::getn(
 }
 
 
-template < size_t DIMENSION_T >
+template < size_t DIMENSION >
 inline bool
-vect< int32_t, DIMENSION_T, __m128i >::operator ==(
-	const vect< int32_t, DIMENSION_T, __m128i >& src) const
+vect< int32_t, DIMENSION, __m128i >::operator ==(
+	const vect< int32_t, DIMENSION, __m128i >& src) const
 {
 	for (size_t i = 0; i < dimension / scalars_per_native; ++i)
 		if (full_mask != _mm_movemask_epi8(_mm_cmpeq_epi32(n[i], src.n[i])))
@@ -595,10 +588,10 @@ vect< int32_t, DIMENSION_T, __m128i >::operator ==(
 }
 
 
-template < size_t DIMENSION_T >
+template < size_t DIMENSION >
 inline bool
-vect< int32_t, DIMENSION_T, __m128i >::operator !=(
-	const vect< int32_t, DIMENSION_T, __m128i >& src) const
+vect< int32_t, DIMENSION, __m128i >::operator !=(
+	const vect< int32_t, DIMENSION, __m128i >& src) const
 {
 	for (size_t i = 0; i < dimension / scalars_per_native; ++i)
 		if (full_mask != _mm_movemask_epi8(_mm_cmpeq_epi32(n[i], src.n[i])))
@@ -614,10 +607,10 @@ vect< int32_t, DIMENSION_T, __m128i >::operator !=(
 }
 
 
-template < size_t DIMENSION_T >
+template < size_t DIMENSION >
 inline bool
-vect< int32_t, DIMENSION_T, __m128i >::operator >(
-	const vect< int32_t, DIMENSION_T, __m128i >& src) const
+vect< int32_t, DIMENSION, __m128i >::operator >(
+	const vect< int32_t, DIMENSION, __m128i >& src) const
 {
 	for (size_t i = 0; i < dimension / scalars_per_native; ++i)
 		if (full_mask != _mm_movemask_epi8(_mm_cmpgt_epi32(n[i], src.n[i])))
@@ -633,10 +626,10 @@ vect< int32_t, DIMENSION_T, __m128i >::operator >(
 }
 
 
-template < size_t DIMENSION_T >
+template < size_t DIMENSION >
 inline bool
-vect< int32_t, DIMENSION_T, __m128i >::operator >=(
-	const vect< int32_t, DIMENSION_T, __m128i >& src) const
+vect< int32_t, DIMENSION, __m128i >::operator >=(
+	const vect< int32_t, DIMENSION, __m128i >& src) const
 {
 	for (size_t i = 0; i < dimension / scalars_per_native; ++i)
 		if (full_mask != _mm_movemask_epi8(_mm_cmpge_epi32(n[i], src.n[i])))

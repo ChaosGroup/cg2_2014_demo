@@ -55,8 +55,6 @@
 	#include <immintrin.h>
 #endif
 
-struct empty_struct {};
-
 namespace simd
 {
 
@@ -65,16 +63,16 @@ namespace simd
 // type- and dimensionality-agnostic vector; provides seamless downcasting and a basic set of vector
 // ops; subclass as:
 //
-//		class myVect : public protovect< myScalarType, myDimension, myNative, myVect >
+//		class myVect : public protovect< myVect, myScalarType, myDimension, myNative >
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
-class protovect : public base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T = SCALAR_T >
+class protovect : public base::vect< SCALAR_T, DIMENSION, NATIVE_T >
 {
 public:
 
-	typedef base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T > basetype;
+	typedef base::vect< SCALAR_T, DIMENSION, NATIVE_T > basetype;
 	typedef SUBCLASS_T subclass;
 
 	protovect()
@@ -82,7 +80,7 @@ public:
 	}
 
 	explicit protovect(
-		const SCALTYPE_T (& src)[DIMENSION_T],
+		const SCALAR_T (& src)[DIMENSION],
 		const bool zero_first = false);
 
 	operator SUBCLASS_T&();
@@ -91,386 +89,386 @@ public:
 
 	// negative of argument
 	SUBCLASS_T& negate(
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src);
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src);
 
 	// negative of this
 	SUBCLASS_T& negate();
 
 	// product of argument and scalar argument
 	SUBCLASS_T& mul(
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src,
-		const SCALTYPE_T c);
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src,
+		const SCALAR_T c);
 
 	// product of this and scalar argument
 	SUBCLASS_T& mul(
-		const SCALTYPE_T c);
+		const SCALAR_T c);
 
 	// sum of arguments
 	SUBCLASS_T& add(
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src0,
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src1);
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1);
 
 	// sum of this and argument
 	SUBCLASS_T& add(
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src);
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src);
 
 	// difference between arguments
 	SUBCLASS_T& sub(
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src0,
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src1);
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1);
 
 	// difference between this and argument
 	SUBCLASS_T& subr(
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src);
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src);
 
 	// difference between argument and this
 	SUBCLASS_T& subl(
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src);
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src);
 
 	// product of arguments
 	SUBCLASS_T& mul(
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src0,
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src1);
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1);
 
 	// product of this and argument
 	SUBCLASS_T& mul(
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src);
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src);
 
 	// product of first two arguments, added to third argument
 	SUBCLASS_T& mad(
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src0,
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src1,
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src2);
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1,
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src2);
 
 	// product of arguments, added to this
 	SUBCLASS_T& mad(
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src0,
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src1);
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1);
 
 	// product of argument and scalar, added to last argument
 	SUBCLASS_T& mad(
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src0,
-		const SCALTYPE_T c,
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src1);
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
+		const SCALAR_T c,
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1);
 
 	// product of argument and scalar, added to this
 	SUBCLASS_T& mad(
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src,
-		const SCALTYPE_T c);
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src,
+		const SCALAR_T c);
 
 	// division of first by second argument
 	SUBCLASS_T& div(
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src0,
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src1);
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1);
 
 	// division of this by argument
 	SUBCLASS_T& divr(
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src);
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src);
 
 	// division of argument by this
 	SUBCLASS_T& divl(
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src);
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src);
 
 	// weighted sum of arguments
 	SUBCLASS_T& wsum(
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src0,
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src1,
-		const SCALTYPE_T factor0,
-		const SCALTYPE_T factor1);
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1,
+		const SCALAR_T factor0,
+		const SCALAR_T factor1);
 
 	// weighted sum of this and argument
 	SUBCLASS_T& wsum(
-		const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src,
-		const SCALTYPE_T factor0,
-		const SCALTYPE_T factor1);
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src,
+		const SCALAR_T factor0,
+		const SCALAR_T factor1);
 
 	// set this to zeros
 	SUBCLASS_T& zero();
 };
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::operator SUBCLASS_T&()
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::operator SUBCLASS_T&()
 {
 	return *static_cast< SUBCLASS_T* >(this);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::operator const SUBCLASS_T&() const
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::operator const SUBCLASS_T&() const
 {
 	return *static_cast< const SUBCLASS_T* >(this);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
-inline protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::protovect(
-	const SCALTYPE_T (& src)[DIMENSION_T],
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
+inline protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::protovect(
+	const SCALAR_T (& src)[DIMENSION],
 	const bool zero_first)
 {
-	const bool zero_init = DIMENSION_T != this->native_dimension && zero_first;
+	const bool zero_init = DIMENSION != this->native_dimension && zero_first;
 
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
 
 	if (zero_init)
 		subthis->zero();
 
-	for (size_t i = 0; i < DIMENSION_T; ++i)
+	for (size_t i = 0; i < DIMENSION; ++i)
 		subthis->set(i, src[i]);
 
 	if (zero_init)
 		return;
 
-	for (size_t i = DIMENSION_T; i < this->native_dimension; ++i)
-		subthis->set_native(i, src[DIMENSION_T - 1]);
+	for (size_t i = DIMENSION; i < this->native_dimension; ++i)
+		subthis->set_native(i, src[DIMENSION - 1]);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::mul(
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src,
-	const SCALTYPE_T c)
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::mul(
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src,
+	const SCALAR_T c)
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
 
-	for (size_t i = 0; i < DIMENSION_T; ++i)
+	for (size_t i = 0; i < DIMENSION; ++i)
 		subthis->set(i, src[i] * c);
 
 	return *this;
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::mul(
-	const SCALTYPE_T c)
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::mul(
+	const SCALAR_T c)
 {
 	return *this = SUBCLASS_T().mul(*this, c);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::negate(
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src)
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::negate(
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src)
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
 
-	for (size_t i = 0; i < DIMENSION_T; ++i)
+	for (size_t i = 0; i < DIMENSION; ++i)
 		subthis->set(i, -src[i]);
 
 	return *this;
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::negate()
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::negate()
 {
 	return *this = SUBCLASS_T().negate(*this);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::add(
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src0,
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src1)
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::add(
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1)
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
 
-	for (size_t i = 0; i < DIMENSION_T; ++i)
+	for (size_t i = 0; i < DIMENSION; ++i)
 		subthis->set(i, src0[i] + src1[i]);
 
 	return *this;
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::add(
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src)
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::add(
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src)
 {
 	return *this = SUBCLASS_T().add(*this, src);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::sub(
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src0,
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src1)
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::sub(
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1)
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
 
-	for (size_t i = 0; i < DIMENSION_T; ++i)
+	for (size_t i = 0; i < DIMENSION; ++i)
 		subthis->set(i, src0[i] - src1[i]);
 
 	return *this;
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::subr(
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src)
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::subr(
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src)
 {
 	return *this = SUBCLASS_T().sub(*this, src);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::subl(
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src)
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::subl(
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src)
 {
 	return *this = SUBCLASS_T().sub(src, *this);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::mul(
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src0,
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src1)
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::mul(
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1)
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
 
-	for (size_t i = 0; i < DIMENSION_T; ++i)
+	for (size_t i = 0; i < DIMENSION; ++i)
 		subthis->set(i, src0[i] * src1[i]);
 
 	return *this;
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::mul(
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src)
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::mul(
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src)
 {
 	return *this = SUBCLASS_T().mul(*this, src);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::mad(
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src0,
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src1,
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src2)
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::mad(
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1,
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src2)
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
 
-	for (size_t i = 0; i < DIMENSION_T; ++i)
+	for (size_t i = 0; i < DIMENSION; ++i)
 		subthis->set(i, src0[i] * src1[i] + src2[i]);
 
 	return *this;
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::mad(
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src0,
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src1)
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::mad(
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1)
 {
 	return *this = SUBCLASS_T().mad(src0, src1, *this);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::mad(
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src0,
-	const SCALTYPE_T c,
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src1)
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::mad(
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
+	const SCALAR_T c,
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1)
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
 
-	for (size_t i = 0; i < DIMENSION_T; ++i)
+	for (size_t i = 0; i < DIMENSION; ++i)
 		subthis->set(i, src0[i] * c + src1[i]);
 
 	return *this;
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::mad(
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src,
-	const SCALTYPE_T c)
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::mad(
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src,
+	const SCALAR_T c)
 {
 	return *this = SUBCLASS_T().mad(src, c, *this);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::div(
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src0,
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src1)
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::div(
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1)
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
 
-	for (size_t i = 0; i < DIMENSION_T; ++i)
+	for (size_t i = 0; i < DIMENSION; ++i)
 		subthis->set(i, src0[i] / src1[i]);
 
 	return *this;
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::divr(
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src)
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::divr(
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src)
 {
 	return *this = SUBCLASS_T().div(*this, src);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::divl(
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src)
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::divl(
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src)
 {
 	return *this = SUBCLASS_T().div(src, *this);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::wsum(
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src0,
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src1,
-	const SCALTYPE_T factor0,
-	const SCALTYPE_T factor1)
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::wsum(
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1,
+	const SCALAR_T factor0,
+	const SCALAR_T factor1)
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
 
-	for (size_t i = 0; i < DIMENSION_T; ++i)
+	for (size_t i = 0; i < DIMENSION; ++i)
 		subthis->set(i, src0[i] * factor0 + src1[i] * factor1);
 
 	return *this;
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::wsum(
-	const base::vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src,
-	const SCALTYPE_T factor0,
-	const SCALTYPE_T factor1)
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::wsum(
+	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src,
+	const SCALAR_T factor0,
+	const SCALAR_T factor1)
 {
 	return *this = SUBCLASS_T().wsum(*this, src, factor0, factor1);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::zero()
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::zero()
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
 
@@ -486,9 +484,9 @@ protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, SUBCLASS_T >::zero()
 // as one should normally aim for the most derived subclass that fits a scenario
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T = SCALAR_T >
 class vect_generic : public protovect<
-	SCALTYPE_T, DIMENSION_T, NATIVE_T, vect_generic< SCALTYPE_T, DIMENSION_T, NATIVE_T > >
+	vect_generic< SCALAR_T, DIMENSION, NATIVE_T >, SCALAR_T, DIMENSION, NATIVE_T >
 {
 public:
 
@@ -497,16 +495,16 @@ public:
 	}
 
 	explicit vect_generic(
-		const SCALTYPE_T (& src)[DIMENSION_T],
+		const SCALAR_T (& src)[DIMENSION],
 		const bool zero_first = false);
 };
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
-inline vect_generic< SCALTYPE_T, DIMENSION_T, NATIVE_T >::vect_generic(
-	const SCALTYPE_T (& src)[DIMENSION_T],
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
+inline vect_generic< SCALAR_T, DIMENSION, NATIVE_T >::vect_generic(
+	const SCALAR_T (& src)[DIMENSION],
 	const bool zero_first)
-: protovect< SCALTYPE_T, DIMENSION_T, NATIVE_T, vect_generic< SCALTYPE_T, DIMENSION_T, NATIVE_T > >(src, zero_first)
+: protovect< vect_generic, SCALAR_T, DIMENSION, NATIVE_T >(src, zero_first)
 {
 }
 
@@ -515,8 +513,8 @@ inline vect_generic< SCALTYPE_T, DIMENSION_T, NATIVE_T >::vect_generic(
 // integer-based dimensionality-agnostic vector; hosts integer-only functionality
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
-class vectz : public protovect< int32_t, DIMENSION_T, NATIVE_T, SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T = int32_t >
+class vectz : public protovect< SUBCLASS_T, int32_t, DIMENSION, NATIVE_T >
 {
 public:
 
@@ -525,7 +523,7 @@ public:
 	}
 
 	explicit vectz(
-		const int (& src)[DIMENSION_T],
+		const int (& src)[DIMENSION],
 		const bool zero_first = false);
 
 	operator SUBCLASS_T&();
@@ -534,24 +532,24 @@ public:
 };
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
-inline vectz< DIMENSION_T, NATIVE_T, SUBCLASS_T >::vectz(
-	const int (& src)[DIMENSION_T],
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
+inline vectz< SUBCLASS_T, DIMENSION, NATIVE_T >::vectz(
+	const int (& src)[DIMENSION],
 	const bool zero_first)
-: protovect< int32_t, DIMENSION_T, NATIVE_T, SUBCLASS_T >(src, zero_first)
+: protovect< SUBCLASS_T, int32_t, DIMENSION, NATIVE_T >(src, zero_first)
 {
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
-inline vectz< DIMENSION_T, NATIVE_T, SUBCLASS_T >::operator SUBCLASS_T&()
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
+inline vectz< SUBCLASS_T, DIMENSION, NATIVE_T >::operator SUBCLASS_T&()
 {
 	return *static_cast< SUBCLASS_T* >(this);
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
-inline vectz< DIMENSION_T, NATIVE_T, SUBCLASS_T >::operator const SUBCLASS_T&() const
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
+inline vectz< SUBCLASS_T, DIMENSION, NATIVE_T >::operator const SUBCLASS_T&() const
 {
 	return *static_cast< const SUBCLASS_T* >(this);
 }
@@ -561,8 +559,8 @@ inline vectz< DIMENSION_T, NATIVE_T, SUBCLASS_T >::operator const SUBCLASS_T&() 
 // convenience wrapper of class vectz
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template < size_t DIMENSION_T, typename NATIVE_T >
-class ivect : public vectz< DIMENSION_T, NATIVE_T, ivect< DIMENSION_T, NATIVE_T > >
+template < size_t DIMENSION, typename NATIVE_T = int32_t >
+class ivect : public vectz< ivect< DIMENSION, NATIVE_T >, DIMENSION, NATIVE_T >
 {
 public:
 
@@ -571,26 +569,26 @@ public:
 	}
 
 	explicit ivect(
-		const int (& src)[DIMENSION_T],
+		const int (& src)[DIMENSION],
 		const bool zero_first = false);
 };
 
 
-template < size_t DIMENSION_T, typename NATIVE_T >
-inline ivect< DIMENSION_T, NATIVE_T >::ivect(
-	const int (&src)[DIMENSION_T],
+template < size_t DIMENSION, typename NATIVE_T >
+inline ivect< DIMENSION, NATIVE_T >::ivect(
+	const int (&src)[DIMENSION],
 	const bool zero_first)
-: vectz< DIMENSION_T, NATIVE_T, ivect< DIMENSION_T, NATIVE_T > >(src, zero_first)
+: vectz< ivect, DIMENSION, NATIVE_T >(src, zero_first)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // class ivect<2>
-// specialization of ivect for DIMENSION_T = 2
+// specialization of ivect for DIMENSION = 2
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template < typename NATIVE_T >
-class ivect< 2, NATIVE_T > : public vectz< 2, NATIVE_T, ivect< 2, NATIVE_T > >
+class ivect< 2, NATIVE_T > : public vectz< ivect< 2, NATIVE_T >, 2, NATIVE_T >
 {
 public:
 
@@ -613,7 +611,7 @@ template < typename NATIVE_T >
 inline ivect< 2, NATIVE_T >::ivect(
 	const int (& src)[2],
 	const bool zero_first)
-: vectz< 2, NATIVE_T, ivect< 2, NATIVE_T > >(src, zero_first)
+: vectz< ivect, 2, NATIVE_T >(src, zero_first)
 {
 }
 
@@ -641,11 +639,11 @@ inline ivect< 2, NATIVE_T >::ivect(
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // class ivect<3>
-// specialization of ivect for DIMENSION_T = 3
+// specialization of ivect for DIMENSION = 3
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template < typename NATIVE_T >
-class ivect< 3, NATIVE_T > : public vectz< 3, NATIVE_T, ivect< 3, NATIVE_T > >
+class ivect< 3, NATIVE_T > : public vectz< ivect< 3, NATIVE_T >, 3, NATIVE_T >
 {
 public:
 
@@ -669,7 +667,7 @@ template < typename NATIVE_T >
 inline ivect< 3, NATIVE_T >::ivect(
 	const int (& src)[3],
 	const bool zero_first)
-: vectz< 3, NATIVE_T, ivect< 3, NATIVE_T > >(src, zero_first)
+: vectz< ivect, 3, NATIVE_T >(src, zero_first)
 {
 }
 
@@ -699,11 +697,11 @@ inline ivect< 3, NATIVE_T >::ivect(
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // class ivect<4>
-// specialization of ivect for DIMENSION_T = 4
+// specialization of ivect for DIMENSION = 4
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template < typename NATIVE_T >
-class ivect< 4, NATIVE_T > : public vectz< 4, NATIVE_T, ivect< 4, NATIVE_T > >
+class ivect< 4, NATIVE_T > : public vectz< ivect< 4, NATIVE_T >, 4, NATIVE_T >
 {
 public:
 
@@ -728,7 +726,7 @@ template < typename NATIVE_T >
 inline ivect< 4, NATIVE_T >::ivect(
 	const int (& src)[4],
 	const bool zero_first)
-: vectz< 4, NATIVE_T, ivect< 4, NATIVE_T > >(src, zero_first)
+: vectz< ivect, 4, NATIVE_T >(src, zero_first)
 {
 }
 
@@ -763,8 +761,8 @@ inline ivect< 4, NATIVE_T >::ivect(
 // float-based dimensionality-agnostic vector; hosts float-only functionality
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
-class vectr : public protovect< float, DIMENSION_T, NATIVE_T, SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T = float >
+class vectr : public protovect< SUBCLASS_T, float, DIMENSION, NATIVE_T >
 {
 public:
 
@@ -773,7 +771,7 @@ public:
 	}
 
 	explicit vectr(
-		const float (& src)[DIMENSION_T],
+		const float (& src)[DIMENSION],
 		const bool zero_first = false);
 
 	operator SUBCLASS_T&();
@@ -782,7 +780,7 @@ public:
 
 	// dot product
 	float dot(
-		const base::vect< float, DIMENSION_T, NATIVE_T >& src) const;
+		const base::vect< float, DIMENSION, NATIVE_T >& src) const;
 
 	// Euclidean norm, squared
 	float sqr() const;
@@ -795,77 +793,77 @@ public:
 
 	// normalise argument
 	SUBCLASS_T& normalise(
-		const base::vect< float, DIMENSION_T, NATIVE_T >& src);
+		const base::vect< float, DIMENSION, NATIVE_T >& src);
 
 	// reciprocal of this
 	SUBCLASS_T& rcp();
 
 	// reciprocal of argument
 	SUBCLASS_T& rcp(
-		const base::vect< float, DIMENSION_T, NATIVE_T >& src);
+		const base::vect< float, DIMENSION, NATIVE_T >& src);
 
 	// product of argument and row-major matrix operator
 	SUBCLASS_T& mul(
-		const base::vect< float, DIMENSION_T, NATIVE_T >& src,
-		const base::matx< float, DIMENSION_T, NATIVE_T >& op);
+		const base::vect< float, DIMENSION, NATIVE_T >& src,
+		const base::matx< float, DIMENSION, NATIVE_T >& op);
 
 	// product of this and row-major matrix operator
 	SUBCLASS_T& mul(
-		const base::matx< float, DIMENSION_T, NATIVE_T >& op);
+		const base::matx< float, DIMENSION, NATIVE_T >& op);
 
-	using protovect< float, DIMENSION_T, NATIVE_T, SUBCLASS_T >::mul;
+	using protovect< SUBCLASS_T, float, DIMENSION, NATIVE_T >::mul;
 
 	// product of argument and row-major matrix operator; last element of argument assumed 1
 	SUBCLASS_T& mulH(
-		const base::vect< float, DIMENSION_T, NATIVE_T >& src,
-		const base::matx< float, DIMENSION_T, NATIVE_T >& op);
+		const base::vect< float, DIMENSION, NATIVE_T >& src,
+		const base::matx< float, DIMENSION, NATIVE_T >& op);
 
 	// product of this and row-major matrix operator; last element of this assumed 1
 	SUBCLASS_T& mulH(
-		const base::matx< float, DIMENSION_T, NATIVE_T >& op);
+		const base::matx< float, DIMENSION, NATIVE_T >& op);
 };
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
-inline vectr< DIMENSION_T, NATIVE_T, SUBCLASS_T >::vectr(
-	const float (& src)[DIMENSION_T],
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
+inline vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::vectr(
+	const float (& src)[DIMENSION],
 	const bool zero_first)
-: protovect< float, DIMENSION_T, NATIVE_T, SUBCLASS_T >(src, zero_first)
+: protovect< SUBCLASS_T, float, DIMENSION, NATIVE_T >(src, zero_first)
 {
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
-inline vectr< DIMENSION_T, NATIVE_T, SUBCLASS_T >::operator SUBCLASS_T&()
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
+inline vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::operator SUBCLASS_T&()
 {
 	return *static_cast< SUBCLASS_T* >(this);
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
-inline vectr< DIMENSION_T, NATIVE_T, SUBCLASS_T >::operator const SUBCLASS_T&() const
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
+inline vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::operator const SUBCLASS_T&() const
 {
 	return *static_cast< const SUBCLASS_T* >(this);
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline float
-vectr< DIMENSION_T, NATIVE_T, SUBCLASS_T >::dot(
-	const base::vect< float, DIMENSION_T, NATIVE_T >& src) const
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::dot(
+	const base::vect< float, DIMENSION, NATIVE_T >& src) const
 {
 	float t = this->operator [](0) * src[0];
 
-	for (size_t i = 1; i < DIMENSION_T; ++i)
+	for (size_t i = 1; i < DIMENSION; ++i)
 		t += this->operator [](i) * src[i];
 
 	return t;
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline float
-vectr< DIMENSION_T, NATIVE_T, SUBCLASS_T >::sqr() const
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::sqr() const
 {
 	const SUBCLASS_T* const subthis = static_cast< const SUBCLASS_T* >(this);
 
@@ -873,9 +871,9 @@ vectr< DIMENSION_T, NATIVE_T, SUBCLASS_T >::sqr() const
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline float
-vectr< DIMENSION_T, NATIVE_T, SUBCLASS_T >::norm() const
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::norm() const
 {
 	const SUBCLASS_T* const subthis = static_cast< const SUBCLASS_T* >(this);
 
@@ -883,10 +881,10 @@ vectr< DIMENSION_T, NATIVE_T, SUBCLASS_T >::norm() const
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-vectr< DIMENSION_T, NATIVE_T, SUBCLASS_T >::normalise(
-	const base::vect< float, DIMENSION_T, NATIVE_T >& src)
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::normalise(
+	const base::vect< float, DIMENSION, NATIVE_T >& src)
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
 
@@ -894,85 +892,85 @@ vectr< DIMENSION_T, NATIVE_T, SUBCLASS_T >::normalise(
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-vectr< DIMENSION_T, NATIVE_T, SUBCLASS_T >::normalise()
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::normalise()
 {
 	return *this = SUBCLASS_T().normalise(*this);
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-vectr< DIMENSION_T, NATIVE_T, SUBCLASS_T >::rcp(
-	const base::vect< float, DIMENSION_T, NATIVE_T >& src)
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::rcp(
+	const base::vect< float, DIMENSION, NATIVE_T >& src)
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
 
-	for (size_t i = 0; i < DIMENSION_T; ++i)
+	for (size_t i = 0; i < DIMENSION; ++i)
 		subthis->set(i, 1.f / src[i]);
 
 	return *this;
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T& 
-vectr< DIMENSION_T, NATIVE_T, SUBCLASS_T >::rcp()
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::rcp()
 {
 	return *this = SUBCLASS_T().rcp(*this);
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-vectr< DIMENSION_T, NATIVE_T, SUBCLASS_T >::mul(
-	const base::vect< float, DIMENSION_T, NATIVE_T >& src,
-	const base::matx< float, DIMENSION_T, NATIVE_T >& op)
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::mul(
+	const base::vect< float, DIMENSION, NATIVE_T >& src,
+	const base::matx< float, DIMENSION, NATIVE_T >& op)
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
 
 	subthis->mul(op[0], src[0]);
 
-	for (size_t i = 1; i < DIMENSION_T; ++i)
+	for (size_t i = 1; i < DIMENSION; ++i)
 		subthis->mad(op[i], src[i]);
 
 	return *this;
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-vectr< DIMENSION_T, NATIVE_T, SUBCLASS_T >::mul(
-	const base::matx< float, DIMENSION_T, NATIVE_T >& op)
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::mul(
+	const base::matx< float, DIMENSION, NATIVE_T >& op)
 {
 	return *this = SUBCLASS_T().mul(*this, op);
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-vectr< DIMENSION_T, NATIVE_T, SUBCLASS_T >::mulH(
-	const base::vect< float, DIMENSION_T, NATIVE_T >& src,
-	const base::matx< float, DIMENSION_T, NATIVE_T >& op)
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::mulH(
+	const base::vect< float, DIMENSION, NATIVE_T >& src,
+	const base::matx< float, DIMENSION, NATIVE_T >& op)
 {
-	assert(1.f == src[DIMENSION_T - 1]);
+	assert(1.f == src[DIMENSION - 1]);
 
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
 
-	*this = op[DIMENSION_T - 1];
+	*this = op[DIMENSION - 1];
 
-	for (size_t i = 0; i < DIMENSION_T - 1; ++i)
+	for (size_t i = 0; i < DIMENSION - 1; ++i)
 		subthis->mad(op[i], src[i]);
 
 	return *this;
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-vectr< DIMENSION_T, NATIVE_T, SUBCLASS_T >::mulH(
-	const base::matx< float, DIMENSION_T, NATIVE_T >& op)
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::mulH(
+	const base::matx< float, DIMENSION, NATIVE_T >& op)
 {
 	return *this = SUBCLASS_T().mulH(*this, op);
 }
@@ -982,8 +980,8 @@ vectr< DIMENSION_T, NATIVE_T, SUBCLASS_T >::mulH(
 // convenience wrapper of class vectr
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template < size_t DIMENSION_T, typename NATIVE_T >
-class vect : public vectr< DIMENSION_T, NATIVE_T, vect< DIMENSION_T, NATIVE_T > >
+template < size_t DIMENSION, typename NATIVE_T = float >
+class vect : public vectr< vect< DIMENSION, NATIVE_T >, DIMENSION, NATIVE_T >
 {
 public:
 
@@ -992,26 +990,26 @@ public:
 	}
 
 	explicit vect(
-		const float (& src)[DIMENSION_T],
+		const float (& src)[DIMENSION],
 		const bool zero_first = false);
 };
 
 
-template < size_t DIMENSION_T, typename NATIVE_T >
-inline vect< DIMENSION_T, NATIVE_T >::vect(
-	const float (& src)[DIMENSION_T],
+template < size_t DIMENSION, typename NATIVE_T >
+inline vect< DIMENSION, NATIVE_T >::vect(
+	const float (& src)[DIMENSION],
 	const bool zero_first)
-: vectr< DIMENSION_T, NATIVE_T, vect< DIMENSION_T, NATIVE_T > >(src, zero_first)
+: vectr< vect, DIMENSION, NATIVE_T >(src, zero_first)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // class vect<2>
-// specialization of vect for DIMENSION_T = 2
+// specialization of vect for DIMENSION = 2
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template < typename NATIVE_T >
-class vect< 2, NATIVE_T > : public vectr< 2, NATIVE_T, vect< 2, NATIVE_T > >
+class vect< 2, NATIVE_T > : public vectr< vect< 2, NATIVE_T >, 2, NATIVE_T >
 {
 public:
 
@@ -1043,7 +1041,7 @@ template < typename NATIVE_T >
 inline vect< 2, NATIVE_T >::vect(
 	const float (& src)[2],
 	const bool zero_first)
-: vectr< 2, NATIVE_T, vect< 2, NATIVE_T > >(src, zero_first)
+: vectr< vect, 2, NATIVE_T >(src, zero_first)
 {
 }
 
@@ -1092,11 +1090,11 @@ vect< 2, NATIVE_T >::crossr(
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // class vect<3>
-// specialization of vect for DIMENSION_T = 3
+// specialization of vect for DIMENSION = 3
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template < typename NATIVE_T >
-class vect< 3, NATIVE_T > : public vectr< 3, NATIVE_T, vect< 3, NATIVE_T > >
+class vect< 3, NATIVE_T > : public vectr< vect< 3, NATIVE_T >, 3, NATIVE_T >
 {
 public:
 
@@ -1119,14 +1117,14 @@ public:
 		const base::vect< float, 3, NATIVE_T >& src0,
 		const base::vect< float, 3, NATIVE_T >& src1);
 
-	using vectr< 3, NATIVE_T, vect< 3, NATIVE_T > >::add;
+	using vectr< vect, 3, NATIVE_T >::add;
 
 	// difference between arguments
 	vect& sub(
 		const base::vect< float, 3, NATIVE_T >& src0,
 		const base::vect< float, 3, NATIVE_T >& src1);
 
-	using vectr< 3, NATIVE_T, vect< 3, NATIVE_T > >::sub;
+	using vectr< vect, 3, NATIVE_T >::sub;
 
 	// product of argument and scalar argument
 	vect& mul(
@@ -1143,27 +1141,27 @@ public:
 		const base::vect< float, 3, NATIVE_T >& src,
 		const base::matx< float, 4, NATIVE_T >& op);
 
-	using vectr< 3, NATIVE_T, vect< 3, NATIVE_T > >::mul;
+	using vectr< vect, 3, NATIVE_T >::mul;
 
 	// product of argument and row-major operator of R4; an extra element of argument assumed 1
 	vect& mulH(
 		const base::vect< float, 3, NATIVE_T >& src,
 		const base::matx< float, 4, NATIVE_T >& op);
 
-	using vectr< 3, NATIVE_T, vect< 3, NATIVE_T > >::mulH;
+	using vectr< vect, 3, NATIVE_T >::mulH;
 
 	// division of first by second argument
 	vect& div(
 		const base::vect< float, 3, NATIVE_T >& src0,
 		const base::vect< float, 3, NATIVE_T >& src1);
 
-	using vectr< 3, NATIVE_T, vect< 3, NATIVE_T > >::div;
+	using vectr< vect, 3, NATIVE_T >::div;
 
 	// reciprocal of argument
 	vect& rcp(
 		const base::vect< float, 3, NATIVE_T >& src);
 
-	using vectr< 3, NATIVE_T, vect< 3, NATIVE_T > >::rcp;
+	using vectr< vect, 3, NATIVE_T >::rcp;
 
 	// cross-product of this and argument
 	vect& crossr(
@@ -1184,7 +1182,7 @@ template < typename NATIVE_T >
 inline vect< 3, NATIVE_T >::vect(
 	const float (& src)[3],
 	const bool zero_first)
-: vectr< 3, NATIVE_T, vect< 3, NATIVE_T > >(src, zero_first)
+: vectr< vect, 3, NATIVE_T >(src, zero_first)
 {
 }
 
@@ -1219,13 +1217,15 @@ vect< 3, NATIVE_T >::add(
 	const base::vect< float, 3, NATIVE_T >& src0,
 	const base::vect< float, 3, NATIVE_T >& src1)
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return vectr< 3, NATIVE_T, vect< 3, NATIVE_T > >::add(src0, src1);
+	typedef typename vectr< vect, 3, NATIVE_T >::basetype basetype;
+
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return vectr< vect, 3, NATIVE_T >::add(src0, src1);
 
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #else
 	for (size_t i = 0; i < this->native_count; ++i)
@@ -1260,13 +1260,15 @@ vect< 3, NATIVE_T >::sub(
 	const base::vect< float, 3, NATIVE_T >& src0,
 	const base::vect< float, 3, NATIVE_T >& src1)
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return vectr< 3, NATIVE_T, vect< 3, NATIVE_T > >::sub(src0, src1);
+	typedef typename vectr< vect, 3, NATIVE_T >::basetype basetype;
+
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return vectr< vect, 3, NATIVE_T >::sub(src0, src1);
 
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #else
 	for (size_t i = 0; i < this->native_count; ++i)
@@ -1301,13 +1303,15 @@ vect< 3, NATIVE_T >::mul(
 	const base::vect< float, 3, NATIVE_T >& src,
 	const float c)
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return vectr< 3, NATIVE_T, vect< 3, NATIVE_T > >::mul(src, c);
+	typedef typename vectr< vect, 3, NATIVE_T >::basetype basetype;
+
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return vectr< vect, 3, NATIVE_T >::mul(src, c);
 
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 	this->setn(0, (NATIVE_T) { c, c } * src.getn(0));
@@ -1354,13 +1358,15 @@ vect< 3, NATIVE_T >::mul(
 	const base::vect< float, 3, NATIVE_T >& src0,
 	const base::vect< float, 3, NATIVE_T >& src1)
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return vectr< 3, NATIVE_T, vect< 3, NATIVE_T > >::mul(src0, src1);
+	typedef typename vectr< vect, 3, NATIVE_T >::basetype basetype;
+
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return vectr< vect, 3, NATIVE_T >::mul(src0, src1);
 
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #else
 	for (size_t i = 0; i < this->native_count; ++i)
@@ -1395,14 +1401,16 @@ vect< 3, NATIVE_T >::mul(
 	const base::vect< float, 3, NATIVE_T >& src,
 	const base::matx< float, 4, NATIVE_T >& op)
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return vectr< 3, NATIVE_T, vect< 3, NATIVE_T > >::mul(src, op);
+	typedef typename vectr< vect, 3, NATIVE_T >::basetype basetype;
+
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return vectr< vect, 3, NATIVE_T >::mul(src, op);
 
 #if SIMD_INTRINSICS == 0
 	const float e0 = src[0];
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 	this->setn(0, (NATIVE_T) { e0, e0 } * op[0].getn(0));
@@ -1427,7 +1435,7 @@ vect< 3, NATIVE_T >::mul(
 		const float ei = src[i];
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-		assert(0);
+		const compiler_assert< false > assert_false;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 		this->setn(0, this->getn(0) + (NATIVE_T) { ei, ei } * op[i].getn(0));
@@ -1483,13 +1491,15 @@ vect< 3, NATIVE_T >::mulH(
 	const base::vect< float, 3, NATIVE_T >& src,
 	const base::matx< float, 4, NATIVE_T >& op)
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return vectr< 3, NATIVE_T, vect< 3, NATIVE_T > >::mulH(src, op);
+	typedef typename vectr< vect, 3, NATIVE_T >::basetype basetype;
+
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return vectr< vect, 3, NATIVE_T >::mulH(src, op);
 
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #endif // SIMD_AUTOVECT
 
@@ -1501,7 +1511,7 @@ vect< 3, NATIVE_T >::mulH(
 		const float ei = src[i];
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-		assert(0);
+		const compiler_assert< false > assert_false;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 		this->setn(0, this->getn(0) + (NATIVE_T) { ei, ei } * op[i].getn(0));
@@ -1560,13 +1570,15 @@ inline vect< 3, NATIVE_T >&
 vect< 3, NATIVE_T >::rcp(
 	const base::vect< float, 3, NATIVE_T >& src)
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return vectr< 3, NATIVE_T, vect< 3, NATIVE_T > >::rcp(src);
+	typedef typename vectr< vect, 3, NATIVE_T >::basetype basetype;
+
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return vectr< vect, 3, NATIVE_T >::rcp(src);
 
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 	this->setn(0, (NATIVE_T) { 1.f, 1.f } / src.getn(0));
@@ -1637,13 +1649,15 @@ vect< 3, NATIVE_T >::div(
 	const base::vect< float, 3, NATIVE_T >& src0,
 	const base::vect< float, 3, NATIVE_T >& src1)
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return vectr< 3, NATIVE_T, vect< 3, NATIVE_T > >::div(src0, src1);
+	typedef typename vectr< vect, 3, NATIVE_T >::basetype basetype;
+
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return vectr< vect, 3, NATIVE_T >::div(src0, src1);
 
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #else
 	for (size_t i = 0; i < this->native_count; ++i)
@@ -1738,8 +1752,10 @@ inline float
 vect< 3, NATIVE_T >::dot(
 	const base::vect< float, 3, NATIVE_T >& src) const
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return vectr< 3, NATIVE_T, vect< 3, NATIVE_T > >::dot(src);
+	typedef typename vectr< vect, 3, NATIVE_T >::basetype basetype;
+
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return vectr< vect, 3, NATIVE_T >::dot(src);
 
 #if SIMD_INTRINSICS == SIMD_SSE
 #if defined(__SSE4_1__)
@@ -1747,16 +1763,16 @@ vect< 3, NATIVE_T >::dot(
 #endif
 #endif // SIMD_INTRINSICS
 
-	return vectr< 3, NATIVE_T, vect< 3, NATIVE_T > >::dot(src);
+	return vectr< vect, 3, NATIVE_T >::dot(src);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // class vect<4>
-// specialization of vect for DIMENSION_T = 4
+// specialization of vect for DIMENSION = 4
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template < typename NATIVE_T >
-class vect< 4, NATIVE_T > : public vectr< 4, NATIVE_T, vect< 4, NATIVE_T > >
+class vect< 4, NATIVE_T > : public vectr< vect< 4, NATIVE_T >, 4, NATIVE_T >
 {
 public:
 
@@ -1780,14 +1796,14 @@ public:
 		const base::vect< float, 4, NATIVE_T >& src0,
 		const base::vect< float, 4, NATIVE_T >& src1);
 
-	using vectr< 4, NATIVE_T, vect< 4, NATIVE_T > >::add;
+	using vectr< vect< 4, NATIVE_T >, 4, NATIVE_T >::add;
 
 	// difference between arguments
 	vect& sub(
 		const base::vect< float, 4, NATIVE_T >& src0,
 		const base::vect< float, 4, NATIVE_T >& src1);
 
-	using vectr< 4, NATIVE_T, vect< 4, NATIVE_T > >::sub;
+	using vectr< vect< 4, NATIVE_T >, 4, NATIVE_T >::sub;
 
 	// product of argument and scalar argument
 	vect& mul(
@@ -1804,27 +1820,27 @@ public:
 		const base::vect< float, 4, NATIVE_T >& src,
 		const base::matx< float, 4, NATIVE_T >& op);
 
-	using vectr< 4, NATIVE_T, vect< 4, NATIVE_T > >::mul;
+	using vectr< vect< 4, NATIVE_T >, 4, NATIVE_T >::mul;
 
 	// product of argument and row-major operator; last element of argument assumed 1
 	vect& mulH(
 		const base::vect< float, 4, NATIVE_T >& src,
 		const base::matx< float, 4, NATIVE_T >& op);
 
-	using vectr< 4, NATIVE_T, vect< 4, NATIVE_T > >::mulH;
+	using vectr< vect< 4, NATIVE_T >, 4, NATIVE_T >::mulH;
 
 	// division of first by second argument
 	vect& div(
 		const base::vect< float, 4, NATIVE_T >& src0,
 		const base::vect< float, 4, NATIVE_T >& src1);
 
-	using vectr< 4, NATIVE_T, vect< 4, NATIVE_T > >::div;
+	using vectr< vect< 4, NATIVE_T >, 4, NATIVE_T >::div;
 
 	// reciprocal of argument
 	vect& rcp(
 		const base::vect< float, 4, NATIVE_T >& src);
 
-	using vectr< 4, NATIVE_T, vect< 4, NATIVE_T > >::rcp;
+	using vectr< vect< 4, NATIVE_T >, 4, NATIVE_T >::rcp;
 
 	// cross-product of this and argument, taken as 3-component
 	vect& crossr(
@@ -1845,7 +1861,7 @@ template < typename NATIVE_T >
 inline vect< 4, NATIVE_T >::vect(
 	const float (& src)[4],
 	const bool zero_first)
-: vectr< 4, NATIVE_T, vect< 4, NATIVE_T > >(src, zero_first)
+: vectr< vect, 4, NATIVE_T >(src, zero_first)
 {
 }
 
@@ -1882,13 +1898,15 @@ vect< 4, NATIVE_T >::add(
 	const base::vect< float, 4, NATIVE_T >& src0,
 	const base::vect< float, 4, NATIVE_T >& src1)
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return vectr< 4, NATIVE_T, vect< 4, NATIVE_T > >::add(src0, src1);
+	typedef typename vectr< vect, 4, NATIVE_T >::basetype basetype;
+
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return vectr< vect, 4, NATIVE_T >::add(src0, src1);
 
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #else
 	for (size_t i = 0; i < this->native_count; ++i)
@@ -1923,13 +1941,15 @@ vect< 4, NATIVE_T >::sub(
 	const base::vect< float, 4, NATIVE_T >& src0,
 	const base::vect< float, 4, NATIVE_T >& src1)
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return vectr< 4, NATIVE_T, vect< 4, NATIVE_T > >::sub(src0, src1);
+	typedef typename vectr< vect, 4, NATIVE_T >::basetype basetype;
+
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return vectr< vect, 4, NATIVE_T >::sub(src0, src1);
 
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #else
 	for (size_t i = 0; i < this->native_count; ++i)
@@ -1964,13 +1984,15 @@ vect< 4, NATIVE_T >::mul(
 	const base::vect< float, 4, NATIVE_T >& src,
 	const float c)
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return vectr< 4, NATIVE_T, vect< 4, NATIVE_T > >::mul(src, c);
+	typedef typename vectr< vect, 4, NATIVE_T >::basetype basetype;
+
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return vectr< vect, 4, NATIVE_T >::mul(src, c);
 
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 	this->setn(0, (NATIVE_T) { c, c } * src.getn(0));
@@ -2017,13 +2039,15 @@ vect< 4, NATIVE_T >::mul(
 	const base::vect< float, 4, NATIVE_T >& src0,
 	const base::vect< float, 4, NATIVE_T >& src1)
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return vectr< 4, NATIVE_T, vect< 4, NATIVE_T > >::mul(src0, src1);
+	typedef typename vectr< vect, 4, NATIVE_T >::basetype basetype;
+
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return vectr< vect, 4, NATIVE_T >::mul(src0, src1);
 
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #else
 	for (size_t i = 0; i < this->native_count; ++i)
@@ -2058,14 +2082,16 @@ vect< 4, NATIVE_T >::mul(
 	const base::vect< float, 4, NATIVE_T >& src,
 	const base::matx< float, 4, NATIVE_T >& op)
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return vectr< 4, NATIVE_T, vect< 4, NATIVE_T > >::mul(src, op);
+	typedef typename vectr< vect, 4, NATIVE_T >::basetype basetype;
+
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return vectr< vect, 4, NATIVE_T >::mul(src, op);
 
 #if SIMD_INTRINSICS == 0
 	const float e0 = src[0];
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 	this->setn(0, (NATIVE_T) { e0, e0 } * op[0].getn(0));
@@ -2090,7 +2116,7 @@ vect< 4, NATIVE_T >::mul(
 		const float ei = src[i];
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-		assert(0);
+		const compiler_assert< false > assert_false;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 		this->setn(0, this->getn(0) + (NATIVE_T) { ei, ei } * op[i].getn(0));
@@ -2150,13 +2176,15 @@ vect< 4, NATIVE_T >::mulH(
 	const base::vect< float, 4, NATIVE_T >& src,
 	const base::matx< float, 4, NATIVE_T >& op)
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return vectr< 4, NATIVE_T, vect< 4, NATIVE_T > >::mulH(src, op);
+	typedef typename vectr< vect, 4, NATIVE_T >::basetype basetype;
+
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return vectr< vect, 4, NATIVE_T >::mulH(src, op);
 
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #endif // SIMD_AUTOVECT
 
@@ -2168,7 +2196,7 @@ vect< 4, NATIVE_T >::mulH(
 		const float ei = src[i];
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-		assert(0);
+		const compiler_assert< false > assert_false;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 		this->setn(0, this->getn(0) + (NATIVE_T) { ei, ei } * op[i].getn(0));
@@ -2227,13 +2255,15 @@ inline vect< 4, NATIVE_T >&
 vect< 4, NATIVE_T >::rcp(
 	const base::vect< float, 4, NATIVE_T >& src)
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return vectr< 4, NATIVE_T, vect< 4, NATIVE_T > >::rcp(src);
+	typedef typename vectr< vect, 4, NATIVE_T >::basetype basetype;
+
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return vectr< vect, 4, NATIVE_T >::rcp(src);
 
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 	this->setn(0, (NATIVE_T) { 1.f, 1.f } / src.getn(0));
@@ -2304,13 +2334,15 @@ vect< 4, NATIVE_T >::div(
 	const base::vect< float, 4, NATIVE_T >& src0,
 	const base::vect< float, 4, NATIVE_T >& src1)
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return vectr< 4, NATIVE_T, vect< 4, NATIVE_T > >::div(src0, src1);
+	typedef typename vectr< vect, 4, NATIVE_T >::basetype basetype;
+
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return vectr< vect, 4, NATIVE_T >::div(src0, src1);
 
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #else
 	for (size_t i = 0; i < this->native_count; ++i)
@@ -2384,9 +2416,9 @@ vect< 4, NATIVE_T >::cross(
 	const base::vect< float, 4, NATIVE_T >& src0,
 	const base::vect< float, 4, NATIVE_T >& src1)
 {
-	typedef typename vectr< 4, NATIVE_T, vect >::basetype basetype;
+	typedef typename vectr< vect, 4, NATIVE_T >::basetype basetype;
 
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
 	{
 		static_cast< basetype& >(*this) = scal::vect< 4, NATIVE_T >().cross(src0, src1);
 		return *this;
@@ -2395,7 +2427,7 @@ vect< 4, NATIVE_T >::cross(
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY || \
 	  SIMD_AUTOVECT == SIMD_4WAY || \
@@ -2449,8 +2481,10 @@ inline float
 vect< 4, NATIVE_T >::dot(
 	const base::vect< float, 4, NATIVE_T >& src) const
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return vectr< 4, NATIVE_T, vect< 4, NATIVE_T > >::dot(src);
+	typedef typename vectr< vect, 4, NATIVE_T >::basetype basetype;
+
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return vectr< vect, 4, NATIVE_T >::dot(src);
 
 #if SIMD_INTRINSICS == SIMD_SSE
 #if defined(__SSE4_1__)
@@ -2458,7 +2492,7 @@ vect< 4, NATIVE_T >::dot(
 #endif
 #endif // SIMD_INTRINSICS
 
-	return vectr< 4, NATIVE_T, vect< 4, NATIVE_T > >::dot(src);
+	return vectr< vect, 4, NATIVE_T >::dot(src);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2468,8 +2502,8 @@ vect< 4, NATIVE_T >::dot(
 // herein quaternions use an x, y, z, w vector layout, where the last component is the scalar part
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template < typename NATIVE_T >
-class hamilton : public vectr< 4, NATIVE_T, hamilton< NATIVE_T > >
+template < typename NATIVE_T = float >
+class hamilton : public vectr< hamilton< NATIVE_T >, 4, NATIVE_T >
 {
 public:
 
@@ -2510,7 +2544,7 @@ template < typename NATIVE_T >
 inline hamilton< NATIVE_T >::hamilton(
 	const float (& src)[4],
 	const bool zero_first)
-: vectr< 4, NATIVE_T, hamilton >(src, zero_first)
+: vectr< hamilton, 4, NATIVE_T >(src, zero_first)
 {
 }
 
@@ -2584,12 +2618,12 @@ hamilton< NATIVE_T >::qmull(
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
-class protomatx : public base::matx< float, DIMENSION_T, NATIVE_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T = float >
+class protomatx : public base::matx< float, DIMENSION, NATIVE_T >
 {
 public:
 
-	typedef base::matx< float, DIMENSION_T, NATIVE_T > basetype;
+	typedef base::matx< float, DIMENSION, NATIVE_T > basetype;
 	typedef SUBCLASS_T subclass;
 
 	protomatx()
@@ -2597,7 +2631,7 @@ public:
 	}
 
 	explicit protomatx(
-		const float (& src)[DIMENSION_T][DIMENSION_T]);
+		const float (& src)[DIMENSION][DIMENSION]);
 
 	operator SUBCLASS_T&();
 
@@ -2608,27 +2642,27 @@ public:
 
 	// transpose of argument
 	SUBCLASS_T& transpose(
-		const base::matx< float, DIMENSION_T, NATIVE_T >& src);
+		const base::matx< float, DIMENSION, NATIVE_T >& src);
 
 	// transpose of this
 	SUBCLASS_T& transpose();
 
 	// product of arguments
 	SUBCLASS_T& mul(
-		const base::matx< float, DIMENSION_T, NATIVE_T >& src0,
-		const base::matx< float, DIMENSION_T, NATIVE_T >& src1);
+		const base::matx< float, DIMENSION, NATIVE_T >& src0,
+		const base::matx< float, DIMENSION, NATIVE_T >& src1);
 
 	// product of this and argument
 	SUBCLASS_T& mulr(
-		const base::matx< float, DIMENSION_T, NATIVE_T >& src);
+		const base::matx< float, DIMENSION, NATIVE_T >& src);
 
 	// product of argument and this
 	SUBCLASS_T& mull(
-		const base::matx< float, DIMENSION_T, NATIVE_T >& src);
+		const base::matx< float, DIMENSION, NATIVE_T >& src);
 
 	// product of argument and scalar argument
 	SUBCLASS_T& mul(
-		const base::matx< float, DIMENSION_T, NATIVE_T >& src,
+		const base::matx< float, DIMENSION, NATIVE_T >& src,
 		const float c);
 
 	// product of this and scalar argument
@@ -2637,46 +2671,46 @@ public:
 };
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline
-protomatx< DIMENSION_T, NATIVE_T, SUBCLASS_T >::operator SUBCLASS_T&()
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::operator SUBCLASS_T&()
 {
 	return *static_cast< SUBCLASS_T* >(this);
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline
-protomatx< DIMENSION_T, NATIVE_T, SUBCLASS_T >::operator const SUBCLASS_T&() const
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::operator const SUBCLASS_T&() const
 {
 	return *static_cast< const SUBCLASS_T* >(this);
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
-protomatx< DIMENSION_T, NATIVE_T, SUBCLASS_T >::protomatx(
-	const float (& src)[DIMENSION_T][DIMENSION_T])
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::protomatx(
+	const float (& src)[DIMENSION][DIMENSION])
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
 
-	for (size_t i = 0; i < DIMENSION_T; ++i)
-		for (size_t j = 0; j < DIMENSION_T; ++j)
+	for (size_t i = 0; i < DIMENSION; ++i)
+		for (size_t j = 0; j < DIMENSION; ++j)
 			subthis->set(i, j, src[i][j]);
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protomatx< DIMENSION_T, NATIVE_T, SUBCLASS_T >::identity()
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::identity()
 {
-	for (size_t i = 0; i < DIMENSION_T; ++i)
+	for (size_t i = 0; i < DIMENSION; ++i)
 	{
 		for (size_t j = 0; j < i; ++j)
 			this->set(i, j, 0.f);
 
 		this->set(i, i, 1.f);
 
-		for (size_t j = i + 1; j < DIMENSION_T; ++j)
+		for (size_t j = i + 1; j < DIMENSION; ++j)
 			this->set(i, j, 0.f);
 	}
 
@@ -2684,80 +2718,80 @@ protomatx< DIMENSION_T, NATIVE_T, SUBCLASS_T >::identity()
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protomatx< DIMENSION_T, NATIVE_T, SUBCLASS_T >::transpose(
-	const base::matx< float, DIMENSION_T, NATIVE_T >& src)
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::transpose(
+	const base::matx< float, DIMENSION, NATIVE_T >& src)
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
 
-	for (size_t i = 0; i < DIMENSION_T; ++i)
-		for (size_t j = 0; j < DIMENSION_T; ++j)
+	for (size_t i = 0; i < DIMENSION; ++i)
+		for (size_t j = 0; j < DIMENSION; ++j)
 			subthis->set(j, i, src[i][j]);
 
 	return *this;
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protomatx< DIMENSION_T, NATIVE_T, SUBCLASS_T >::transpose()
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::transpose()
 {
 	return *this = SUBCLASS_T().transpose(*this);
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protomatx< DIMENSION_T, NATIVE_T, SUBCLASS_T >::mul(
-	const base::matx< float, DIMENSION_T, NATIVE_T >& src0,
-	const base::matx< float, DIMENSION_T, NATIVE_T >& src1)
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::mul(
+	const base::matx< float, DIMENSION, NATIVE_T >& src0,
+	const base::matx< float, DIMENSION, NATIVE_T >& src1)
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
 
-	for (size_t i = 0; i < DIMENSION_T; ++i)
-		subthis->set(i, vect< DIMENSION_T, NATIVE_T >().mul(src0[i], src1));
+	for (size_t i = 0; i < DIMENSION; ++i)
+		subthis->set(i, vect< DIMENSION, NATIVE_T >().mul(src0[i], src1));
 
 	return *this;
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protomatx< DIMENSION_T, NATIVE_T, SUBCLASS_T >::mulr(
-	const base::matx< float, DIMENSION_T, NATIVE_T >& src)
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::mulr(
+	const base::matx< float, DIMENSION, NATIVE_T >& src)
 {
 	return *this = SUBCLASS_T().mul(*this, src);
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protomatx< DIMENSION_T, NATIVE_T, SUBCLASS_T >::mull(
-	const base::matx< float, DIMENSION_T, NATIVE_T >& src)
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::mull(
+	const base::matx< float, DIMENSION, NATIVE_T >& src)
 {
 	return *this = SUBCLASS_T().mul(src, *this);
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protomatx< DIMENSION_T, NATIVE_T, SUBCLASS_T >::mul(
-	const base::matx< float, DIMENSION_T, NATIVE_T >& src,
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::mul(
+	const base::matx< float, DIMENSION, NATIVE_T >& src,
 	const float c)
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
 
-	for (size_t i = 0; i < DIMENSION_T; ++i)
-		subthis->set(i, vect< DIMENSION_T, NATIVE_T >().mul(src[i], c));
+	for (size_t i = 0; i < DIMENSION; ++i)
+		subthis->set(i, vect< DIMENSION, NATIVE_T >().mul(src[i], c));
 
 	return *this;
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protomatx< DIMENSION_T, NATIVE_T, SUBCLASS_T >::mul(
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::mul(
 	const float c)
 {
 	return *this = SUBCLASS_T().mul(*this, c);
@@ -2768,8 +2802,8 @@ protomatx< DIMENSION_T, NATIVE_T, SUBCLASS_T >::mul(
 // instantiatable, dimensionality-agnostic square matrix of floats
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template < size_t DIMENSION_T, typename NATIVE_T >
-class matx : public protomatx< DIMENSION_T, NATIVE_T, matx< DIMENSION_T, NATIVE_T > >
+template < size_t DIMENSION, typename NATIVE_T = float >
+class matx : public protomatx< matx< DIMENSION, NATIVE_T >, DIMENSION, NATIVE_T >
 {
 public:
 
@@ -2778,24 +2812,24 @@ public:
 	}
 
 	explicit matx(
-		const float (& src)[DIMENSION_T][DIMENSION_T]);
+		const float (& src)[DIMENSION][DIMENSION]);
 };
 
 
-template < size_t DIMENSION_T, typename NATIVE_T >
-inline matx< DIMENSION_T, NATIVE_T >::matx(
-	const float (& src)[DIMENSION_T][DIMENSION_T])
-: protomatx< DIMENSION_T, NATIVE_T, matx< DIMENSION_T, NATIVE_T > >(src)
+template < size_t DIMENSION, typename NATIVE_T >
+inline matx< DIMENSION, NATIVE_T >::matx(
+	const float (& src)[DIMENSION][DIMENSION])
+: protomatx< matx, DIMENSION, NATIVE_T >(src)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // class matx<3>
-// specialization of matx for DIMENSION_T = 3
+// specialization of matx for DIMENSION = 3
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template < typename NATIVE_T >
-class matx< 3, NATIVE_T > : public protomatx< 3, NATIVE_T, matx< 3, NATIVE_T > >
+class matx< 3, NATIVE_T > : public protomatx< matx< 3, NATIVE_T >, 3, NATIVE_T >
 {
 public:
 
@@ -2822,7 +2856,7 @@ public:
 template < typename NATIVE_T >
 inline matx< 3, NATIVE_T >::matx(
 	const float (& src)[3][3])
-: protomatx< 3, NATIVE_T, matx< 3, NATIVE_T > >(src)
+: protomatx< matx, 3, NATIVE_T >(src)
 {
 }
 
@@ -2869,13 +2903,15 @@ template < typename NATIVE_T >
 inline matx< 3, NATIVE_T >&
 matx< 3, NATIVE_T >::identity()
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return protomatx< 3, NATIVE_T, matx< 3, NATIVE_T > >::identity();
+	typedef typename protomatx< matx, 3, NATIVE_T >::basetype basetype;
+	
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return protomatx< matx, 3, NATIVE_T >::identity();
 
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 	this->setn(0, 0, (NATIVE_T) { 1.f, 0.f });
@@ -2935,11 +2971,11 @@ matx< 3, NATIVE_T >::identity()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // class matx<4>
-// specialization of matx for DIMENSION_T = 4
+// specialization of matx for DIMENSION = 4
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template < typename NATIVE_T >
-class matx< 4, NATIVE_T > : public protomatx< 4, NATIVE_T, matx< 4, NATIVE_T > >
+class matx< 4, NATIVE_T > : public protomatx< matx< 4, NATIVE_T >, 4, NATIVE_T >
 {
 public:
 
@@ -2966,7 +3002,7 @@ public:
 	matx& transpose(
 		const base::matx< float, 4, NATIVE_T >& src);
 
-	using protomatx< 4, NATIVE_T, matx< 4, NATIVE_T > >::transpose;
+	using protomatx< matx, 4, NATIVE_T >::transpose;
 
 	// inverse of this
 	matx& inverse();
@@ -2980,7 +3016,7 @@ public:
 template < typename NATIVE_T >
 inline matx< 4, NATIVE_T >::matx(
 	const float (& src)[4][4])
-: protomatx< 4, NATIVE_T, matx< 4, NATIVE_T > >(src)
+: protomatx< matx, 4, NATIVE_T >(src)
 {
 }
 
@@ -3044,13 +3080,15 @@ template < typename NATIVE_T >
 inline matx< 4, NATIVE_T >&
 matx< 4, NATIVE_T >::identity()
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return protomatx< 4, NATIVE_T, matx< 4, NATIVE_T > >::identity();
+	typedef typename protomatx< matx, 4, NATIVE_T >::basetype basetype;
+	
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return protomatx< matx, 4, NATIVE_T >::identity();
 
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 	this->setn(0, 0, (NATIVE_T) { 1.f, 0.f });
@@ -3123,19 +3161,21 @@ inline matx< 4, NATIVE_T >&
 matx< 4, NATIVE_T >::transpose(
 	const base::matx< float, 4, NATIVE_T >& src)
 {
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
-		return protomatx< 4, NATIVE_T, matx< 4, NATIVE_T > >::transpose(src);
+	typedef typename protomatx< matx, 4, NATIVE_T >::basetype basetype;
+	
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
+		return protomatx< matx, 4, NATIVE_T >::transpose(src);
 
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY || \
 	  SIMD_AUTOVECT == SIMD_4WAY || \
 	  SIMD_AUTOVECT == SIMD_8WAY || \
 	  SIMD_AUTOVECT == SIMD_16WAY
-	protomatx< 4, NATIVE_T, matx< 4, NATIVE_T > >::transpose(src);
+	protomatx< matx, 4, NATIVE_T >::transpose(src);
 
 #else
 #error unhandled SIMD_AUTOVECT target
@@ -3143,7 +3183,7 @@ matx< 4, NATIVE_T >::transpose(
 #endif // SIMD_AUTOVECT
 
 #elif SIMD_INTRINSICS == SIMD_ALTIVEC
-	protomatx< 4, NATIVE_T, matx< 4, NATIVE_T > >::transpose(src);
+	protomatx< matx, 4, NATIVE_T >::transpose(src);
 
 #elif SIMD_INTRINSICS == SIMD_SSE
 	const __m128 t0 = _mm_unpacklo_ps(src[0].getn(), src[1].getn());
@@ -3156,10 +3196,10 @@ matx< 4, NATIVE_T >::transpose(
 	this->setn(3, 0, _mm_movehl_ps(t3, t2));
 
 #elif SIMD_INTRINSICS == SIMD_MIC
-	protomatx< 4, NATIVE_T, matx< 4, NATIVE_T > >::transpose(src);
+	protomatx< matx, 4, NATIVE_T >::transpose(src);
 
 #elif SIMD_INTRINSICS == SIMD_NEON
-	protomatx< 4, NATIVE_T, matx< 4, NATIVE_T > >::transpose(src);
+	protomatx< matx, 4, NATIVE_T >::transpose(src);
 
 #else
 #error unhandled SIMD_INTRINSICS target
@@ -3175,9 +3215,9 @@ inline matx< 4, NATIVE_T >&
 matx< 4, NATIVE_T >::inverse(
 	const base::matx< float, 4, NATIVE_T >& src)
 {
-	typedef typename protomatx< 4, NATIVE_T, matx >::basetype basetype;
+	typedef typename protomatx< matx, 4, NATIVE_T >::basetype basetype;
 
-	if (sizeof(NATIVE_T) == sizeof(empty_struct))
+	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
 	{
 		static_cast< basetype& >(*this) = scal::matx< 4, NATIVE_T >().inverse(src);
 		return *this;
@@ -3186,7 +3226,7 @@ matx< 4, NATIVE_T >::inverse(
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	assert(0);
+	const compiler_assert< false > assert_false;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY || \
 	  SIMD_AUTOVECT == SIMD_4WAY || \
@@ -3305,7 +3345,7 @@ matx< 4, NATIVE_T >::inverse()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// final specialisations (finalisations)
+// final specializations (finalizations)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if SIMD_AUTOVECT == SIMD_4WAY
@@ -3393,18 +3433,18 @@ typedef matx< 3, __m512 > matx3;
 typedef matx< 4, __m512 > matx4;
 
 #else
-typedef ivect< 2, empty_struct > ivect2;
-typedef ivect< 3, empty_struct > ivect3;
-typedef ivect< 4, empty_struct > ivect4;
+typedef ivect< 2 > ivect2;
+typedef ivect< 3 > ivect3;
+typedef ivect< 4 > ivect4;
 
-typedef vect< 2, empty_struct > vect2;
-typedef vect< 3, empty_struct > vect3;
-typedef vect< 4, empty_struct > vect4;
+typedef vect< 2 > vect2;
+typedef vect< 3 > vect3;
+typedef vect< 4 > vect4;
 
-typedef hamilton< empty_struct > quat;
+typedef hamilton quat;
 
-typedef matx< 3, empty_struct > matx3;
-typedef matx< 4, empty_struct > matx4;
+typedef matx< 3 > matx3;
+typedef matx< 4 > matx4;
 
 #endif
 

@@ -3,40 +3,79 @@
 
 #include <cassert>
 
-namespace base
-{
+namespace base {
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
-class vect
-{
+template < bool >
+struct compile_assert;
+
+
+template <>
+struct compile_assert< true > {
+	compile_assert() {
+	}
+};
+
+template < typename SCALAR_T, size_t NATIVE_COUNT, typename NATIVE_T, bool = sizeof(SCALAR_T) == sizeof(NATIVE_T) >
+struct alt;
+
+template < typename SCALAR_T, size_t NATIVE_COUNT, typename NATIVE_T >
+struct alt< SCALAR_T, NATIVE_COUNT, NATIVE_T, true > {
+	static void scalar_mutator(
+		NATIVE_T (& n)[NATIVE_COUNT], const size_t i, const SCALAR_T c) {
+
+		n[i] = c;
+	}
+	static SCALAR_T scalar_accessor(
+		const NATIVE_T (& n)[NATIVE_COUNT], const size_t i) {
+
+		return n[i];
+	}
+};
+
+
+template < typename SCALAR_T, size_t NATIVE_COUNT, typename NATIVE_T >
+struct alt< SCALAR_T, NATIVE_COUNT, NATIVE_T, false > {
+	static void scalar_mutator(
+		NATIVE_T (& n)[NATIVE_COUNT], const size_t i, const SCALAR_T c) {
+
+		n[i / (sizeof(NATIVE_T) / sizeof(SCALAR_T))][i % (sizeof(NATIVE_T) / sizeof(SCALAR_T))] = c;
+	}
+	static SCALAR_T scalar_accessor(
+		const NATIVE_T (& n)[NATIVE_COUNT], const size_t i) {
+
+		return n[i / (sizeof(NATIVE_T) / sizeof(SCALAR_T))][i % (sizeof(NATIVE_T) / sizeof(SCALAR_T))];
+	}
+};
+
+
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T = SCALAR_T >
+class vect {
 public:
 
-	typedef SCALTYPE_T scaltype;
-	typedef NATIVE_T native;
+	typedef SCALAR_T scalar_t;
+	typedef NATIVE_T native_t;
 
-	enum
-	{
-		dimension = DIMENSION_T,
-		native_count = (sizeof(SCALTYPE_T) * DIMENSION_T + sizeof(NATIVE_T) - 1) / sizeof(NATIVE_T),
-		native_dimension = native_count * sizeof(NATIVE_T) / sizeof(SCALTYPE_T),
-		scalars_per_native = sizeof(NATIVE_T) / sizeof(SCALTYPE_T)
+	enum {
+		dimension = DIMENSION,
+		native_count = (sizeof(SCALAR_T) * DIMENSION + sizeof(NATIVE_T) - 1) / sizeof(NATIVE_T),
+		native_dimension = native_count * sizeof(NATIVE_T) / sizeof(SCALAR_T),
+		scalars_per_native = sizeof(NATIVE_T) / sizeof(SCALAR_T)
 	};
 
-	vect()
-	{
+	vect() {
 	}
 
 	// element mutator
 	void set(
 		const size_t i,
-		const SCALTYPE_T c);
+		const SCALAR_T c);
 
 	// element accessor
-	SCALTYPE_T get(
+	SCALAR_T get(
 		const size_t i) const;
 
 	// element accessor, array subscript
-	SCALTYPE_T operator [](
+	SCALAR_T operator [](
 		const size_t i) const;
 
 	bool operator ==(
@@ -62,67 +101,64 @@ public:
 
 protected:
 
-	// native element mutator
+	// native element mutator - can access all scalars in the native
+	// vector type, including those beyond the specified dimension
 	void set_native(
 		const size_t i,
-		const SCALTYPE_T c);
+		const SCALAR_T c);
 
 private:
-
 	NATIVE_T n[native_count];
 };
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline void
-vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >::set(
+vect< SCALAR_T, DIMENSION, NATIVE_T >::set(
 	const size_t i,
-	const SCALTYPE_T c)
+	const SCALAR_T c)
 {
 	assert(i < dimension);
-	assert(scalars_per_native == 1);
 
-	n[i] = c;
+	alt< scalar_t, native_count, native_t >::scalar_mutator(n, i, c);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline void
-vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >::set_native(
+vect< SCALAR_T, DIMENSION, NATIVE_T >::set_native(
 	const size_t i,
-	const SCALTYPE_T c)
+	const SCALAR_T c)
 {
 	assert(i < native_dimension);
-	assert(scalars_per_native == 1);
 
-	n[i] = c;
+	alt< scalar_t, native_count, native_t >::scalar_mutator(n, i, c);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
-inline SCALTYPE_T
-vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >::get(
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
+inline SCALAR_T
+vect< SCALAR_T, DIMENSION, NATIVE_T >::get(
 	const size_t i) const
 {
 	assert(i < dimension);
-	assert(scalars_per_native == 1);
 
-	return n[i];
+	return alt< scalar_t, native_count, native_t >::scalar_accessor(n, i);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
-inline SCALTYPE_T
-vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >::operator [](
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
+inline SCALAR_T
+vect< SCALAR_T, DIMENSION, NATIVE_T >::operator [](
 	const size_t i) const
 {
 	return this->get(i);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
-inline vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >&
-vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >::setn(
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
+inline vect< SCALAR_T, DIMENSION, NATIVE_T >&
+vect< SCALAR_T, DIMENSION, NATIVE_T >::setn(
 	const size_t i,
 	const NATIVE_T src)
 {
@@ -134,9 +170,9 @@ vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >::setn(
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline NATIVE_T
-vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >::getn(
+vect< SCALAR_T, DIMENSION, NATIVE_T >::getn(
 	const size_t i) const
 {
 	assert(i < native_count);
@@ -145,12 +181,12 @@ vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >::getn(
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline bool
-vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >::operator ==(
-	const vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src) const
+vect< SCALAR_T, DIMENSION, NATIVE_T >::operator ==(
+	const vect< SCALAR_T, DIMENSION, NATIVE_T >& src) const
 {
-	for (size_t i = 0; i < DIMENSION_T; ++i)
+	for (size_t i = 0; i < DIMENSION; ++i)
 		if (this->operator [](i) != src[i])
 			return false;
 
@@ -158,21 +194,21 @@ vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >::operator ==(
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline bool
-vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >::operator !=(
-	const vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src) const
+vect< SCALAR_T, DIMENSION, NATIVE_T >::operator !=(
+	const vect< SCALAR_T, DIMENSION, NATIVE_T >& src) const
 {
 	return !this->operator ==(src);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline bool
-vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >::operator >(
-	const vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src) const
+vect< SCALAR_T, DIMENSION, NATIVE_T >::operator >(
+	const vect< SCALAR_T, DIMENSION, NATIVE_T >& src) const
 {
-	for (size_t i = 0; i < DIMENSION_T; ++i)
+	for (size_t i = 0; i < DIMENSION; ++i)
 		if (this->operator [](i) <= src[i])
 			return false;
 
@@ -180,12 +216,12 @@ vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >::operator >(
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline bool
-vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >::operator >=(
-	const vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src) const
+vect< SCALAR_T, DIMENSION, NATIVE_T >::operator >=(
+	const vect< SCALAR_T, DIMENSION, NATIVE_T >& src) const
 {
-	for (size_t i = 0; i < DIMENSION_T; ++i)
+	for (size_t i = 0; i < DIMENSION; ++i)
 		if (this->operator [](i) < src[i])
 			return false;
 
@@ -193,44 +229,42 @@ vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >::operator >=(
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
-class matx
-{
-	vect< SCALTYPE_T, DIMENSION_T, NATIVE_T > m[DIMENSION_T];
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T = SCALAR_T >
+class matx {
+	vect< SCALAR_T, DIMENSION, NATIVE_T > m[DIMENSION];
 
 public:
 
-	typedef SCALTYPE_T scaltype;
-	typedef NATIVE_T native;
+	typedef SCALAR_T scalar_t;
+	typedef NATIVE_T native_t;
 
-	enum { dimension = DIMENSION_T };
+	enum { dimension = DIMENSION };
 
-	matx()
-	{
+	matx() {
 	}
 
 	// element mutator
 	void set(
 		const size_t i,
 		const size_t j,
-		const SCALTYPE_T c);
+		const SCALAR_T c);
 
 	// element accessor
-	SCALTYPE_T get(
+	SCALAR_T get(
 		const size_t i,
 		const size_t j) const;
 
 	// row mutator
 	void set(
 		const size_t i,
-		const vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& row);
+		const vect< SCALAR_T, DIMENSION, NATIVE_T >& row);
 
 	// row accessor
-	const vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& get(
+	const vect< SCALAR_T, DIMENSION, NATIVE_T >& get(
 		const size_t i) const;
 
 	// row accessor, array subscript
-	const vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& operator [](
+	const vect< SCALAR_T, DIMENSION, NATIVE_T >& operator [](
 		const size_t i) const;
 
 	bool operator ==(
@@ -252,12 +286,12 @@ public:
 };
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline void
-matx< SCALTYPE_T, DIMENSION_T, NATIVE_T >::set(
+matx< SCALAR_T, DIMENSION, NATIVE_T >::set(
 	const size_t i,
 	const size_t j,
-	const SCALTYPE_T c)
+	const SCALAR_T c)
 {
 	assert(i < dimension && j < dimension);
 
@@ -265,9 +299,9 @@ matx< SCALTYPE_T, DIMENSION_T, NATIVE_T >::set(
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
-inline SCALTYPE_T
-matx< SCALTYPE_T, DIMENSION_T, NATIVE_T >::get(
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
+inline SCALAR_T
+matx< SCALAR_T, DIMENSION, NATIVE_T >::get(
 	const size_t i,
 	const size_t j) const
 {
@@ -277,11 +311,11 @@ matx< SCALTYPE_T, DIMENSION_T, NATIVE_T >::get(
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline void
-matx< SCALTYPE_T, DIMENSION_T, NATIVE_T >::set(
+matx< SCALAR_T, DIMENSION, NATIVE_T >::set(
 	const size_t i,
-	const vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >& row)
+	const vect< SCALAR_T, DIMENSION, NATIVE_T >& row)
 {
 	assert(i < dimension);
 
@@ -289,9 +323,9 @@ matx< SCALTYPE_T, DIMENSION_T, NATIVE_T >::set(
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
-inline const vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >&
-matx< SCALTYPE_T, DIMENSION_T, NATIVE_T >::get(
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
+inline const vect< SCALAR_T, DIMENSION, NATIVE_T >&
+matx< SCALAR_T, DIMENSION, NATIVE_T >::get(
 	const size_t i) const
 {
 	assert(i < dimension);
@@ -300,19 +334,19 @@ matx< SCALTYPE_T, DIMENSION_T, NATIVE_T >::get(
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
-inline const vect< SCALTYPE_T, DIMENSION_T, NATIVE_T >&
-matx< SCALTYPE_T, DIMENSION_T, NATIVE_T >::operator [](
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
+inline const vect< SCALAR_T, DIMENSION, NATIVE_T >&
+matx< SCALAR_T, DIMENSION, NATIVE_T >::operator [](
 	const size_t i) const
 {
 	return this->get(i);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline bool
-matx< SCALTYPE_T, DIMENSION_T, NATIVE_T >::operator ==(
-	const matx< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src) const
+matx< SCALAR_T, DIMENSION, NATIVE_T >::operator ==(
+	const matx< SCALAR_T, DIMENSION, NATIVE_T >& src) const
 {
 	for (size_t i = 0; i < dimension; ++i)
 		if (this->operator [](i) != src[i])
@@ -322,31 +356,31 @@ matx< SCALTYPE_T, DIMENSION_T, NATIVE_T >::operator ==(
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline bool
-matx< SCALTYPE_T, DIMENSION_T, NATIVE_T >::operator !=(
-	const matx< SCALTYPE_T, DIMENSION_T, NATIVE_T >& src) const
+matx< SCALAR_T, DIMENSION, NATIVE_T >::operator !=(
+	const matx< SCALAR_T, DIMENSION, NATIVE_T >& src) const
 {
 	return !this->operator ==(src);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline void
-matx< SCALTYPE_T, DIMENSION_T, NATIVE_T >::setn(
+matx< SCALAR_T, DIMENSION, NATIVE_T >::setn(
 	const size_t i,
 	const size_t j,
 	const NATIVE_T n)
 {
-	assert(i < DIMENSION_T && j < m[i].native_count);
+	assert(i < DIMENSION && j < m[i].native_count);
 
 	m[i].setn(j, n);
 }
 
 
-template < typename SCALTYPE_T, size_t DIMENSION_T, typename NATIVE_T >
+template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline NATIVE_T
-matx< SCALTYPE_T, DIMENSION_T, NATIVE_T >::getn(
+matx< SCALAR_T, DIMENSION, NATIVE_T >::getn(
 	const size_t i,
 	const size_t j) const
 {

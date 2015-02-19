@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# clang version suffix, e.g. -3.4, -3.5, etc
+VERSION=-3.5
 BINARY=problem_4
 COMMON=../common
 SOURCE=(
@@ -18,6 +20,15 @@ CFLAGS=(
 	-I$COMMON
 	-fno-exceptions
 	-fno-rtti
+	-fdata-sections
+	-ffunction-sections
+# Enable some optimisations that may or may not be enabled by the global optimisation level of choice in this compiler version
+	-ffast-math
+	-fstrict-aliasing
+	-fstrict-overflow
+	-funroll-loops
+	-fomit-frame-pointer
+	-DNDEBUG
 # Instruct GL headers to properly define their prototypes
 	-DGLX_GLXEXT_PROTOTYPES
 	-DGLCOREARB_PROTOTYPES
@@ -35,9 +46,9 @@ CFLAGS=(
 # Use a linear distribution of directions across the hemisphere rather than proper angular such
 #	-DCHEAP_LINEAR_DISTRIBUTION=1
 # Number of workforce threads (normally equating the number of logical cores)
-	-DWORKFORCE_NUM_THREADS=8
+	-DWORKFORCE_NUM_THREADS=`lscpu | grep ^"CPU(s)" | sed s/^[^[:digit:]]*//`
 # Make workforce threads sticky (NUMA, etc)
-#	-DWORKFORCE_THREADS_STICKY=1
+	-DWORKFORCE_THREADS_STICKY=`lscpu | grep ^"NUMA node(s)" | echo "\`sed s/^[^[:digit:]]*//\` > 1" | bc`
 # Colorize the output of individual threads
 #	-DCOLORIZE_THREADS=1
 # Threading model 'division of labor' alternatives: 0, 1, 2
@@ -54,9 +65,9 @@ CFLAGS=(
 #	--analyze
 	-DCLANG_QUIRK_0001=1
 )
+# For non-native or tweaked architecture targets, comment out 'native' and uncomment the correct target architecture and flags
 TARGET=(
 	native
-# For non-native or tweaked architecture targets, uncomment the correct target architecture
 # AMD Bobcat:
 #	btver1
 # AMD Jaguar:
@@ -87,41 +98,36 @@ LFLAGS=(
 #	-lpng12
 )
 
-CFLAGS+=(
-# Enable some optimisations that may or may not be enabled by the global optimisation level of choice in this compiler version
-	-ffast-math
-	-fstrict-aliasing
-	-fstrict-overflow
-	-funroll-loops
-	-fomit-frame-pointer
-	-O3
-	-DNDEBUG
-)
-
-SOURCE_COUNT=${#SOURCE[@]}
-
-for (( i=0; i < $SOURCE_COUNT; i++ )); do
-	BUILD_CMD="clang++-3.5 -c -emit-llvm "${CFLAGS[@]}" -march="${TARGET[0]}" -mtune="${TARGET[@]}" "${SOURCE[$i]}
-	echo $BUILD_CMD
-	$BUILD_CMD
-done
-
 BITCODE=( "${SOURCE[@]##*/}" )
 BITCODE=( "${BITCODE[@]%.cpp}" )
 BITCODE=( "${BITCODE[@]/%/.bc}" )
 
-LINK_LMD="llvm-link-3.5 -o _"${BINARY}".bc "${BITCODE[@]}
+SOURCE_COUNT=${#SOURCE[@]}
+
+for (( i=0; i < $SOURCE_COUNT; i++ )); do
+	BUILD_CMD="clang++"${VERSION}" -c -flto -emit-llvm -O3 "${CFLAGS[@]}" -march="${TARGET[@]}" "${SOURCE[$i]}" -o "${BITCODE[$i]}
+	echo $BUILD_CMD
+	$BUILD_CMD
+done
+
+LINK_LMD="llvm-link"${VERSION}" -o _"${BINARY}".bc "${BITCODE[@]}
 echo $LINK_LMD
 $LINK_LMD
 
-# OPT_CMD="opt-3.5 -filetype=asm -data-sections -function-sections -O3 -enable-unsafe-fp-math -fp-contract=fast -enable-no-infs-fp-math -enable-no-nans-fp-math -enable-misched -mcpu="${TARGET[0]}" _"${BINARY}".bc -o=__"${BINARY}".bc"
-# echo $OPT_CMD
-# $OPT_CMD
+if [[ ${TARGET[0]} == "native" ]]; then
+	LLC_TARGET=`llc${VERSION} --version | grep "Host CPU:" | sed s/^[[:space:]]*"Host CPU:"[[:space:]]*//`
+else
+	LLC_TARGET=${TARGET[0]}
+fi
 
-BUILD_LMD="llc-3.5 -filetype=obj -data-sections -function-sections -O=3 -enable-unsafe-fp-math -fp-contract=fast -enable-no-infs-fp-math -enable-no-nans-fp-math -enable-misched -mcpu="${TARGET[0]}" _"${BINARY}".bc"
+OPT_LMD="opt"${VERSION}" -filetype=asm -O3 -enable-unsafe-fp-math -fp-contract=fast -enable-no-infs-fp-math -enable-no-nans-fp-math -enable-misched -mcpu="${LLC_TARGET}" _"${BINARY}".bc -o=__"${BINARY}".bc"
+echo $OPT_LMD
+$OPT_LMD
+
+BUILD_LMD="llc"${VERSION}" -filetype=obj -O=3 -enable-unsafe-fp-math -fp-contract=fast -enable-no-infs-fp-math -enable-no-nans-fp-math -enable-misched -mcpu="${LLC_TARGET}" __"${BINARY}".bc"
 echo $BUILD_LMD
 $BUILD_LMD
 
-LINK_CMD="clang++-3.5 -o "$BINARY" "${LFLAGS[@]}" _"${BINARY}".o -Wl,--gc-sections"
+LINK_CMD="clang++"${VERSION}" -o "$BINARY" "${LFLAGS[@]}" __"${BINARY}".o -Wl,--gc-sections"
 echo $LINK_CMD
 $LINK_CMD
