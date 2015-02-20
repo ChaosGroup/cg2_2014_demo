@@ -3391,9 +3391,9 @@ typedef matx< 3, vector float > matx3;
 typedef matx< 4, vector float > matx4;
 
 #elif SIMD_INTRINSICS == SIMD_SSE
-typedef ivect< 2, __m128i > ivect2;
-typedef ivect< 3, __m128i > ivect3;
-typedef ivect< 4, __m128i > ivect4;
+typedef ivect< 2, __attribute__ ((vector_size(4 * sizeof(int32_t)))) int32_t > ivect2;
+typedef ivect< 3, __attribute__ ((vector_size(4 * sizeof(int32_t)))) int32_t > ivect3;
+typedef ivect< 4, __attribute__ ((vector_size(4 * sizeof(int32_t)))) int32_t > ivect4;
 
 typedef vect< 2, __m128 > vect2;
 typedef vect< 3, __m128 > vect3;
