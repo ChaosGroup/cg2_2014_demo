@@ -1796,14 +1796,14 @@ public:
 		const base::vect< float, 4, NATIVE_T >& src0,
 		const base::vect< float, 4, NATIVE_T >& src1);
 
-	using vectr< vect< 4, NATIVE_T >, 4, NATIVE_T >::add;
+	using vectr< vect, 4, NATIVE_T >::add;
 
 	// difference between arguments
 	vect& sub(
 		const base::vect< float, 4, NATIVE_T >& src0,
 		const base::vect< float, 4, NATIVE_T >& src1);
 
-	using vectr< vect< 4, NATIVE_T >, 4, NATIVE_T >::sub;
+	using vectr< vect, 4, NATIVE_T >::sub;
 
 	// product of argument and scalar argument
 	vect& mul(
@@ -1820,27 +1820,27 @@ public:
 		const base::vect< float, 4, NATIVE_T >& src,
 		const base::matx< float, 4, NATIVE_T >& op);
 
-	using vectr< vect< 4, NATIVE_T >, 4, NATIVE_T >::mul;
+	using vectr< vect, 4, NATIVE_T >::mul;
 
 	// product of argument and row-major operator; last element of argument assumed 1
 	vect& mulH(
 		const base::vect< float, 4, NATIVE_T >& src,
 		const base::matx< float, 4, NATIVE_T >& op);
 
-	using vectr< vect< 4, NATIVE_T >, 4, NATIVE_T >::mulH;
+	using vectr< vect, 4, NATIVE_T >::mulH;
 
 	// division of first by second argument
 	vect& div(
 		const base::vect< float, 4, NATIVE_T >& src0,
 		const base::vect< float, 4, NATIVE_T >& src1);
 
-	using vectr< vect< 4, NATIVE_T >, 4, NATIVE_T >::div;
+	using vectr< vect, 4, NATIVE_T >::div;
 
 	// reciprocal of argument
 	vect& rcp(
 		const base::vect< float, 4, NATIVE_T >& src);
 
-	using vectr< vect< 4, NATIVE_T >, 4, NATIVE_T >::rcp;
+	using vectr< vect, 4, NATIVE_T >::rcp;
 
 	// cross-product of this and argument, taken as 3-component
 	vect& crossr(

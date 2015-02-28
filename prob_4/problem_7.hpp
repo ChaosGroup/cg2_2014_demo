@@ -1,5 +1,5 @@
-#ifndef prob_4_H__
-#define prob_4_H__
+#ifndef prob_7_H__
+#define prob_7_H__
 
 #if __AVX__ != 0
 	#include <immintrin.h>
@@ -15,6 +15,7 @@
 #include <limits>
 #include "vectsimd_sse.hpp"
 #include "array.hpp"
+#include "array_lite.hpp"
 #include "scoped.hpp"
 
 template < bool >
@@ -1043,10 +1044,11 @@ public:
 		return m_count[index];
 	}
 
+	template < size_t T, size_t U >
 	bool
 	add(
 		const size_t index,
-		Array< Voxel >& payload,
+		ArrayLite< Voxel, T, U >& payload,
 		const Voxel& item)
 	{
 		assert(capacity > index);
@@ -1077,10 +1079,11 @@ public:
 		return _mm_cmpeq_epi16(_mm_set1_epi16(0), reinterpret_cast< const __m128i* >(this)[1]);
 	}
 
+	template < size_t T, size_t U >
 	void
 	compact(
 		size_t& cursor,
-		Array< Voxel >& payload)
+		ArrayLite< Voxel, T, U >& payload)
 	{
 		// avoid paired elements crossing cachelines - force cursor to start at even positions only
 		cursor = cursor + 1 & size_t(-2);
@@ -1172,16 +1175,42 @@ struct HitInfo
 };
 
 //
-// A sparse regular octree
+// A sparse regular octree - pointer-less version
 //
+
+enum {
+	octree_interior_offset = 64 - sizeof(Octet),
+	octree_interior_sizeof = octree_interior_count * sizeof(Octet),
+
+	octree_leaf_offset = octree_interior_offset + octree_interior_sizeof,
+	octree_leaf_sizeof = octree_leaf_count * sizeof(Leaf),
+
+	octree_payload_offset = octree_leaf_offset + octree_leaf_sizeof,
+	octree_payload_sizeof = octree_payload_count * sizeof(Voxel)
+};
+
+struct TimesliceMimic // mimics the layout of Timeslice
+{
+	BBox m_root_bbox;
+	ArrayLite< Octet, octree_interior_count, 0 > m_interior;
+	ArrayLite< Leaf, octree_leaf_count, 0 >      m_leaf;
+	ArrayLite< Voxel, octree_payload_count, 0 >  m_payload;
+};
+
+static const compile_assert< sizeof(TimesliceMimic) == octree_interior_offset > assert_sizeof_timeslicemimic;
 
 class Timeslice
 {
-	BBox             m_root_bbox;
-	Octet            m_root;
-	Array< Octet >   m_interior;
-	Array< Leaf >    m_leaf;
-	Array< Voxel >   m_payload;
+	enum {
+		octree_interior_relative_offset = octree_interior_offset - offsetof(TimesliceMimic, m_interior),
+		octree_leaf_relative_offset     = octree_leaf_offset - offsetof(TimesliceMimic, m_leaf),
+		octree_payload_relative_offset  = octree_payload_offset - offsetof(TimesliceMimic, m_payload)
+	};
+
+	BBox m_root_bbox;
+	ArrayLite< Octet, octree_interior_count, octree_interior_relative_offset > m_interior;
+	ArrayLite< Leaf, octree_leaf_count, octree_leaf_relative_offset >          m_leaf;
+	ArrayLite< Voxel, octree_payload_count, octree_payload_relative_offset >   m_payload;
 
 	// following data members are thread-local and valid only for the duration of a traversal
 	static __thread const Ray* m_ray;
@@ -1284,6 +1313,12 @@ public:
 		HitInfo& hit) const;
 
 #endif // CLANG_QUIRK_0001
+};
+
+static const compile_assert< sizeof(Timeslice) == sizeof(TimesliceMimic) > assert_sizeof_timeslice;
+
+class __attribute__ ((aligned(4096))) TimesliceBalloon : public Timeslice {
+	int8_t air[octree_payload_offset + octree_payload_sizeof - sizeof(Timeslice)];
 };
 
 #include "octet_intersect_wide.hpp"
@@ -1788,7 +1823,7 @@ Timeslice::traverse(
 	m_hit = &hit;
 
 	return traverse< octree_level_root >(
-		m_root,
+		m_interior.getElement(0),
 		m_root_bbox);
 }
 
@@ -1809,7 +1844,7 @@ Timeslice::traverse_lite(
 	m_hit = &hit;
 
 	return traverse_lite< octree_level_root >(
-		m_root,
+		m_interior.getElement(0),
 		m_root_bbox);
 }
 
@@ -1830,10 +1865,10 @@ Timeslice::traverse_litest(
 	m_hit = &hit;
 
 	return traverse_litest< octree_level_root >(
-		m_root,
+		m_interior.getElement(0),
 		m_root_bbox);
 }
 
 #endif // CLANG_QUIRK_0001
 
-#endif // prob_4_H__
+#endif // prob_7_H__

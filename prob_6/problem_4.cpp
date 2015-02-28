@@ -365,7 +365,7 @@ Timeslice::set_payload_array(
 	if (!m_leaf.setCapacity(octree_leaf_count))
 		return false;
 
-	if (!m_payload.setCapacity(octree_cell_count * cell_capacity))
+	if (!m_payload.setCapacity(octree_payload_count))
 		return false;
 
 	// feed payload item by item to the tree, building up the tree in the process

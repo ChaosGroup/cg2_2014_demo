@@ -5,7 +5,7 @@
 #include "array.hpp"
 #include "isfinite.hpp"
 #include "stream.hpp"
-#include "problem_4.hpp"
+#include "problem_7.hpp"
 
 // verify iostream-free status
 #if _GLIBCXX_IOSTREAM
@@ -336,7 +336,6 @@ Timeslice::set_payload_array(
 	const Array< Voxel >& payload)
 {
 	m_root_bbox = BBox();
-	m_root = Octet();
 
 	const size_t item_count = payload.getCount();
 
@@ -359,21 +358,18 @@ Timeslice::set_payload_array(
 	if (!m_root_bbox.is_valid())
 		return false;
 
-	if (!m_interior.setCapacity(octree_interior_count))
-		return false;
+	m_interior.resetCount();
+	m_interior.addElement(); // root octet
 
-	if (!m_leaf.setCapacity(octree_leaf_count))
-		return false;
-
-	if (!m_payload.setCapacity(octree_payload_count))
-		return false;
+	m_leaf.resetCount();
+	m_payload.resetCount();
 
 	// feed payload item by item to the tree, building up the tree in the process
 	for (size_t i = 0; i < item_count; ++i)
 	{
 		const Voxel item = Voxel(payload.getElement(i).get_bbox(), i);
 
-		if (!add_payload< 0 >(m_root, m_root_bbox, item))
+		if (!add_payload< 0 >(m_interior.getMutable(0), m_root_bbox, item))
 			return false;
 	}
 
@@ -409,7 +405,7 @@ Timeslice::traverse(
 	m_hit = &hit;
 
 	return traverse< octree_level_root >(
-		m_root,
+		m_interior.getElement(0),
 		m_root_bbox);
 }
 
@@ -429,7 +425,7 @@ Timeslice::traverse_lite(
 	m_hit = &hit;
 
 	return traverse_lite< octree_level_root >(
-		m_root,
+		m_interior.getElement(0),
 		m_root_bbox);
 }
 
@@ -449,7 +445,7 @@ Timeslice::traverse_litest(
 	m_hit = &hit;
 
 	return traverse_litest< octree_level_root >(
-		m_root,
+		m_interior.getElement(0),
 		m_root_bbox);
 }
 

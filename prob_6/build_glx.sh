@@ -8,7 +8,7 @@ SOURCE=(
 	$COMMON/util_gl.cpp
 	$COMMON/prim_rgb_view.cpp
 	$COMMON/get_file_size.cpp
-	problem_4.cpp
+	problem_7.cpp
 	main.cpp
 )
 CFLAGS=(

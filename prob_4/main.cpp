@@ -14,7 +14,8 @@
 #include "stream.hpp"
 #include "vectsimd_sse.hpp"
 #include "prim_rgb_view.hpp"
-#include "problem_4.hpp"
+#include "array.hpp"
+#include "problem_7.hpp"
 
 // verify iostream-free status
 #if _GLIBCXX_IOSTREAM
@@ -1387,14 +1388,14 @@ int main(
 
 	glEnable(GL_CULL_FACE);
 
-	const testbed::scoped_ptr< uint8_t[4], generic_free > framebuffer(
+	const testbed::scoped_ptr< uint8_t[4], generic_free > unaligned_fb(
 		reinterpret_cast< uint8_t(*)[4] >(malloc(w * h * sizeof(uint8_t[4]) + 63)));
 
 	// get that buffer cacheline aligned
-	uint8_t (* const aligned_framebuffer)[4] = reinterpret_cast< uint8_t(*)[4] >(uintptr_t(framebuffer()) + uintptr_t(63) & ~uintptr_t(63));
-	memset(aligned_framebuffer, 0, w * h * sizeof(*aligned_framebuffer));
+	uint8_t (* const framebuffer)[4] = reinterpret_cast< uint8_t(*)[4] >(uintptr_t(unaligned_fb()) + uintptr_t(63) & ~uintptr_t(63));
+	memset(framebuffer, 0, w * h * sizeof(*framebuffer));
 
-	workforce_t workforce(aligned_framebuffer, w, h);
+	workforce_t workforce(framebuffer, w, h);
 
 	if (!workforce.is_successfully_init())
 	{
@@ -1418,8 +1419,18 @@ int main(
 		return -1;
 	}
 
+#if defined(prob_4_H__)
 	Timeslice ts;
 
+#elif defined(prob_7_H__)
+	const testbed::scoped_ptr< TimesliceBalloon, generic_free > unaligned_ts(
+		reinterpret_cast< TimesliceBalloon* >(malloc(sizeof(TimesliceBalloon) + 4095)));
+	Timeslice& ts = *reinterpret_cast< TimesliceBalloon* >(uintptr_t(unaligned_ts()) + uintptr_t(4095) & ~uintptr_t(4095));
+
+#else
+	#error prob_4_H__ or prob_7_H__ required
+
+#endif
 	GLuint input = 0;
 	unsigned nframes = 0;
 	const uint64_t t0 = timer_nsec();
@@ -1499,11 +1510,11 @@ int main(
 		workgroup_cursor = 0;
 
 #endif
-		compute_arg carg(0, nframes, cam, ts, aligned_framebuffer, w, h);
+		compute_arg carg(0, nframes, cam, ts, framebuffer, w, h);
 		compute(&carg);
 
 #if VISUALIZE != 0
-		testbed::rgbv::render(aligned_framebuffer);
+		testbed::rgbv::render(framebuffer);
 		testbed::swapBuffers();
 
 #endif

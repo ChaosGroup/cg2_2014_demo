@@ -1,8 +1,8 @@
 #ifndef octet_intersect_wide_H__
 #define octet_intersect_wide_H__
 
-#ifndef prob_4_H__
-	#error prob_4_H__ required
+#if !defined(prob_4_H__) && !defined(prob_7_H__)
+	#error prob_4_H__ or prob_7_H__ required
 #endif
 
 inline size_t

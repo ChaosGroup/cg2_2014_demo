@@ -14,11 +14,11 @@ namespace simd
 // type- and dimensionality-agnostic vector; provides seamless downcasting and a basic set of vector
 // ops; subclass as:
 //
-//		class myVect : public protovect< myScalarType, myDimension, myNative, myVect >
+//		class myVect : public protovect< myVect, myScalarType, myDimension, myNative >
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 class protovect : public base::vect< SCALAR_T, DIMENSION, NATIVE_T >
 {
 public:
@@ -138,24 +138,24 @@ public:
 };
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::operator SUBCLASS_T&()
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::operator SUBCLASS_T&()
 {
 	return *static_cast< SUBCLASS_T* >(this);
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::operator const SUBCLASS_T&() const
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::operator const SUBCLASS_T&() const
 {
 	return *static_cast< const SUBCLASS_T* >(this);
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
-inline protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::protovect(
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
+inline protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::protovect(
 	const SCALAR_T (& src)[DIMENSION],
 	const bool zero_first)
 {
@@ -177,9 +177,9 @@ inline protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::protovect(
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::mul(
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::mul(
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src,
 	const SCALAR_T c)
 {
@@ -192,18 +192,18 @@ protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::mul(
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::mul(
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::mul(
 	const SCALAR_T c)
 {
 	return *this = SUBCLASS_T().mul(*this, c);
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::negate(
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::negate(
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src)
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
@@ -215,17 +215,17 @@ protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::negate(
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::negate()
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::negate()
 {
 	return *this = SUBCLASS_T().negate(*this);
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::add(
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::add(
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1)
 {
@@ -238,18 +238,18 @@ protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::add(
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::add(
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::add(
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src)
 {
 	return *this = SUBCLASS_T().add(*this, src);
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::sub(
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::sub(
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1)
 {
@@ -262,27 +262,27 @@ protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::sub(
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::subr(
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::subr(
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src)
 {
 	return *this = SUBCLASS_T().sub(*this, src);
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::subl(
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::subl(
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src)
 {
 	return *this = SUBCLASS_T().sub(src, *this);
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::mul(
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::mul(
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1)
 {
@@ -295,18 +295,18 @@ protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::mul(
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::mul(
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::mul(
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src)
 {
 	return *this = SUBCLASS_T().mul(*this, src);
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::mad(
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::mad(
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1,
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src2)
@@ -320,9 +320,9 @@ protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::mad(
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::mad(
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::mad(
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1)
 {
@@ -330,9 +330,9 @@ protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::mad(
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::mad(
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::mad(
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
 	const SCALAR_T c,
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1)
@@ -346,9 +346,9 @@ protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::mad(
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::mad(
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::mad(
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src,
 	const SCALAR_T c)
 {
@@ -356,9 +356,9 @@ protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::mad(
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::div(
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::div(
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1)
 {
@@ -371,27 +371,27 @@ protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::div(
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::divr(
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::divr(
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src)
 {
 	return *this = SUBCLASS_T().div(*this, src);
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::divl(
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::divl(
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src)
 {
 	return *this = SUBCLASS_T().div(src, *this);
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::wsum(
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::wsum(
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src0,
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src1,
 	const SCALAR_T factor0,
@@ -406,9 +406,9 @@ protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::wsum(
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::wsum(
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::wsum(
 	const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src,
 	const SCALAR_T factor0,
 	const SCALAR_T factor1)
@@ -417,9 +417,9 @@ protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::wsum(
 }
 
 
-template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::zero()
+protovect< SUBCLASS_T, SCALAR_T, DIMENSION, NATIVE_T >::zero()
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
 
@@ -437,7 +437,7 @@ protovect< SCALAR_T, DIMENSION, NATIVE_T, SUBCLASS_T >::zero()
 
 template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 class vect_generic : public protovect<
-	SCALAR_T, DIMENSION, NATIVE_T, vect_generic< SCALAR_T, DIMENSION, NATIVE_T > >
+	vect_generic< SCALAR_T, DIMENSION, NATIVE_T >, SCALAR_T, DIMENSION, NATIVE_T >
 {
 public:
 
@@ -455,7 +455,7 @@ template < typename SCALAR_T, size_t DIMENSION, typename NATIVE_T >
 inline vect_generic< SCALAR_T, DIMENSION, NATIVE_T >::vect_generic(
 	const SCALAR_T (& src)[DIMENSION],
 	const bool zero_first)
-: protovect< SCALAR_T, DIMENSION, NATIVE_T, vect_generic< SCALAR_T, DIMENSION, NATIVE_T > >(src, zero_first)
+: protovect< vect_generic, SCALAR_T, DIMENSION, NATIVE_T >(src, zero_first)
 {
 }
 
@@ -464,8 +464,8 @@ inline vect_generic< SCALAR_T, DIMENSION, NATIVE_T >::vect_generic(
 // integer-based dimensionality-agnostic vector; hosts integer-only functionality
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
-class vectz : public protovect< int32_t, DIMENSION, NATIVE_T, SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
+class vectz : public protovect< SUBCLASS_T, int32_t, DIMENSION, NATIVE_T >
 {
 public:
 
@@ -483,24 +483,24 @@ public:
 };
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
-inline vectz< DIMENSION, NATIVE_T, SUBCLASS_T >::vectz(
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
+inline vectz< SUBCLASS_T, DIMENSION, NATIVE_T >::vectz(
 	const int (& src)[DIMENSION],
 	const bool zero_first)
-: protovect< int32_t, DIMENSION, NATIVE_T, SUBCLASS_T >(src, zero_first)
+: protovect< SUBCLASS_T, int32_t, DIMENSION, NATIVE_T >(src, zero_first)
 {
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
-inline vectz< DIMENSION, NATIVE_T, SUBCLASS_T >::operator SUBCLASS_T&()
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
+inline vectz< SUBCLASS_T, DIMENSION, NATIVE_T >::operator SUBCLASS_T&()
 {
 	return *static_cast< SUBCLASS_T* >(this);
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
-inline vectz< DIMENSION, NATIVE_T, SUBCLASS_T >::operator const SUBCLASS_T&() const
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
+inline vectz< SUBCLASS_T, DIMENSION, NATIVE_T >::operator const SUBCLASS_T&() const
 {
 	return *static_cast< const SUBCLASS_T* >(this);
 }
@@ -511,7 +511,7 @@ inline vectz< DIMENSION, NATIVE_T, SUBCLASS_T >::operator const SUBCLASS_T&() co
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template < size_t DIMENSION, typename NATIVE_T >
-class ivect : public vectz< DIMENSION, NATIVE_T, ivect< DIMENSION, NATIVE_T > >
+class ivect : public vectz< ivect< DIMENSION, NATIVE_T >, DIMENSION, NATIVE_T >
 {
 public:
 
@@ -529,7 +529,7 @@ template < size_t DIMENSION, typename NATIVE_T >
 inline ivect< DIMENSION, NATIVE_T >::ivect(
 	const int (&src)[DIMENSION],
 	const bool zero_first)
-: vectz< DIMENSION, NATIVE_T, ivect< DIMENSION, NATIVE_T > >(src, zero_first)
+: vectz< ivect, DIMENSION, NATIVE_T >(src, zero_first)
 {
 }
 
@@ -539,7 +539,7 @@ inline ivect< DIMENSION, NATIVE_T >::ivect(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <>
-class ivect< 2, __m128i > : public vectz< 2, __m128i, ivect< 2, __m128i > >
+class ivect< 2, __m128i > : public vectz< ivect< 2, __m128i >, 2, __m128i >
 {
 public:
 
@@ -561,7 +561,7 @@ public:
 inline ivect< 2, __m128i >::ivect(
 	const int (& src)[2],
 	const bool zero_first)
-: vectz< 2, __m128i, ivect< 2, __m128i > >(src, zero_first)
+: vectz< ivect, 2, __m128i >(src, zero_first)
 {
 }
 
@@ -592,7 +592,7 @@ inline ivect< 2, __m128i >::ivect(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <>
-class ivect< 3, __m128i > : public vectz< 3, __m128i, ivect< 3, __m128i > >
+class ivect< 3, __m128i > : public vectz< ivect< 3, __m128i >, 3, __m128i >
 {
 public:
 
@@ -615,7 +615,7 @@ public:
 inline ivect< 3, __m128i >::ivect(
 	const int (& src)[3],
 	const bool zero_first)
-: vectz< 3, __m128i, ivect< 3, __m128i > >(src, zero_first)
+: vectz< ivect, 3, __m128i >(src, zero_first)
 {
 }
 
@@ -648,7 +648,7 @@ inline ivect< 3, __m128i >::ivect(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <>
-class ivect< 4, __m128i > : public vectz< 4, __m128i, ivect< 4, __m128i > >
+class ivect< 4, __m128i > : public vectz< ivect< 4, __m128i >, 4, __m128i >
 {
 public:
 
@@ -672,7 +672,7 @@ public:
 inline ivect< 4, __m128i >::ivect(
 	const int (& src)[4],
 	const bool zero_first)
-: vectz< 4, __m128i, ivect< 4, __m128i > >(src, zero_first)
+: vectz< ivect, 4, __m128i >(src, zero_first)
 {
 }
 
@@ -695,8 +695,8 @@ inline ivect< 4, __m128i >::ivect(
 // float-based dimensionality-agnostic vector; hosts float-only functionality
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
-class vectr : public protovect< float, DIMENSION, NATIVE_T, SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
+class vectr : public protovect< SUBCLASS_T, float, DIMENSION, NATIVE_T >
 {
 public:
 
@@ -745,7 +745,7 @@ public:
 	SUBCLASS_T& mul(
 		const base::matx< float, DIMENSION, NATIVE_T >& op);
 
-	using protovect< float, DIMENSION, NATIVE_T, SUBCLASS_T >::mul;
+	using protovect< SUBCLASS_T, float, DIMENSION, NATIVE_T >::mul;
 
 	// product of argument and row-major matrix operator; last element of argument assumed 1
 	SUBCLASS_T& mulH(
@@ -758,32 +758,32 @@ public:
 };
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
-inline vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::vectr(
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
+inline vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::vectr(
 	const float (& src)[DIMENSION],
 	const bool zero_first)
-: protovect< float, DIMENSION, NATIVE_T, SUBCLASS_T >(src, zero_first)
+: protovect< SUBCLASS_T, float, DIMENSION, NATIVE_T >(src, zero_first)
 {
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
-inline vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::operator SUBCLASS_T&()
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
+inline vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::operator SUBCLASS_T&()
 {
 	return *static_cast< SUBCLASS_T* >(this);
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
-inline vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::operator const SUBCLASS_T&() const
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
+inline vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::operator const SUBCLASS_T&() const
 {
 	return *static_cast< const SUBCLASS_T* >(this);
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline float
-vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::dot(
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::dot(
 	const base::vect< float, DIMENSION, NATIVE_T >& src) const
 {
 	float t = this->operator [](0) * src[0];
@@ -795,9 +795,9 @@ vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::dot(
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline float
-vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::sqr() const
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::sqr() const
 {
 	const SUBCLASS_T* const subthis = static_cast< const SUBCLASS_T* >(this);
 
@@ -805,9 +805,9 @@ vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::sqr() const
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline float
-vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::norm() const
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::norm() const
 {
 	const SUBCLASS_T* const subthis = static_cast< const SUBCLASS_T* >(this);
 
@@ -815,9 +815,9 @@ vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::norm() const
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::normalise(
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::normalise(
 	const base::vect< float, DIMENSION, NATIVE_T >& src)
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
@@ -826,17 +826,17 @@ vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::normalise(
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::normalise()
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::normalise()
 {
 	return *this = SUBCLASS_T().normalise(*this);
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::rcp(
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::rcp(
 	const base::vect< float, DIMENSION, NATIVE_T >& src)
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
@@ -848,17 +848,17 @@ vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::rcp(
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T& 
-vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::rcp()
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::rcp()
 {
 	return *this = SUBCLASS_T().rcp(*this);
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::mul(
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::mul(
 	const base::vect< float, DIMENSION, NATIVE_T >& src,
 	const base::matx< float, DIMENSION, NATIVE_T >& op)
 {
@@ -873,18 +873,18 @@ vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::mul(
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::mul(
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::mul(
 	const base::matx< float, DIMENSION, NATIVE_T >& op)
 {
 	return *this = SUBCLASS_T().mul(*this, op);
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::mulH(
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::mulH(
 	const base::vect< float, DIMENSION, NATIVE_T >& src,
 	const base::matx< float, DIMENSION, NATIVE_T >& op)
 {
@@ -901,9 +901,9 @@ vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::mulH(
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::mulH(
+vectr< SUBCLASS_T, DIMENSION, NATIVE_T >::mulH(
 	const base::matx< float, DIMENSION, NATIVE_T >& op)
 {
 	return *this = SUBCLASS_T().mulH(*this, op);
@@ -915,7 +915,7 @@ vectr< DIMENSION, NATIVE_T, SUBCLASS_T >::mulH(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template < size_t DIMENSION, typename NATIVE_T >
-class vect : public vectr< DIMENSION, NATIVE_T, vect< DIMENSION, NATIVE_T > >
+class vect : public vectr< vect< DIMENSION, NATIVE_T >, DIMENSION, NATIVE_T >
 {
 public:
 
@@ -933,7 +933,7 @@ template < size_t DIMENSION, typename NATIVE_T >
 inline vect< DIMENSION, NATIVE_T >::vect(
 	const float (& src)[DIMENSION],
 	const bool zero_first)
-: vectr< DIMENSION, NATIVE_T, vect< DIMENSION, NATIVE_T > >(src, zero_first)
+: vectr< vect, DIMENSION, NATIVE_T >(src, zero_first)
 {
 }
 
@@ -943,7 +943,7 @@ inline vect< DIMENSION, NATIVE_T >::vect(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <>
-class vect< 2, __m128 > : public vectr< 2, __m128, vect< 2, __m128 > >
+class vect< 2, __m128 > : public vectr< vect< 2, __m128 >, 2, __m128 >
 {
 public:
 
@@ -974,7 +974,7 @@ public:
 inline vect< 2, __m128 >::vect(
 	const float (& src)[2],
 	const bool zero_first)
-: vectr< 2, __m128, vect< 2, __m128 > >(src, zero_first)
+: vectr< vect, 2, __m128 >(src, zero_first)
 {
 }
 
@@ -1024,7 +1024,7 @@ vect< 2, __m128 >::crossr(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <>
-class vect< 3, __m128 > : public vectr< 3, __m128, vect< 3, __m128 > >
+class vect< 3, __m128 > : public vectr< vect< 3, __m128 >, 3, __m128 >
 {
 public:
 
@@ -1047,21 +1047,21 @@ public:
 		const base::vect< float, 3, __m128 >& src);
 
 	// negative of this
-	using vectr< 3, __m128, vect< 3, __m128 > >::negate;
+	using vectr< vect, 3, __m128 >::negate;
 
 	// sum of arguments
 	vect& add(
 		const base::vect< float, 3, __m128 >& src0,
 		const base::vect< float, 3, __m128 >& src1);
 
-	using vectr< 3, __m128, vect< 3, __m128 > >::add;
+	using vectr< vect, 3, __m128 >::add;
 
 	// difference between arguments
 	vect& sub(
 		const base::vect< float, 3, __m128 >& src0,
 		const base::vect< float, 3, __m128 >& src1);
 
-	using vectr< 3, __m128, vect< 3, __m128 > >::sub;
+	using vectr< vect, 3, __m128 >::sub;
 
 	// product of argument and scalar argument
 	vect& mul(
@@ -1078,27 +1078,27 @@ public:
 		const base::vect< float, 3, __m128 >& src,
 		const base::matx< float, 4, __m128 >& op);
 
-	using vectr< 3, __m128, vect< 3, __m128 > >::mul;
+	using vectr< vect, 3, __m128 >::mul;
 
 	// product of argument and row-major operator of R4; an extra element of argument assumed 1
 	vect& mulH(
 		const base::vect< float, 3, __m128 >& src,
 		const base::matx< float, 4, __m128 >& op);
 
-	using vectr< 3, __m128, vect< 3, __m128 > >::mulH;
+	using vectr< vect, 3, __m128 >::mulH;
 
 	// division of first by second argument
 	vect& div(
 		const base::vect< float, 3, __m128 >& src0,
 		const base::vect< float, 3, __m128 >& src1);
 
-	using vectr< 3, __m128, vect< 3, __m128 > >::div;
+	using vectr< vect, 3, __m128 >::div;
 
 	// reciprocal of argument
 	vect& rcp(
 		const base::vect< float, 3, __m128 >& src);
 
-	using vectr< 3, __m128, vect< 3, __m128 > >::rcp;
+	using vectr< vect, 3, __m128 >::rcp;
 
 	// cross-product of this and argument
 	vect& crossr(
@@ -1113,7 +1113,7 @@ public:
 	vect& normalise(
 		const base::vect< float, 3, __m128 >& src);
 
-	using vectr< 3, __m128, vect< 3, __m128 > >::normalise;
+	using vectr< vect, 3, __m128 >::normalise;
 
 	// dot product
 	float dot(
@@ -1124,7 +1124,7 @@ public:
 inline vect< 3, __m128 >::vect(
 	const float (& src)[3],
 	const bool zero_first)
-: vectr< 3, __m128, vect< 3, __m128 > >(src, zero_first)
+: vectr< vect, 3, __m128 >(src, zero_first)
 {
 }
 
@@ -1345,7 +1345,7 @@ vect< 3, __m128 >::dot(
 	return _mm_cvtss_f32(_mm_dp_ps(this->getn(), src.getn(), 0x71));
 
 #else
-	return vectr< 3, __m128, vect< 3, __m128 > >::dot(src);
+	return vectr< vect, 3, __m128 >::dot(src);
 
 #endif
 }
@@ -1356,7 +1356,7 @@ vect< 3, __m128 >::dot(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <>
-class vect< 4, __m128 > : public vectr< 4, __m128, vect< 4, __m128 > >
+class vect< 4, __m128 > : public vectr< vect< 4, __m128 >, 4, __m128 >
 {
 public:
 
@@ -1380,21 +1380,21 @@ public:
 		const base::vect< float, 4, __m128 >& src);
 
 	// negative of this
-	using vectr< 4, __m128, vect< 4, __m128 > >::negate;
+	using vectr< vect, 4, __m128 >::negate;
 
 	// sum of arguments
 	vect& add(
 		const base::vect< float, 4, __m128 >& src0,
 		const base::vect< float, 4, __m128 >& src1);
 
-	using vectr< 4, __m128, vect< 4, __m128 > >::add;
+	using vectr< vect, 4, __m128 >::add;
 
 	// difference between arguments
 	vect& sub(
 		const base::vect< float, 4, __m128 >& src0,
 		const base::vect< float, 4, __m128 >& src1);
 
-	using vectr< 4, __m128, vect< 4, __m128 > >::sub;
+	using vectr< vect, 4, __m128 >::sub;
 
 	// product of argument and scalar argument
 	vect& mul(
@@ -1411,27 +1411,27 @@ public:
 		const base::vect< float, 4, __m128 >& src,
 		const base::matx< float, 4, __m128 >& op);
 
-	using vectr< 4, __m128, vect< 4, __m128 > >::mul;
+	using vectr< vect, 4, __m128 >::mul;
 
 	// product of argument and row-major operator; last element of argument assumed 1
 	vect& mulH(
 		const base::vect< float, 4, __m128 >& src,
 		const base::matx< float, 4, __m128 >& op);
 
-	using vectr< 4, __m128, vect< 4, __m128 > >::mulH;
+	using vectr< vect, 4, __m128 >::mulH;
 
 	// division of first by second argument
 	vect& div(
 		const base::vect< float, 4, __m128 >& src0,
 		const base::vect< float, 4, __m128 >& src1);
 
-	using vectr< 4, __m128, vect< 4, __m128 > >::div;
+	using vectr< vect, 4, __m128 >::div;
 
 	// reciprocal of argument
 	vect& rcp(
 		const base::vect< float, 4, __m128 >& src);
 
-	using vectr< 4, __m128, vect< 4, __m128 > >::rcp;
+	using vectr< vect, 4, __m128 >::rcp;
 
 	// cross-product of this and argument, taken as 3-component
 	vect& crossr(
@@ -1446,7 +1446,7 @@ public:
 	vect& normalise(
 		const base::vect< float, 4, __m128 >& src);
 
-	using vectr< 4, __m128, vect< 4, __m128 > >::normalise;
+	using vectr< vect, 4, __m128 >::normalise;
 
 	// dot product
 	float dot(
@@ -1457,7 +1457,7 @@ public:
 inline vect< 4, __m128 >::vect(
 	const float (& src)[4],
 	const bool zero_first)
-: vectr< 4, __m128, vect< 4, __m128 > >(src, zero_first)
+: vectr< vect, 4, __m128 >(src, zero_first)
 {
 }
 
@@ -1671,7 +1671,7 @@ vect< 4, __m128 >::dot(
 	return _mm_cvtss_f32(_mm_dp_ps(this->getn(), src.getn(), 0xf1));
 
 #else
-	return vectr< 4, __m128, vect< 4, __m128 > >::dot(src);
+	return vectr< vect, 4, __m128 >::dot(src);
 
 #endif
 }
@@ -1684,7 +1684,7 @@ vect< 4, __m128 >::dot(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template < typename NATIVE_T >
-class hamilton : public vectr< 4, NATIVE_T, hamilton< NATIVE_T > >
+class hamilton : public vectr< hamilton< NATIVE_T >, 4, NATIVE_T >
 {
 public:
 
@@ -1725,7 +1725,7 @@ template < typename NATIVE_T >
 inline hamilton< NATIVE_T >::hamilton(
 	const float (& src)[4],
 	const bool zero_first)
-: vectr< 4, NATIVE_T, hamilton >(src, zero_first)
+: vectr< hamilton, 4, NATIVE_T >(src, zero_first)
 {
 }
 
@@ -1799,7 +1799,7 @@ hamilton< NATIVE_T >::qmull(
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 class protomatx : public base::matx< float, DIMENSION, NATIVE_T >
 {
 public:
@@ -1852,24 +1852,24 @@ public:
 };
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline
-protomatx< DIMENSION, NATIVE_T, SUBCLASS_T >::operator SUBCLASS_T&()
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::operator SUBCLASS_T&()
 {
 	return *static_cast< SUBCLASS_T* >(this);
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline
-protomatx< DIMENSION, NATIVE_T, SUBCLASS_T >::operator const SUBCLASS_T&() const
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::operator const SUBCLASS_T&() const
 {
 	return *static_cast< const SUBCLASS_T* >(this);
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
-protomatx< DIMENSION, NATIVE_T, SUBCLASS_T >::protomatx(
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::protomatx(
 	const float (& src)[DIMENSION][DIMENSION])
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
@@ -1880,9 +1880,9 @@ protomatx< DIMENSION, NATIVE_T, SUBCLASS_T >::protomatx(
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protomatx< DIMENSION, NATIVE_T, SUBCLASS_T >::identity()
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::identity()
 {
 	for (size_t i = 0; i < DIMENSION; ++i)
 	{
@@ -1899,9 +1899,9 @@ protomatx< DIMENSION, NATIVE_T, SUBCLASS_T >::identity()
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protomatx< DIMENSION, NATIVE_T, SUBCLASS_T >::transpose(
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::transpose(
 	const base::matx< float, DIMENSION, NATIVE_T >& src)
 {
 	SUBCLASS_T* const subthis = static_cast< SUBCLASS_T* >(this);
@@ -1914,17 +1914,17 @@ protomatx< DIMENSION, NATIVE_T, SUBCLASS_T >::transpose(
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protomatx< DIMENSION, NATIVE_T, SUBCLASS_T >::transpose()
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::transpose()
 {
 	return *this = SUBCLASS_T().transpose(*this);
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protomatx< DIMENSION, NATIVE_T, SUBCLASS_T >::mul(
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::mul(
 	const base::matx< float, DIMENSION, NATIVE_T >& src0,
 	const base::matx< float, DIMENSION, NATIVE_T >& src1)
 {
@@ -1937,27 +1937,27 @@ protomatx< DIMENSION, NATIVE_T, SUBCLASS_T >::mul(
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protomatx< DIMENSION, NATIVE_T, SUBCLASS_T >::mulr(
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::mulr(
 	const base::matx< float, DIMENSION, NATIVE_T >& src)
 {
 	return *this = SUBCLASS_T().mul(*this, src);
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protomatx< DIMENSION, NATIVE_T, SUBCLASS_T >::mull(
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::mull(
 	const base::matx< float, DIMENSION, NATIVE_T >& src)
 {
 	return *this = SUBCLASS_T().mul(src, *this);
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protomatx< DIMENSION, NATIVE_T, SUBCLASS_T >::mul(
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::mul(
 	const base::matx< float, DIMENSION, NATIVE_T >& src,
 	const float c)
 {
@@ -1970,9 +1970,9 @@ protomatx< DIMENSION, NATIVE_T, SUBCLASS_T >::mul(
 }
 
 
-template < size_t DIMENSION, typename NATIVE_T, typename SUBCLASS_T >
+template < typename SUBCLASS_T, size_t DIMENSION, typename NATIVE_T >
 inline SUBCLASS_T&
-protomatx< DIMENSION, NATIVE_T, SUBCLASS_T >::mul(
+protomatx< SUBCLASS_T, DIMENSION, NATIVE_T >::mul(
 	const float c)
 {
 	return *this = SUBCLASS_T().mul(*this, c);
@@ -1984,7 +1984,7 @@ protomatx< DIMENSION, NATIVE_T, SUBCLASS_T >::mul(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template < size_t DIMENSION, typename NATIVE_T >
-class matx : public protomatx< DIMENSION, NATIVE_T, matx< DIMENSION, NATIVE_T > >
+class matx : public protomatx< matx< DIMENSION, NATIVE_T >, DIMENSION, NATIVE_T >
 {
 public:
 
@@ -2000,7 +2000,7 @@ public:
 template < size_t DIMENSION, typename NATIVE_T >
 inline matx< DIMENSION, NATIVE_T >::matx(
 	const float (& src)[DIMENSION][DIMENSION])
-: protomatx< DIMENSION, NATIVE_T, matx< DIMENSION, NATIVE_T > >(src)
+: protomatx< matx, DIMENSION, NATIVE_T >(src)
 {
 }
 
@@ -2010,7 +2010,7 @@ inline matx< DIMENSION, NATIVE_T >::matx(
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <>
-class matx< 3, __m128 > : public protomatx< 3, __m128, matx< 3, __m128 > >
+class matx< 3, __m128 > : public protomatx< matx< 3, __m128 >, 3, __m128 >
 {
 public:
 
@@ -2036,7 +2036,7 @@ public:
 
 inline matx< 3, __m128 >::matx(
 	const float (& src)[3][3])
-: protomatx< 3, __m128, matx< 3, __m128 > >(src)
+: protomatx< matx, 3, __m128 >(src)
 {
 }
 
@@ -2101,7 +2101,7 @@ matx< 3, __m128 >::identity()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <>
-class matx< 4, __m128 > : public protomatx< 4, __m128, matx< 4, __m128 > >
+class matx< 4, __m128 > : public protomatx< matx< 4, __m128 >, 4, __m128 >
 {
 public:
 
@@ -2128,7 +2128,7 @@ public:
 	matx& transpose(
 		const base::matx< float, 4, __m128 >& src);
 
-	using protomatx< 4, __m128, matx< 4, __m128 > >::transpose;
+	using protomatx< matx, 4, __m128 >::transpose;
 
 	// inverse of this
 	matx& inverse();
@@ -2141,7 +2141,7 @@ public:
 
 inline matx< 4, __m128 >::matx(
 	const float (& src)[4][4])
-: protomatx< 4, __m128, matx< 4, __m128 > >(src)
+: protomatx< matx, 4, __m128 >(src)
 {
 }
 

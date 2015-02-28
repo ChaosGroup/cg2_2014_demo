@@ -880,21 +880,18 @@ enum {
 
 
 enum {
-#if MINIMAL_TREE != 0
-	octree_interior_count = 0,
-
-#else
 	octree_interior_count =
 
+#if MINIMAL_TREE == 0
 #if BIG_TREE != 0
 		(1 << 3 * octree_level_interior_1) +
-		(1 << 3 * octree_level_interior_0),
-
-#else
-		(1 << 3 * octree_level_interior_0),
 
 #endif
+		(1 << 3 * octree_level_interior_0) +
+
 #endif
+		(1 << 3 * octree_level_root),
+
 	octree_leaf_count = 1 << 3 * (octree_level_count - 1),
 	octree_cell_count = 1 << 3 * (octree_level_count - 0),
 	octree_axis_granularity = 1 << octree_level_count
@@ -957,11 +954,15 @@ enum {
 	cell_capacity = 16 // octree cell capacity during building
 };
 
-static const compile_assert< size_t(1) << sizeof(OctetId) * 8 >= octree_leaf_count > assert_capacity;
-static const compile_assert< size_t(1) << sizeof(PayloadId) * 8 >= octree_cell_count * cell_capacity > assert_cell_capacity;
+enum {
+	octree_payload_count = octree_cell_count * cell_capacity
+};
+
+static const compile_assert< (size_t(1) << sizeof(OctetId) * 8 > octree_leaf_count) > assert_octet_id;
+static const compile_assert< (size_t(1) << sizeof(PayloadId) * 8 > octree_payload_count) > assert_payload_id;
 
 
-class Octet
+class __attribute__ ((aligned(16))) Octet
 {
 	enum { capacity = 8 };
 
@@ -1008,7 +1009,7 @@ public:
 };
 
 
-class Leaf
+class __attribute__ ((aligned(16))) Leaf
 {
 	enum { capacity = 8 };
 

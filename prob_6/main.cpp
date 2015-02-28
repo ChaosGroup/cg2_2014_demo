@@ -18,7 +18,8 @@
 #include "stream.hpp"
 #include "vectsimd_sse.hpp"
 #include "prim_rgb_view.hpp"
-#include "problem_4.hpp"
+#include "array.hpp"
+#include "problem_7.hpp"
 
 // verify iostream-free status
 #if _GLIBCXX_IOSTREAM
@@ -2168,8 +2169,16 @@ int main(
 	const testbed::scoped_ptr< testbed::deinit_resources_t, testbed::scoped_functor > deinit(testbed::rgbv::deinit_resources);
 
 #endif
-	Array< Timeslice > timeline; // don't put timeslices on the stack - keep them on the heap for better isolation from main thread's locals
+#if defined(prob_4_H__)
+	Array< Timeslice > timeline;
 
+#elif defined(prob_7_H__)
+	Array< TimesliceBalloon, 4096 > timeline;
+
+#else
+	#error prob_4_H__ or prob_7_H__ required
+
+#endif
 	timeline.setCapacity(scene_count);
 	timeline.addMultiElement(scene_count);
 
@@ -2255,14 +2264,14 @@ int main(
 
 	glEnable(GL_CULL_FACE);
 
-	const testbed::scoped_ptr< uint8_t[4], generic_free > framebuffer(
+	const testbed::scoped_ptr< uint8_t[4], generic_free > unaligned_fb(
 		reinterpret_cast< uint8_t(*)[4] >(malloc(w * h * sizeof(uint8_t[4]) + 63)));
 
 	// get that buffer cacheline aligned
-	uint8_t (* const aligned_framebuffer)[4] = reinterpret_cast< uint8_t(*)[4] >(uintptr_t(framebuffer()) + uintptr_t(63) & ~uintptr_t(63));
-	memset(aligned_framebuffer, 0, w * h * sizeof(*aligned_framebuffer));
+	uint8_t (* const framebuffer)[4] = reinterpret_cast< uint8_t(*)[4] >(uintptr_t(unaligned_fb()) + uintptr_t(63) & ~uintptr_t(63));
+	memset(framebuffer, 0, w * h * sizeof(*framebuffer));
 
-	workforce_t workforce(aligned_framebuffer, w, h);
+	workforce_t workforce(framebuffer, w, h);
 
 	if (!workforce.is_successfully_init())
 	{
@@ -2403,11 +2412,11 @@ int main(
 		workgroup_cursor = 0;
 
 #endif
-		compute_arg carg(0, nframes, cam, timeline.getElement(c::scene_selector), aligned_framebuffer, w, h);
+		compute_arg carg(0, nframes, cam, timeline.getElement(c::scene_selector), framebuffer, w, h);
 		compute(&carg);
 
 #if VISUALIZE != 0
-		testbed::rgbv::render(aligned_framebuffer, c::contrast_middle, c::contrast_k, c::blur_split);
+		testbed::rgbv::render(framebuffer, c::contrast_middle, c::contrast_k, c::blur_split);
 
 #if FRAMEGRAB_RATE != 0
 		saveViewport(0, 0, w, h, nframes);
