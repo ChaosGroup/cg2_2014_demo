@@ -1225,7 +1225,7 @@ vect< 3, NATIVE_T >::add(
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #else
 	for (size_t i = 0; i < this->native_count; ++i)
@@ -1268,7 +1268,7 @@ vect< 3, NATIVE_T >::sub(
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #else
 	for (size_t i = 0; i < this->native_count; ++i)
@@ -1311,7 +1311,7 @@ vect< 3, NATIVE_T >::mul(
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 	this->setn(0, (NATIVE_T) { c, c } * src.getn(0));
@@ -1366,7 +1366,7 @@ vect< 3, NATIVE_T >::mul(
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #else
 	for (size_t i = 0; i < this->native_count; ++i)
@@ -1410,7 +1410,7 @@ vect< 3, NATIVE_T >::mul(
 	const float e0 = src[0];
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 	this->setn(0, (NATIVE_T) { e0, e0 } * op[0].getn(0));
@@ -1435,7 +1435,7 @@ vect< 3, NATIVE_T >::mul(
 		const float ei = src[i];
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-		const compiler_assert< false > assert_false;
+		const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 		this->setn(0, this->getn(0) + (NATIVE_T) { ei, ei } * op[i].getn(0));
@@ -1499,7 +1499,7 @@ vect< 3, NATIVE_T >::mulH(
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #endif // SIMD_AUTOVECT
 
@@ -1511,7 +1511,7 @@ vect< 3, NATIVE_T >::mulH(
 		const float ei = src[i];
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-		const compiler_assert< false > assert_false;
+		const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 		this->setn(0, this->getn(0) + (NATIVE_T) { ei, ei } * op[i].getn(0));
@@ -1578,7 +1578,7 @@ vect< 3, NATIVE_T >::rcp(
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 	this->setn(0, (NATIVE_T) { 1.f, 1.f } / src.getn(0));
@@ -1657,7 +1657,7 @@ vect< 3, NATIVE_T >::div(
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #else
 	for (size_t i = 0; i < this->native_count; ++i)
@@ -1906,7 +1906,7 @@ vect< 4, NATIVE_T >::add(
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #else
 	for (size_t i = 0; i < this->native_count; ++i)
@@ -1949,7 +1949,7 @@ vect< 4, NATIVE_T >::sub(
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #else
 	for (size_t i = 0; i < this->native_count; ++i)
@@ -1992,7 +1992,7 @@ vect< 4, NATIVE_T >::mul(
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 	this->setn(0, (NATIVE_T) { c, c } * src.getn(0));
@@ -2047,7 +2047,7 @@ vect< 4, NATIVE_T >::mul(
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #else
 	for (size_t i = 0; i < this->native_count; ++i)
@@ -2091,7 +2091,7 @@ vect< 4, NATIVE_T >::mul(
 	const float e0 = src[0];
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 	this->setn(0, (NATIVE_T) { e0, e0 } * op[0].getn(0));
@@ -2116,7 +2116,7 @@ vect< 4, NATIVE_T >::mul(
 		const float ei = src[i];
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-		const compiler_assert< false > assert_false;
+		const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 		this->setn(0, this->getn(0) + (NATIVE_T) { ei, ei } * op[i].getn(0));
@@ -2184,7 +2184,7 @@ vect< 4, NATIVE_T >::mulH(
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #endif // SIMD_AUTOVECT
 
@@ -2196,7 +2196,7 @@ vect< 4, NATIVE_T >::mulH(
 		const float ei = src[i];
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-		const compiler_assert< false > assert_false;
+		const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 		this->setn(0, this->getn(0) + (NATIVE_T) { ei, ei } * op[i].getn(0));
@@ -2263,7 +2263,7 @@ vect< 4, NATIVE_T >::rcp(
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 	this->setn(0, (NATIVE_T) { 1.f, 1.f } / src.getn(0));
@@ -2342,7 +2342,7 @@ vect< 4, NATIVE_T >::div(
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #else
 	for (size_t i = 0; i < this->native_count; ++i)
@@ -2419,15 +2419,12 @@ vect< 4, NATIVE_T >::cross(
 	typedef typename vectr< vect, 4, NATIVE_T >::basetype basetype;
 
 	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
-	{
 		static_cast< basetype& >(*this) = scal::vect< 4, NATIVE_T >().cross(src0, src1);
-		return *this;
-	}
 
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY || \
 	  SIMD_AUTOVECT == SIMD_4WAY || \
@@ -2911,7 +2908,7 @@ matx< 3, NATIVE_T >::identity()
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 	this->setn(0, 0, (NATIVE_T) { 1.f, 0.f });
@@ -3088,7 +3085,7 @@ matx< 4, NATIVE_T >::identity()
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY
 	this->setn(0, 0, (NATIVE_T) { 1.f, 0.f });
@@ -3169,7 +3166,7 @@ matx< 4, NATIVE_T >::transpose(
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY || \
 	  SIMD_AUTOVECT == SIMD_4WAY || \
@@ -3218,15 +3215,12 @@ matx< 4, NATIVE_T >::inverse(
 	typedef typename protomatx< matx, 4, NATIVE_T >::basetype basetype;
 
 	if (sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t))
-	{
 		static_cast< basetype& >(*this) = scal::matx< 4, NATIVE_T >().inverse(src);
-		return *this;
-	}
 
 #if SIMD_INTRINSICS == 0
 
 #if SIMD_AUTOVECT <= SIMD_1WAY
-	const compiler_assert< false > assert_false;
+	const base::compile_assert< sizeof(NATIVE_T) == sizeof(typename basetype::scalar_t) > assert_sizeof_native;
 
 #elif SIMD_AUTOVECT == SIMD_2WAY || \
 	  SIMD_AUTOVECT == SIMD_4WAY || \
@@ -3243,7 +3237,7 @@ matx< 4, NATIVE_T >::inverse(
 	static_cast< basetype& >(*this) = scal::matx< 4, NATIVE_T >().inverse(src);
 
 #elif SIMD_INTRINSICS == SIMD_SSE
-	// compute cofactors of the transpose, Intel style
+	// compute cofactors of the transpose, Intel style (AP-928)
 	__m128 row0, row1, row2, row3, tmp1;
 
 	tmp1 = _mm_movelh_ps(src[0].getn(), src[1].getn());
@@ -3441,7 +3435,7 @@ typedef vect< 2 > vect2;
 typedef vect< 3 > vect3;
 typedef vect< 4 > vect4;
 
-typedef hamilton quat;
+typedef hamilton<> quat;
 
 typedef matx< 3 > matx3;
 typedef matx< 4 > matx4;
