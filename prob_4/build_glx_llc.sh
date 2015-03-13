@@ -87,12 +87,10 @@ LFLAGS=(
 # Alias some glibc6 symbols to older ones for better portability
 #	-Wa,-defsym,memcpy=memcpy@GLIBC_2.2.5
 #	-Wa,-defsym,__sqrtf_finite=__sqrtf_finite@GLIBC_2.2.5
-	-L/usr/lib/fglrx
-	-L/usr/lib64/nvidia
 	-lstdc++
 	-ldl
 	-lrt
-	-lGL
+	`ldconfig -p | grep -m 1 ^[[:space:]]libGL.so | sed "s/^.\+ //"`
 	-lX11
 	-lpthread
 #	-lpng12
@@ -120,11 +118,11 @@ else
 	LLC_TARGET=${TARGET[0]}
 fi
 
-OPT_LMD="opt"${VERSION}" -filetype=asm -O3 -enable-unsafe-fp-math -fp-contract=fast -enable-no-infs-fp-math -enable-no-nans-fp-math -enable-misched -mcpu="${LLC_TARGET}" _"${BINARY}".bc -o=__"${BINARY}".bc"
+OPT_LMD="opt"${VERSION}" -filetype=asm -O3 -data-sections -function-sections -enable-unsafe-fp-math -fp-contract=fast -enable-no-infs-fp-math -enable-no-nans-fp-math -enable-misched -mcpu="${LLC_TARGET}" _"${BINARY}".bc -o=__"${BINARY}".bc"
 echo $OPT_LMD
 $OPT_LMD
 
-BUILD_LMD="llc"${VERSION}" -filetype=obj -O=3 -enable-unsafe-fp-math -fp-contract=fast -enable-no-infs-fp-math -enable-no-nans-fp-math -enable-misched -mcpu="${LLC_TARGET}" __"${BINARY}".bc"
+BUILD_LMD="llc"${VERSION}" -filetype=obj -O=3 -data-sections -function-sections -enable-unsafe-fp-math -fp-contract=fast -enable-no-infs-fp-math -enable-no-nans-fp-math -enable-misched -mcpu="${LLC_TARGET}" __"${BINARY}".bc"
 echo $BUILD_LMD
 $BUILD_LMD
 

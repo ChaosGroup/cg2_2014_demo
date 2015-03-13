@@ -2241,7 +2241,7 @@ inline matx< 4, __m128 >&
 matx< 4, __m128 >::inverse(
 	const base::matx< float, 4, __m128 >& src)
 {
-	// compute cofactors of the transpose, Intel style
+	// compute cofactors of the transpose, Intel style (AP-928)
 	__m128 row0, row1, row2, row3, tmp1;
 
 	tmp1 = _mm_movelh_ps(src[0].getn(), src[1].getn());

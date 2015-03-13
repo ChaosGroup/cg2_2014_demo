@@ -78,12 +78,10 @@ LFLAGS=(
 # Alias some glibc6 symbols to older ones for better portability
 #	-Wa,-defsym,memcpy=memcpy@GLIBC_2.2.5
 #	-Wa,-defsym,__sqrtf_finite=__sqrtf_finite@GLIBC_2.2.5
-	-L/usr/lib/fglrx
-	-L/usr/lib64/nvidia
 	-lstdc++
 	-ldl
 	-lrt
-	-lGL
+	`ldconfig -p | grep -m 1 ^[[:space:]]libGL.so | sed "s/^.\+ //"`
 	-lX11
 	-lpthread
 #	-lpng12
