@@ -27,6 +27,8 @@ template <
 class scoped_linkage_ptr : non_copyable, FTOR_T< T >
 {
 public:
+	scoped_linkage_ptr() {}
+
 	~scoped_linkage_ptr()
 	{
 		FTOR_T< T >::operator()(PTR_T);
