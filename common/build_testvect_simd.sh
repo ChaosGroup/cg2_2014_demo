@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CC=clang++
+CC=clang++-3.5
 TARGET=testvect_simd
 SOURCE=(
 	testvect_simd.cpp
@@ -60,12 +60,10 @@ if [[ $HOSTTYPE == "arm" ]]; then
 	if [[ $UNAME_MACHINE == "armv7l" ]]; then
 
 		CFLAGS+=(
-			-mfloat-abi=softfp
+			-march=native
+			-mtune=native
 			-marm
-			-march=armv7-a
-			-mtune=cortex-a8
-			-mcpu=cortex-a8
-			-mfpu=neon
+#			-mfpu=neon
 # Intrinsics yield better results for now
 #			-DSIMD_AUTOVECT=SIMD_4WAY
 			-DCACHELINE_SIZE=32
@@ -123,7 +121,7 @@ elif [[ $HOSTTYPE == "powerpc" ]]; then
 			-mcpu=7450
 			-maltivec
 			-mvrsave
-# Don't use autovectorization with altivec - as of 4.6.3 gcc will not use
+# Do not use autovectorization with altivec - as of 4.6.3 gcc will not use
 # splat/permute altivec ops during autovectorization, rendering that useless.
 #			-DSIMD_AUTOVECT=SIMD_4WAY
 		)
@@ -137,7 +135,7 @@ elif [[ $HOSTTYPE == "powerpc64" || $HOSTTYPE == "ppc64" ]]; then
 		-mtune=power6
 		-maltivec
 		-mvrsave
-# Don't use autovectorization with altivec - as of 4.6.3 gcc will not use
+# Do not use autovectorization with altivec - as of 4.6.3 gcc will not use
 # splat/permute altivec ops during autovectorization, rendering that useless.
 #		-DSIMD_AUTOVECT=SIMD_4WAY
 		-DCACHELINE_SIZE=64

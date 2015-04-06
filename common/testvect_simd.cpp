@@ -5,15 +5,19 @@
 #include <time.h>
 #include <stdint.h>
 #include <pthread.h>
+#if __SSE__
 #include <xmmintrin.h>
+#endif
 
-#if defined(SIMD_SCALAR)
+#if SIMD_SCALAR
 	#include "vectscal.hpp"
 #else
-	#if defined(SIMD_AGNOSTIC)
+	#if SIMD_AGNOSTIC
 		#include "vectsimd.hpp"
-	#else
+	#elif __SSE__
 		#include "vectsimd_sse.hpp"
+	#else
+		#include "vectsimd.hpp"
 	#endif
 #endif
 
@@ -46,9 +50,9 @@
 #if SIMD_INTRINSICS == SIMD_ALTIVEC
 	#include <altivec.h>
 #elif SIMD_INTRINSICS == SIMD_SSE
-	#if defined(__AVX__)
+	#if __AVX__
 		#include <immintrin.h>
-	#elif defined(__SSE4_1__)
+	#elif __SSE4_1__
 		#include <smmintrin.h>
 	#else
 		#include <xmmintrin.h>
@@ -62,10 +66,10 @@
 
 #undef SIMD_NAMESPACE
 
-#if defined(SIMD_ETALON)
+#if SIMD_ETALON
 #define SIMD_NAMESPACE etal
 
-#elif defined(SIMD_SCALAR)
+#elif SIMD_SCALAR
 #define SIMD_NAMESPACE scal
 
 namespace scal
@@ -658,6 +662,7 @@ workforce_t::~workforce_t()
 }
 
 
+#if __SSE__
 static std::ostream& operator << (
 	std::ostream& str,
 	const __m128i a)
@@ -714,11 +719,11 @@ static std::ostream& operator << (
 	return str;
 }
 
-
+#endif // __SSE__
 static bool
 conformance()
 {
-#if defined(SIMD_SCALAR)
+#if SIMD_SCALAR
 	using namespace scal;
 
 #else
