@@ -1,5 +1,5 @@
-#ifndef prim_map_H__
-#define prim_map_H__
+#ifndef prim_rgb_view_H__
+#define prim_rgb_view_H__
 
 namespace testbed
 {
@@ -29,4 +29,4 @@ render(
 } // namespace rgbv
 } // namespace testbed
 
-#endif // prim_map_H__
+#endif // prim_rgb_view_H__

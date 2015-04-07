@@ -1,5 +1,5 @@
-#ifndef prim_map_H__
-#define prim_map_H__
+#ifndef prim_palette_view_H__
+#define prim_palette_view_H__
 
 #include "vectsimd.hpp"
 
@@ -25,4 +25,4 @@ render(
 } // namespace pltv
 } // namespace testbed
 
-#endif // prim_map_H__
+#endif // prim_palette_view_H__
