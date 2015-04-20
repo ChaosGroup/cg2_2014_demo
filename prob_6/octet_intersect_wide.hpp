@@ -5,7 +5,7 @@
 	#error prob_4_H__ or prob_7_H__ required
 #endif
 
-inline size_t
+static size_t
 octet_intersect_wide(
 	const Octet& octet,
 	const BBox& bbox,
@@ -238,16 +238,6 @@ octet_intersect_wide(
 		*(__m128*) (r + 4));
 
 #endif
-	// init child indices
-	child_index.index[0] = 0;
-	child_index.index[1] = 1;
-	child_index.index[2] = 2;
-	child_index.index[3] = 3;
-	child_index.index[4] = 4;
-	child_index.index[5] = 5;
-	child_index.index[6] = 6;
-	child_index.index[7] = 7;
-
 	// sort intersected nodes in ascending order; for the purpose
 	// use Ken Batcher's bitonic sorting network for 8 elements
 
@@ -262,8 +252,9 @@ octet_intersect_wide(
 	const __m128 r0_in0 = *(__m128*)(t + 0); // 0, 1, 2, 3
 	const __m128 r0_in1 = *(__m128*)(t + 4); // 4, 5, 6, 7
 
-	const __m128 r0x_in0 = *(__m128*)(child_index.index + 0);
-	const __m128 r0x_in1 = *(__m128*)(child_index.index + 4);
+	// init indices with [0..7]
+	const __m128 r0x_in0 = _mm_castsi128_ps(_mm_setr_epi32(0, 1, 2, 3));
+	const __m128 r0x_in1 = _mm_castsi128_ps(_mm_setr_epi32(4, 5, 6, 7));
 
 	// stage 0
 	const __m128 r0_A = _mm_shuffle_ps(r0_in0, r0_in1, 0xcc); // 0, 3, 4, 7
