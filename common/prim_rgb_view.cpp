@@ -7,7 +7,6 @@
 #include "cmath_fix"
 #include <sstream>
 
-#include "vectsimd_sse.hpp"
 #include "testbed.hpp"
 #include "scoped.hpp"
 #include "stream.hpp"

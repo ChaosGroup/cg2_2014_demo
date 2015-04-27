@@ -27,7 +27,7 @@ CFLAGS=(
 # Framegrab rate
 #	-DFRAMEGRAB_RATE=30
 # Case-specific optimisation
-#	-DMINIMAL_TREE=1
+	-DMINIMAL_TREE=1
 # Show on screen what was rendered
 	-DVISUALIZE=1
 # Vector aliasing control

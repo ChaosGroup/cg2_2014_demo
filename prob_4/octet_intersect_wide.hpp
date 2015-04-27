@@ -252,16 +252,12 @@ octet_intersect_wide(
 	const __m128 r0_in0 = *(__m128*)(t + 0); // 0, 1, 2, 3
 	const __m128 r0_in1 = *(__m128*)(t + 4); // 4, 5, 6, 7
 
-	// init indices with [0..7]
-	const __m128 r0x_in0 = _mm_castsi128_ps(_mm_setr_epi32(0, 1, 2, 3));
-	const __m128 r0x_in1 = _mm_castsi128_ps(_mm_setr_epi32(4, 5, 6, 7));
-
 	// stage 0
 	const __m128 r0_A = _mm_shuffle_ps(r0_in0, r0_in1, 0xcc); // 0, 3, 4, 7
 	const __m128 r0_B = _mm_shuffle_ps(r0_in0, r0_in1, 0x99); // 1, 2, 5, 6
 
-	const __m128 r0x_A = _mm_shuffle_ps(r0x_in0, r0x_in1, 0xcc);
-	const __m128 r0x_B = _mm_shuffle_ps(r0x_in0, r0x_in1, 0x99);
+	const __m128 r0x_A = _mm_castsi128_ps(_mm_setr_epi32(0, 3, 4, 7));
+	const __m128 r0x_B = _mm_castsi128_ps(_mm_setr_epi32(1, 2, 5, 6));
 
 	const __m128 m0 = _mm_cmple_ps(r0_A, r0_B);
 

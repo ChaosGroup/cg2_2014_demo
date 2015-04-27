@@ -952,7 +952,7 @@ typedef uint16_t OctetId; // integral type capable of holding the amount of leav
 typedef uint16_t PayloadId; // integral type capable of holding the amount of leaf payload
 
 enum {
-	cell_capacity = 16 // octree cell capacity during building
+	cell_capacity = 32 // octree cell capacity during building
 };
 
 enum {
@@ -1085,9 +1085,6 @@ public:
 		size_t& cursor,
 		ArrayLite< Voxel, T, U >& payload)
 	{
-		// avoid paired elements crossing cachelines - force cursor to start at even positions only
-		cursor = cursor + 1 & size_t(-2);
-
 		for (size_t i = 0; i < capacity; ++i)
 		{
 			const size_t cell_start = m_start[i];

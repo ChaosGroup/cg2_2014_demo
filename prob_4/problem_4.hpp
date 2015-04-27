@@ -1082,9 +1082,6 @@ public:
 		size_t& cursor,
 		Array< Voxel >& payload)
 	{
-		// avoid paired elements crossing cachelines - force cursor to start at even positions only
-		cursor = cursor + 1 & size_t(-2);
-
 		for (size_t i = 0; i < capacity; ++i)
 		{
 			const size_t cell_start = m_start[i];
