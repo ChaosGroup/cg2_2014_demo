@@ -1,11 +1,7 @@
 #ifndef cl_util_H__
 #define cl_util_H__
 
-#ifdef __APPLE__
-	#include <OpenCL/cl.h>
-#else
-	#include <CL/cl.h>
-#endif	
+#include <CL/cl.h>
 #include "stream.hpp"
 
 namespace clutil

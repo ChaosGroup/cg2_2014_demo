@@ -1,11 +1,7 @@
 #ifndef cl_wrap_H__
 #define cl_wrap_H__
 
-#ifdef __APPLE__
-	#include <OpenCL/cl.h>
-#else
-	#include <CL/cl.h>
-#endif	
+#include <CL/cl.h>
 #include "cl_util.hpp"
 
 namespace clwrap {

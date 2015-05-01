@@ -1,8 +1,4 @@
-#ifdef __APPLE__
-	#include <OpenCL/cl.h>
-#else
-	#include <CL/cl.h>
-#endif	
+#include <CL/cl.h>
 #if CL_VERSION_1_2 == 0
 	#error required CL_VERSION_1_2 to compile
 #endif

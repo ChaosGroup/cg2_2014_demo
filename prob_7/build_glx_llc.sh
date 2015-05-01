@@ -20,6 +20,7 @@ CFLAGS=(
 	-Wno-logical-op-parentheses
 	-Wno-parentheses
 	-I$COMMON
+	-I..
 	-fno-exceptions
 	-fno-rtti
 	-fdata-sections

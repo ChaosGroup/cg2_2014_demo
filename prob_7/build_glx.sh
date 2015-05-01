@@ -19,6 +19,7 @@ CFLAGS=(
 	-Wno-bitwise-op-parentheses
 	-Wno-parentheses
 	-I$COMMON
+	-I..
 	-pipe
 	-fno-exceptions
 	-fno-rtti
