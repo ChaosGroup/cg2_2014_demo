@@ -8,7 +8,8 @@ Project Tree
 
 The demo itself is in prob_6; it shares a good deal of code (read: identical headers and translation units) with prob_4, which is a game built using the technology from the demo. Its unofficial name is 'An Occlusion Game Unlike No 0ther', for short - aogun0.
 
-* common - various shared functionality, not specific to prob_4 or prob_6
+* CL     - OpenCL 1.2 headers from khronos.org
+* common - shared code, not specific to any particular project
 * prob_4 - aogun0
 * prob_6 - CG2 2014 invitation demo
 * prob_7 - CG2 2014 invitation demo, OpenCL redux (in progress)
