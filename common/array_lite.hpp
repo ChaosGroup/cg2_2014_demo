@@ -8,7 +8,6 @@
 
 template < typename ELEMENT_T, size_t CAPACITY_T, size_t PAYLOAD_OFFSET_T >
 class ArrayLite {
-
 protected:
 	ELEMENT_T* bits() {
 		return reinterpret_cast< ELEMENT_T* >(uintptr_t(this) + uintptr_t(PAYLOAD_OFFSET_T));
@@ -20,20 +19,42 @@ protected:
 
 	uint32_t m_count;
 
+	template < size_t SRC_PAYLOAD_OFFSET_T >
+	void actual_copy_ctor(
+		const ArrayLite< ELEMENT_T, CAPACITY_T, SRC_PAYLOAD_OFFSET_T >& src);
+
+	template < size_t SRC_PAYLOAD_OFFSET_T >
+	ArrayLite& actual_assignment(
+		const ArrayLite< ELEMENT_T, CAPACITY_T, SRC_PAYLOAD_OFFSET_T >& src);
+
 public:
 	ArrayLite()
 	: m_count(0) {
 	}
 
+	ArrayLite(
+		const ArrayLite& src) {
+		actual_copy_ctor(src);
+	}
+
 	template < size_t SRC_PAYLOAD_OFFSET_T >
 	ArrayLite(
-		const ArrayLite< ELEMENT_T, CAPACITY_T, SRC_PAYLOAD_OFFSET_T >& src);
+		const ArrayLite< ELEMENT_T, CAPACITY_T, SRC_PAYLOAD_OFFSET_T >& src) {
+		actual_copy_ctor(src);
+	}
 
 	~ArrayLite();
 
+	ArrayLite& operator =(
+		const ArrayLite& src) {
+		return actual_assignment(src);
+	}
+
 	template < size_t SRC_PAYLOAD_OFFSET_T >
 	ArrayLite& operator =(
-		const ArrayLite< ELEMENT_T, CAPACITY_T, SRC_PAYLOAD_OFFSET_T >& src);
+		const ArrayLite< ELEMENT_T, CAPACITY_T, SRC_PAYLOAD_OFFSET_T >& src) {
+		return actual_assignment(src);
+	}
 
 	size_t
 	getCapacity() const {
@@ -75,9 +96,10 @@ public:
 
 template < typename ELEMENT_T, size_t CAPACITY_T, size_t PAYLOAD_OFFSET_T >
 template < size_t SRC_PAYLOAD_OFFSET_T >
-inline ArrayLite< ELEMENT_T, CAPACITY_T, PAYLOAD_OFFSET_T >::ArrayLite(
-	const ArrayLite< ELEMENT_T, CAPACITY_T, SRC_PAYLOAD_OFFSET_T >& src)
-: m_count(0) {
+inline void ArrayLite< ELEMENT_T, CAPACITY_T, PAYLOAD_OFFSET_T >::actual_copy_ctor(
+	const ArrayLite< ELEMENT_T, CAPACITY_T, SRC_PAYLOAD_OFFSET_T >& src) {
+
+	m_count = 0;
 
 	if (0 == src.m_count)
 		return;
@@ -103,7 +125,7 @@ inline ArrayLite< ELEMENT_T, CAPACITY_T, PAYLOAD_OFFSET_T >::~ArrayLite() {
 template < typename ELEMENT_T, size_t CAPACITY_T, size_t PAYLOAD_OFFSET_T >
 template < size_t SRC_PAYLOAD_OFFSET_T >
 inline ArrayLite< ELEMENT_T, CAPACITY_T, PAYLOAD_OFFSET_T >&
-ArrayLite< ELEMENT_T, CAPACITY_T, PAYLOAD_OFFSET_T >::operator =(
+ArrayLite< ELEMENT_T, CAPACITY_T, PAYLOAD_OFFSET_T >::actual_assignment(
 	const ArrayLite< ELEMENT_T, CAPACITY_T, SRC_PAYLOAD_OFFSET_T >& src) {
 
 	for (size_t i = 0; i < m_count; ++i)

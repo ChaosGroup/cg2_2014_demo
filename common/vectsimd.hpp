@@ -75,8 +75,12 @@ public:
 	typedef base::vect< SCALAR_T, DIMENSION, NATIVE_T > basetype;
 	typedef SUBCLASS_T subclass;
 
-	protovect()
-	{
+	protovect() {
+	}
+
+	explicit protovect(
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src)
+	: base::vect< SCALAR_T, DIMENSION, NATIVE_T >(src) {
 	}
 
 	explicit protovect(
@@ -490,8 +494,12 @@ class vect_generic : public protovect<
 {
 public:
 
-	vect_generic()
-	{
+	vect_generic() {
+	}
+
+	explicit vect_generic(
+		const base::vect< SCALAR_T, DIMENSION, NATIVE_T >& src)
+	: protovect< vect_generic, SCALAR_T, DIMENSION, NATIVE_T >(src) {
 	}
 
 	explicit vect_generic(
@@ -518,8 +526,12 @@ class vectz : public protovect< SUBCLASS_T, int32_t, DIMENSION, NATIVE_T >
 {
 public:
 
-	vectz()
-	{
+	vectz() {
+	}
+
+	explicit vectz(
+		const base::vect< int32_t, DIMENSION, NATIVE_T >& src)
+	: protovect< SUBCLASS_T, int32_t, DIMENSION, NATIVE_T >(src) {
 	}
 
 	explicit vectz(
@@ -564,8 +576,12 @@ class ivect : public vectz< ivect< DIMENSION, NATIVE_T >, DIMENSION, NATIVE_T >
 {
 public:
 
-	ivect()
-	{
+	ivect() {
+	}
+
+	explicit ivect(
+		const base::vect< int32_t, DIMENSION, NATIVE_T >& src)
+	: vectz< ivect, DIMENSION, NATIVE_T >(src) {
 	}
 
 	explicit ivect(
@@ -576,7 +592,7 @@ public:
 
 template < size_t DIMENSION, typename NATIVE_T >
 inline ivect< DIMENSION, NATIVE_T >::ivect(
-	const int (&src)[DIMENSION],
+	const int (& src)[DIMENSION],
 	const bool zero_first)
 : vectz< ivect, DIMENSION, NATIVE_T >(src, zero_first)
 {
@@ -592,8 +608,12 @@ class ivect< 2, NATIVE_T > : public vectz< ivect< 2, NATIVE_T >, 2, NATIVE_T >
 {
 public:
 
-	ivect()
-	{
+	ivect() {
+	}
+
+	explicit ivect(
+		const base::vect< int32_t, 2, NATIVE_T >& src)
+	: vectz< ivect, 2, NATIVE_T >(src) {
 	}
 
 	explicit ivect(
@@ -647,8 +667,12 @@ class ivect< 3, NATIVE_T > : public vectz< ivect< 3, NATIVE_T >, 3, NATIVE_T >
 {
 public:
 
-	ivect()
-	{
+	ivect() {
+	}
+
+	explicit ivect(
+		const base::vect< int32_t, 3, NATIVE_T >& src)
+	: vectz< ivect, 3, NATIVE_T >(src) {
 	}
 
 	explicit ivect(
@@ -705,8 +729,12 @@ class ivect< 4, NATIVE_T > : public vectz< ivect< 4, NATIVE_T >, 4, NATIVE_T >
 {
 public:
 
-	ivect()
-	{
+	ivect() {
+	}
+
+	explicit ivect(
+		const base::vect< int32_t, 4, NATIVE_T >& src)
+	: vectz< ivect, 4, NATIVE_T >(src) {
 	}
 
 	explicit ivect(
@@ -766,8 +794,12 @@ class vectr : public protovect< SUBCLASS_T, float, DIMENSION, NATIVE_T >
 {
 public:
 
-	vectr()
-	{
+	vectr() {
+	}
+
+	explicit vectr(
+		const base::vect< float, DIMENSION, NATIVE_T >& src)
+	: protovect< SUBCLASS_T, float, DIMENSION, NATIVE_T >(src) {
 	}
 
 	explicit vectr(
@@ -985,8 +1017,12 @@ class vect : public vectr< vect< DIMENSION, NATIVE_T >, DIMENSION, NATIVE_T >
 {
 public:
 
-	vect()
-	{
+	vect() {
+	}
+
+	explicit vect(
+		const base::vect< float, DIMENSION, NATIVE_T >& src)
+	: vectr< vect, DIMENSION, NATIVE_T >(src) {
 	}
 
 	explicit vect(
@@ -1013,8 +1049,12 @@ class vect< 2, NATIVE_T > : public vectr< vect< 2, NATIVE_T >, 2, NATIVE_T >
 {
 public:
 
-	vect()
-	{
+	vect() {
+	}
+
+	explicit vect(
+		const base::vect< float, 2, NATIVE_T >& src)
+	: vectr< vect, 2, NATIVE_T >(src) {
 	}
 
 	explicit vect(
@@ -1098,8 +1138,12 @@ class vect< 3, NATIVE_T > : public vectr< vect< 3, NATIVE_T >, 3, NATIVE_T >
 {
 public:
 
-	vect()
-	{
+	vect() {
+	}
+
+	explicit vect(
+		const base::vect< float, 3, NATIVE_T >& src)
+	: vectr< vect, 3, NATIVE_T >(src) {
 	}
 
 	explicit vect(
@@ -1776,8 +1820,12 @@ class vect< 4, NATIVE_T > : public vectr< vect< 4, NATIVE_T >, 4, NATIVE_T >
 {
 public:
 
-	vect()
-	{
+	vect() {
+	}
+
+	explicit vect(
+		const base::vect< float, 4, NATIVE_T >& src)
+	: vectr< vect, 4, NATIVE_T >(src) {
 	}
 
 	explicit vect(
@@ -2504,8 +2552,12 @@ class hamilton : public vectr< hamilton< NATIVE_T >, 4, NATIVE_T >
 {
 public:
 
-	hamilton()
-	{
+	hamilton() {
+	}
+
+	explicit hamilton(
+		const base::vect< float, 4, NATIVE_T >& src)
+	: vectr< hamilton, 4, NATIVE_T >(src) {
 	}
 
 	explicit hamilton(
@@ -2623,8 +2675,12 @@ public:
 	typedef base::matx< float, DIMENSION, NATIVE_T > basetype;
 	typedef SUBCLASS_T subclass;
 
-	protomatx()
-	{
+	protomatx() {
+	}
+
+	explicit protomatx(
+		const base::matx< float, DIMENSION, NATIVE_T >& src)
+	: base::matx< float, DIMENSION, NATIVE_T>(src) {
 	}
 
 	explicit protomatx(
@@ -2804,8 +2860,12 @@ class matx : public protomatx< matx< DIMENSION, NATIVE_T >, DIMENSION, NATIVE_T 
 {
 public:
 
-	matx()
-	{
+	matx() {
+	}
+
+	explicit matx(
+		const base::matx< float, DIMENSION, NATIVE_T >& src)
+	: protomatx< matx, DIMENSION, NATIVE_T>(src) {
 	}
 
 	explicit matx(
@@ -2830,8 +2890,12 @@ class matx< 3, NATIVE_T > : public protomatx< matx< 3, NATIVE_T >, 3, NATIVE_T >
 {
 public:
 
-	matx()
-	{
+	matx() {
+	}
+
+	explicit matx(
+		const base::matx< float, 3, NATIVE_T >& src)
+	: protomatx< matx, 3, NATIVE_T >(src) {
 	}
 
 	explicit matx(
@@ -2976,8 +3040,12 @@ class matx< 4, NATIVE_T > : public protomatx< matx< 4, NATIVE_T >, 4, NATIVE_T >
 {
 public:
 
-	matx()
-	{
+	matx() {
+	}
+
+	explicit matx(
+		const base::matx< float, 4, NATIVE_T >& src)
+	: protomatx< matx, 4, NATIVE_T >(src) {
 	}
 
 	explicit matx(

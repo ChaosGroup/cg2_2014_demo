@@ -330,6 +330,9 @@ processEvents(
 			case '3':
 				input_mask = testbed::INPUT_MASK_OPTION_3;
 				break;
+			case '4':
+				input_mask = testbed::INPUT_MASK_OPTION_4;
+				break;
 			case 'a':
 			case 'A':
 				input_mask = testbed::INPUT_MASK_ALT_LEFT;

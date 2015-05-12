@@ -7,52 +7,72 @@
 
 #include "aligned_ptr.hpp"
 
-template < typename ELEMENT_T, size_t ALIGNMENT_T = 64 >
+template < typename ELEMENT_T, size_t ALIGNMENT = 64 >
 class Array
 {
-	enum { alignment = ALIGNMENT_T };
+	enum { alignment = ALIGNMENT };
 
 protected:
 	uint32_t m_capacity;
 	uint32_t m_count;
 	aligned_ptr< ELEMENT_T, alignment > m_elem;
 
+	// call only from copy ctors
+	template < size_t SRC_ALIGNMENT >
+	void actual_copy_ctor(
+		const Array< ELEMENT_T, SRC_ALIGNMENT >& src);
+
+	// call only from assignment operators
+	template < size_t SRC_ALIGNMENT >
+	Array& actual_assignment(
+		const Array< ELEMENT_T, SRC_ALIGNMENT >& src);
+
 public:
 	Array()
 	: m_capacity(0)
-	, m_count(0)
-	{
+	, m_count(0) {
 	}
 
-	template < size_t SRC_ALIGNMENT_T >
 	Array(
-		const Array< ELEMENT_T, SRC_ALIGNMENT_T >& src);
+		const Array& src) {
+		actual_copy_ctor(src);
+	}
+
+	template < size_t SRC_ALIGNMENT >
+	Array(
+		const Array< ELEMENT_T, SRC_ALIGNMENT >& src) {
+		actual_copy_ctor(src);
+	}
 
 	~Array();
 
-	template < size_t SRC_ALIGNMENT_T >
 	Array& operator =(
-		const Array< ELEMENT_T, SRC_ALIGNMENT_T >& src);
+		const Array& src) {
+		return actual_assignment(src);
+	}
+
+	template < size_t SRC_ALIGNMENT >
+	Array& operator =(
+		const Array< ELEMENT_T, SRC_ALIGNMENT >& src) {
+		return actual_assignment(src);
+	}
 
 	bool
 	setCapacity(
 		const size_t n);
 
 	size_t
-	getCapacity() const
-	{
+	getCapacity() const {
 		return m_capacity;
 	}
 
 	size_t
-	getCount() const
-	{
+	getCount() const {
 		return m_count;
 	}
 
 	void
-	resetCount()
-	{
+	resetCount() {
 		setCapacity(m_capacity);
 	}
 
@@ -76,13 +96,14 @@ public:
 		const size_t i);
 };
 
-template < typename ELEMENT_T, size_t ALIGNMENT_T >
-template < size_t SRC_ALIGNMENT_T >
-inline Array< ELEMENT_T, ALIGNMENT_T >::Array(
-	const Array< ELEMENT_T, SRC_ALIGNMENT_T >& src)
-: m_capacity(0)
-, m_count(0)
-{
+template < typename ELEMENT_T, size_t ALIGNMENT >
+template < size_t SRC_ALIGNMENT >
+inline void Array< ELEMENT_T, ALIGNMENT >::actual_copy_ctor(
+	const Array< ELEMENT_T, SRC_ALIGNMENT >& src) {
+
+	m_capacity = 0;
+	m_count = 0;
+
 	if (0 == src.m_capacity)
 		return;
 
@@ -100,9 +121,9 @@ inline Array< ELEMENT_T, ALIGNMENT_T >::Array(
 	m_count = src.m_count;
 }
 
-template < typename ELEMENT_T, size_t ALIGNMENT_T >
-inline Array< ELEMENT_T, ALIGNMENT_T >::~Array()
-{
+template < typename ELEMENT_T, size_t ALIGNMENT >
+inline Array< ELEMENT_T, ALIGNMENT >::~Array() {
+
 	assert(0 == m_capacity || !m_elem.is_null());
 
 	for (size_t i = 0; i < m_count; ++i)
@@ -115,14 +136,13 @@ inline Array< ELEMENT_T, ALIGNMENT_T >::~Array()
 #endif
 }
 
-template < typename ELEMENT_T, size_t ALIGNMENT_T >
-template < size_t SRC_ALIGNMENT_T >
-inline Array< ELEMENT_T, ALIGNMENT_T >&
-Array< ELEMENT_T, ALIGNMENT_T >::operator =(
-	const Array< ELEMENT_T, SRC_ALIGNMENT_T >& src)
-{
-	if (setCapacity(src.m_capacity))
-	{
+template < typename ELEMENT_T, size_t ALIGNMENT >
+template < size_t SRC_ALIGNMENT >
+inline Array< ELEMENT_T, ALIGNMENT >&
+Array< ELEMENT_T, ALIGNMENT >::actual_assignment(
+	const Array< ELEMENT_T, SRC_ALIGNMENT >& src) {
+
+	if (setCapacity(src.m_capacity)) {
 		for (size_t i = 0; i < src.m_count; ++i)
 			new (m_elem + i) ELEMENT_T(src.m_elem[i]);
 
@@ -132,11 +152,11 @@ Array< ELEMENT_T, ALIGNMENT_T >::operator =(
 	return *this;
 }
 
-template < typename ELEMENT_T, size_t ALIGNMENT_T >
+template < typename ELEMENT_T, size_t ALIGNMENT >
 inline bool
-Array< ELEMENT_T, ALIGNMENT_T >::setCapacity(
-	const size_t n)
-{
+Array< ELEMENT_T, ALIGNMENT >::setCapacity(
+	const size_t n) {
+
 	// setting the capacity resets the content
 	for (size_t i = 0; i < m_count; ++i)
 		m_elem[i].~ELEMENT_T();
@@ -148,8 +168,7 @@ Array< ELEMENT_T, ALIGNMENT_T >::setCapacity(
 
 	m_capacity = 0;
 
-	if (0 == n)
-	{
+	if (0 == n) {
 		m_elem.free();
 		return true;
 	}
@@ -164,10 +183,10 @@ Array< ELEMENT_T, ALIGNMENT_T >::setCapacity(
 	return true;
 }
 
-template < typename ELEMENT_T, size_t ALIGNMENT_T >
+template < typename ELEMENT_T, size_t ALIGNMENT >
 inline bool
-Array< ELEMENT_T, ALIGNMENT_T >::addElement()
-{
+Array< ELEMENT_T, ALIGNMENT >::addElement() {
+
 	if (m_count == m_capacity)
 		return false;
 
@@ -178,11 +197,11 @@ Array< ELEMENT_T, ALIGNMENT_T >::addElement()
 	return true;
 }
 
-template < typename ELEMENT_T, size_t ALIGNMENT_T >
+template < typename ELEMENT_T, size_t ALIGNMENT >
 inline bool
-Array< ELEMENT_T, ALIGNMENT_T >::addElement(
-	const ELEMENT_T& e)
-{
+Array< ELEMENT_T, ALIGNMENT >::addElement(
+	const ELEMENT_T& e) {
+
 	if (m_count == m_capacity)
 		return false;
 
@@ -193,11 +212,11 @@ Array< ELEMENT_T, ALIGNMENT_T >::addElement(
 	return true;
 }
 
-template < typename ELEMENT_T, size_t ALIGNMENT_T >
+template < typename ELEMENT_T, size_t ALIGNMENT >
 inline bool
-Array< ELEMENT_T, ALIGNMENT_T >::addMultiElement(
-	const size_t count)
-{
+Array< ELEMENT_T, ALIGNMENT >::addMultiElement(
+	const size_t count) {
+
 	if (m_count + count > m_capacity)
 		return false;
 
@@ -211,22 +230,22 @@ Array< ELEMENT_T, ALIGNMENT_T >::addMultiElement(
 	return true;
 }
 
-template < typename ELEMENT_T, size_t ALIGNMENT_T >
+template < typename ELEMENT_T, size_t ALIGNMENT >
 inline const ELEMENT_T&
-Array< ELEMENT_T, ALIGNMENT_T >::getElement(
-	const size_t i) const
-{
+Array< ELEMENT_T, ALIGNMENT >::getElement(
+	const size_t i) const {
+
 	assert(i < m_count);
 	assert(!m_elem.is_null());
 
 	return m_elem[i];
 }
 
-template < typename ELEMENT_T, size_t ALIGNMENT_T >
+template < typename ELEMENT_T, size_t ALIGNMENT >
 inline ELEMENT_T&
-Array< ELEMENT_T, ALIGNMENT_T >::getMutable(
-	const size_t i)
-{
+Array< ELEMENT_T, ALIGNMENT >::getMutable(
+	const size_t i) {
+
 	assert(i < m_count);
 	assert(!m_elem.is_null());
 
