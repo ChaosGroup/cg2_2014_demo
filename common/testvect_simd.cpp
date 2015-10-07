@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <pthread.h>
 #if __SSE__
-#include <xmmintrin.h>
+	#include <xmmintrin.h>
 #endif
 
 #if SIMD_SCALAR
@@ -61,37 +61,6 @@
 	#include <arm_neon.h>
 #elif SIMD_INTRINSICS == SIMD_MIC
 	#include <immintrin.h>
-#endif
-
-
-#undef SIMD_NAMESPACE
-
-#if SIMD_ETALON
-#define SIMD_NAMESPACE etal
-
-#elif SIMD_SCALAR
-#define SIMD_NAMESPACE scal
-
-namespace scal
-{
-typedef ivect< 2, int32_t > ivect2;
-typedef ivect< 3, int32_t > ivect3;
-typedef ivect< 4, int32_t > ivect4;
-
-typedef vect< 2, float > vect2;
-typedef vect< 3, float > vect3;
-typedef vect< 4, float > vect4;
-
-typedef hamilton< float > quat;
-
-typedef matx< 3, float > matx3;
-typedef matx< 4, float > matx4;
-
-} // namespace scal
-
-#else
-#define SIMD_NAMESPACE simd
-
 #endif
 
 static uint64_t
@@ -170,8 +139,7 @@ class __attribute__ ((aligned(SIMD_ALIGNMENT))) matx4
 	row m[4];
 
 public:
-	matx4()
-	{
+	matx4() {
 	}
 
 	matx4(
@@ -232,13 +200,321 @@ public:
 		return m[i].m[j];
 	}
 
-	inline __attribute__ ((always_inline)) matx4&
-	mul(
+	const float (& operator[](const size_t i) const)[4] {
+		return m[i].m;
+	}
+
+#if SIMD_ETALON_ALT0
+	inline __attribute__ ((always_inline)) matx4& mul(
+		const matx4& ma0,
+		const matx4& ma1) {
+
+		typedef __attribute__ ((vector_size(16 * sizeof(float)))) float vect16;
+
+		// pass 0
+		const vect16 pass0a = (vect16) {
+			ma0[0][0], ma0[0][0], ma0[0][0], ma0[0][0],
+			ma0[1][0], ma0[1][0], ma0[1][0], ma0[1][0],
+			ma0[2][0], ma0[2][0], ma0[2][0], ma0[2][0],
+			ma0[3][0], ma0[3][0], ma0[3][0], ma0[3][0] };
+
+		const vect16 pass0b = (vect16) {
+			ma1[0][0], ma1[0][1], ma1[0][2], ma1[0][3],
+			ma1[0][0], ma1[0][1], ma1[0][2], ma1[0][3],
+			ma1[0][0], ma1[0][1], ma1[0][2], ma1[0][3],
+			ma1[0][0], ma1[0][1], ma1[0][2], ma1[0][3] };
+
+		// pass 1
+		const vect16 pass1a = (vect16) {
+			ma0[0][1], ma0[0][1], ma0[0][1], ma0[0][1],
+			ma0[1][1], ma0[1][1], ma0[1][1], ma0[1][1],
+			ma0[2][1], ma0[2][1], ma0[2][1], ma0[2][1],
+			ma0[3][1], ma0[3][1], ma0[3][1], ma0[3][1] };
+
+		const vect16 pass1b = (vect16) {
+			ma1[1][0], ma1[1][1], ma1[1][2], ma1[1][3],
+			ma1[1][0], ma1[1][1], ma1[1][2], ma1[1][3],
+			ma1[1][0], ma1[1][1], ma1[1][2], ma1[1][3],
+			ma1[1][0], ma1[1][1], ma1[1][2], ma1[1][3] };
+
+		// pass 2
+		const vect16 pass2a = (vect16) {
+			ma0[0][2], ma0[0][2], ma0[0][2], ma0[0][2],
+			ma0[1][2], ma0[1][2], ma0[1][2], ma0[1][2],
+			ma0[2][2], ma0[2][2], ma0[2][2], ma0[2][2],
+			ma0[3][2], ma0[3][2], ma0[3][2], ma0[3][2] };
+
+		const vect16 pass2b = (vect16) {
+			ma1[2][0], ma1[2][1], ma1[2][2], ma1[2][3],
+			ma1[2][0], ma1[2][1], ma1[2][2], ma1[2][3],
+			ma1[2][0], ma1[2][1], ma1[2][2], ma1[2][3],
+			ma1[2][0], ma1[2][1], ma1[2][2], ma1[2][3] };
+
+		// pass 3
+		const vect16 pass3a = (vect16) {
+			ma0[0][3], ma0[0][3], ma0[0][3], ma0[0][3],
+			ma0[1][3], ma0[1][3], ma0[1][3], ma0[1][3],
+			ma0[2][3], ma0[2][3], ma0[2][3], ma0[2][3],
+			ma0[3][3], ma0[3][3], ma0[3][3], ma0[3][3] };
+
+		const vect16 pass3b = (vect16) {
+			ma1[3][0], ma1[3][1], ma1[3][2], ma1[3][3],
+			ma1[3][0], ma1[3][1], ma1[3][2], ma1[3][3],
+			ma1[3][0], ma1[3][1], ma1[3][2], ma1[3][3],
+			ma1[3][0], ma1[3][1], ma1[3][2], ma1[3][3] };
+
+		const vect16 res =
+			pass0a * pass0b +
+			pass1a * pass1b +
+			pass2a * pass2b +
+			pass3a * pass3b;
+
+		return *this = *reinterpret_cast< const matx4* >(&res);
+	}
+
+#elif SIMD_ETALON_ALT1
+	inline __attribute__ ((always_inline)) matx4& mul(
+		const matx4& ma0,
+		const matx4& ma1) {
+
+		typedef __attribute__ ((vector_size( 4 * sizeof(float)))) float vect4;
+		typedef __attribute__ ((vector_size(16 * sizeof(float)))) float vect16;
+
+#if __AVX__ == 0
+		// try hinting the compiler of splatting elements from 4-way vector reads
+		const vect4 ma0r0 = *reinterpret_cast< const vect4* >(ma0[0]);
+		const vect4 ma0r1 = *reinterpret_cast< const vect4* >(ma0[1]);
+		const vect4 ma0r2 = *reinterpret_cast< const vect4* >(ma0[2]);
+		const vect4 ma0r3 = *reinterpret_cast< const vect4* >(ma0[3]);
+
+#else
+		typedef __attribute__ ((vector_size( 8 * sizeof(float)))) float vect8;
+
+		// try hinting the compiler of splatting elements from 8-way vector reads
+		const vect8 ma0r01 = *reinterpret_cast< const vect8* >(ma0[0]);
+		const vect8 ma0r23 = *reinterpret_cast< const vect8* >(ma0[2]);
+
+		const vect4 ma0r0 = (vect4){ ma0r01[0], ma0r01[1], ma0r01[2], ma0r01[3] };
+		const vect4 ma0r1 = (vect4){ ma0r01[4], ma0r01[5], ma0r01[6], ma0r01[7] };
+		const vect4 ma0r2 = (vect4){ ma0r23[0], ma0r23[1], ma0r23[2], ma0r23[3] };
+		const vect4 ma0r3 = (vect4){ ma0r23[4], ma0r23[5], ma0r23[6], ma0r23[7] };
+
+#endif
+		// pass 0
+		const vect16 pass0a = (vect16) {
+			ma0r0[0], ma0r0[0], ma0r0[0], ma0r0[0],
+			ma0r1[0], ma0r1[0], ma0r1[0], ma0r1[0],
+			ma0r2[0], ma0r2[0], ma0r2[0], ma0r2[0],
+			ma0r3[0], ma0r3[0], ma0r3[0], ma0r3[0] };
+
+		const vect16 pass0b = (vect16) {
+			ma1[0][0], ma1[0][1], ma1[0][2], ma1[0][3],
+			ma1[0][0], ma1[0][1], ma1[0][2], ma1[0][3],
+			ma1[0][0], ma1[0][1], ma1[0][2], ma1[0][3],
+			ma1[0][0], ma1[0][1], ma1[0][2], ma1[0][3] };
+
+		// pass 1
+		const vect16 pass1a = (vect16) {
+			ma0r0[1], ma0r0[1], ma0r0[1], ma0r0[1],
+			ma0r1[1], ma0r1[1], ma0r1[1], ma0r1[1],
+			ma0r2[1], ma0r2[1], ma0r2[1], ma0r2[1],
+			ma0r3[1], ma0r3[1], ma0r3[1], ma0r3[1] };
+
+		const vect16 pass1b = (vect16) {
+			ma1[1][0], ma1[1][1], ma1[1][2], ma1[1][3],
+			ma1[1][0], ma1[1][1], ma1[1][2], ma1[1][3],
+			ma1[1][0], ma1[1][1], ma1[1][2], ma1[1][3],
+			ma1[1][0], ma1[1][1], ma1[1][2], ma1[1][3] };
+
+		// pass 2
+		const vect16 pass2a = (vect16) {
+			ma0r0[2], ma0r0[2], ma0r0[2], ma0r0[2],
+			ma0r1[2], ma0r1[2], ma0r1[2], ma0r1[2],
+			ma0r2[2], ma0r2[2], ma0r2[2], ma0r2[2],
+			ma0r3[2], ma0r3[2], ma0r3[2], ma0r3[2] };
+
+		const vect16 pass2b = (vect16) {
+			ma1[2][0], ma1[2][1], ma1[2][2], ma1[2][3],
+			ma1[2][0], ma1[2][1], ma1[2][2], ma1[2][3],
+			ma1[2][0], ma1[2][1], ma1[2][2], ma1[2][3],
+			ma1[2][0], ma1[2][1], ma1[2][2], ma1[2][3] };
+
+		// pass 3
+		const vect16 pass3a = (vect16) {
+			ma0r0[3], ma0r0[3], ma0r0[3], ma0r0[3],
+			ma0r1[3], ma0r1[3], ma0r1[3], ma0r1[3],
+			ma0r2[3], ma0r2[3], ma0r2[3], ma0r2[3],
+			ma0r3[3], ma0r3[3], ma0r3[3], ma0r3[3] };
+
+		const vect16 pass3b = (vect16) {
+			ma1[3][0], ma1[3][1], ma1[3][2], ma1[3][3],
+			ma1[3][0], ma1[3][1], ma1[3][2], ma1[3][3],
+			ma1[3][0], ma1[3][1], ma1[3][2], ma1[3][3],
+			ma1[3][0], ma1[3][1], ma1[3][2], ma1[3][3] };
+
+		const vect16 res =
+			pass0a * pass0b +
+			pass1a * pass1b +
+			pass2a * pass2b +
+			pass3a * pass3b;
+
+		return *this = *reinterpret_cast< const matx4* >(&res);
+	}
+
+#elif SIMD_ETALON_ALT2
+	inline __attribute__ ((always_inline)) matx4& mul(
+		const matx4& ma0,
+		const matx4& ma1) {
+
+		typedef __attribute__ ((vector_size( 4 * sizeof(float)))) float vect4;
+		typedef __attribute__ ((vector_size(16 * sizeof(float)))) float vect16;
+
+		// try hinting the compiler of using the fast scalar-broadcast op on AVX processors
+		const vect4 ma0r0_0 = (vect4) { ma0[0][0], ma0[0][0], ma0[0][0], ma0[0][0] };
+		const vect4 ma0r1_0 = (vect4) { ma0[1][0], ma0[1][0], ma0[1][0], ma0[1][0] };
+		const vect4 ma0r2_0 = (vect4) { ma0[2][0], ma0[2][0], ma0[2][0], ma0[2][0] };
+		const vect4 ma0r3_0 = (vect4) { ma0[3][0], ma0[3][0], ma0[3][0], ma0[3][0] };
+
+		const vect4 ma0r0_1 = (vect4) { ma0[0][1], ma0[0][1], ma0[0][1], ma0[0][1] };
+		const vect4 ma0r1_1 = (vect4) { ma0[1][1], ma0[1][1], ma0[1][1], ma0[1][1] };
+		const vect4 ma0r2_1 = (vect4) { ma0[2][1], ma0[2][1], ma0[2][1], ma0[2][1] };
+		const vect4 ma0r3_1 = (vect4) { ma0[3][1], ma0[3][1], ma0[3][1], ma0[3][1] };
+
+		const vect4 ma0r0_2 = (vect4) { ma0[0][2], ma0[0][2], ma0[0][2], ma0[0][2] };
+		const vect4 ma0r1_2 = (vect4) { ma0[1][2], ma0[1][2], ma0[1][2], ma0[1][2] };
+		const vect4 ma0r2_2 = (vect4) { ma0[2][2], ma0[2][2], ma0[2][2], ma0[2][2] };
+		const vect4 ma0r3_2 = (vect4) { ma0[3][2], ma0[3][2], ma0[3][2], ma0[3][2] };
+
+		const vect4 ma0r0_3 = (vect4) { ma0[0][3], ma0[0][3], ma0[0][3], ma0[0][3] };
+		const vect4 ma0r1_3 = (vect4) { ma0[1][3], ma0[1][3], ma0[1][3], ma0[1][3] };
+		const vect4 ma0r2_3 = (vect4) { ma0[2][3], ma0[2][3], ma0[2][3], ma0[2][3] };
+		const vect4 ma0r3_3 = (vect4) { ma0[3][3], ma0[3][3], ma0[3][3], ma0[3][3] };
+
+		// pass 0
+		const vect16 pass0a = (vect16) {
+			ma0r0_0[0], ma0r0_0[1], ma0r0_0[2], ma0r0_0[3],
+			ma0r1_0[0], ma0r1_0[1], ma0r1_0[2], ma0r1_0[3],
+			ma0r2_0[0], ma0r2_0[1], ma0r2_0[2], ma0r2_0[3],
+			ma0r3_0[0], ma0r3_0[1], ma0r3_0[2], ma0r3_0[3] };
+
+		const vect16 pass0b = (vect16) {
+			ma1[0][0], ma1[0][1], ma1[0][2], ma1[0][3],
+			ma1[0][0], ma1[0][1], ma1[0][2], ma1[0][3],
+			ma1[0][0], ma1[0][1], ma1[0][2], ma1[0][3],
+			ma1[0][0], ma1[0][1], ma1[0][2], ma1[0][3] };
+
+		// pass 1
+		const vect16 pass1a = (vect16) {
+			ma0r0_1[0], ma0r0_1[1], ma0r0_1[2], ma0r0_1[3],
+			ma0r1_1[0], ma0r1_1[1], ma0r1_1[2], ma0r1_1[3],
+			ma0r2_1[0], ma0r2_1[1], ma0r2_1[2], ma0r2_1[3],
+			ma0r3_1[0], ma0r3_1[1], ma0r3_1[2], ma0r3_1[3] };
+
+		const vect16 pass1b = (vect16) {
+			ma1[1][0], ma1[1][1], ma1[1][2], ma1[1][3],
+			ma1[1][0], ma1[1][1], ma1[1][2], ma1[1][3],
+			ma1[1][0], ma1[1][1], ma1[1][2], ma1[1][3],
+			ma1[1][0], ma1[1][1], ma1[1][2], ma1[1][3] };
+
+		// pass 2
+		const vect16 pass2a = (vect16) {
+			ma0r0_2[0], ma0r0_2[1], ma0r0_2[2], ma0r0_2[3],
+			ma0r1_2[0], ma0r1_2[1], ma0r1_2[2], ma0r1_2[3],
+			ma0r2_2[0], ma0r2_2[1], ma0r2_2[2], ma0r2_2[3],
+			ma0r3_2[0], ma0r3_2[1], ma0r3_2[2], ma0r3_2[3] };
+
+		const vect16 pass2b = (vect16) {
+			ma1[2][0], ma1[2][1], ma1[2][2], ma1[2][3],
+			ma1[2][0], ma1[2][1], ma1[2][2], ma1[2][3],
+			ma1[2][0], ma1[2][1], ma1[2][2], ma1[2][3],
+			ma1[2][0], ma1[2][1], ma1[2][2], ma1[2][3] };
+
+		// pass 3
+		const vect16 pass3a = (vect16) {
+			ma0r0_3[0], ma0r0_3[1], ma0r0_3[2], ma0r0_3[3],
+			ma0r1_3[0], ma0r1_3[1], ma0r1_3[2], ma0r1_3[3],
+			ma0r2_3[0], ma0r2_3[1], ma0r2_3[2], ma0r2_3[3],
+			ma0r3_3[0], ma0r3_3[1], ma0r3_3[2], ma0r3_3[3] };
+
+		const vect16 pass3b = (vect16) {
+			ma1[3][0], ma1[3][1], ma1[3][2], ma1[3][3],
+			ma1[3][0], ma1[3][1], ma1[3][2], ma1[3][3],
+			ma1[3][0], ma1[3][1], ma1[3][2], ma1[3][3],
+			ma1[3][0], ma1[3][1], ma1[3][2], ma1[3][3] };
+
+		const vect16 res =
+			pass0a * pass0b +
+			pass1a * pass1b +
+			pass2a * pass2b +
+			pass3a * pass3b;
+
+		return *this = *reinterpret_cast< const matx4* >(&res);
+	}
+
+#elif SIMD_ETALON_ALT3
+	inline __attribute__ ((always_inline)) matx4& mul(
+		const matx4& ma0,
+		const matx4& ma1) { // ma1 is transposed
+
+		const __m128 ma0r0 = ma0.m[0].n;
+		const __m128 ma0r1 = ma0.m[1].n;
+		const __m128 ma0r2 = ma0.m[2].n;
+		const __m128 ma0r3 = ma0.m[3].n;
+
+		const __m128 ma1c0 = ma1.m[0].n;
+		const __m128 ma1c1 = ma1.m[1].n;
+		const __m128 ma1c2 = ma1.m[2].n;
+		const __m128 ma1c3 = ma1.m[3].n;
+
+		const __m128 re0_0 = _mm_dp_ps(ma0r0, ma1c0, 0xf1);
+		const __m128 re0_1 = _mm_dp_ps(ma0r0, ma1c1, 0xf1);
+		const __m128 re0_2 = _mm_dp_ps(ma0r0, ma1c2, 0xf1);
+		const __m128 re0_3 = _mm_dp_ps(ma0r0, ma1c3, 0xf1);
+
+		const __m128 r0 = _mm_movelh_ps(
+			_mm_unpacklo_ps(re0_0, re0_1),
+			_mm_unpacklo_ps(re0_2, re0_3));
+
+		const __m128 re1_0 = _mm_dp_ps(ma0r1, ma1c0, 0xf1);
+		const __m128 re1_1 = _mm_dp_ps(ma0r1, ma1c1, 0xf1);
+		const __m128 re1_2 = _mm_dp_ps(ma0r1, ma1c2, 0xf1);
+		const __m128 re1_3 = _mm_dp_ps(ma0r1, ma1c3, 0xf1);
+
+		const __m128 r1 = _mm_movelh_ps(
+			_mm_unpacklo_ps(re1_0, re1_1),
+			_mm_unpacklo_ps(re1_2, re1_3));
+
+		const __m128 re2_0 = _mm_dp_ps(ma0r2, ma1c0, 0xf1);
+		const __m128 re2_1 = _mm_dp_ps(ma0r2, ma1c1, 0xf1);
+		const __m128 re2_2 = _mm_dp_ps(ma0r2, ma1c2, 0xf1);
+		const __m128 re2_3 = _mm_dp_ps(ma0r2, ma1c3, 0xf1);
+
+		const __m128 r2 = _mm_movelh_ps(
+			_mm_unpacklo_ps(re2_0, re2_1),
+			_mm_unpacklo_ps(re2_2, re2_3));
+
+		const __m128 re3_0 = _mm_dp_ps(ma0r3, ma1c0, 0xf1);
+		const __m128 re3_1 = _mm_dp_ps(ma0r3, ma1c1, 0xf1);
+		const __m128 re3_2 = _mm_dp_ps(ma0r3, ma1c2, 0xf1);
+		const __m128 re3_3 = _mm_dp_ps(ma0r3, ma1c3, 0xf1);
+
+		const __m128 r3 = _mm_movelh_ps(
+			_mm_unpacklo_ps(re3_0, re3_1),
+			_mm_unpacklo_ps(re3_2, re3_3));
+
+		m[0].n = r0;
+		m[1].n = r1;
+		m[2].n = r2;
+		m[3].n = r3;
+		return *this;
+	}
+
+#else // SIMD_ETALON_ALT*
+	inline __attribute__ ((always_inline)) matx4& mul(
 		const matx4& mat0,
-		const matx4& mat1)
-	{
-		for (unsigned i = 0; i < 4; ++i)
-		{
+		const matx4& mat1) {
+
+		for (unsigned i = 0; i < 4; ++i) {
 			const float e0 = mat0.m[i].m[0];
 
 #if SIMD_preamble_per_output_row
@@ -251,7 +527,7 @@ public:
 			m[i].n = vec_madd(vec_splat(mat0.m[i].n, 3), mat1.m[3].n, m[i].n);
 
 #elif SIMD_INTRINSICS == SIMD_SSE
-#if 1
+#if __AVX__ == 0
 			m[i].n =            _mm_mul_ps(_mm_shuffle_ps(mat0.m[i].n, mat0.m[i].n, _MM_SHUFFLE(0, 0, 0, 0)), mat1.m[0].n);
 			m[i].n = _mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(mat0.m[i].n, mat0.m[i].n, _MM_SHUFFLE(1, 1, 1, 1)), mat1.m[1].n), m[i].n);
 			m[i].n = _mm_add_ps(_mm_mul_ps(_mm_shuffle_ps(mat0.m[i].n, mat0.m[i].n, _MM_SHUFFLE(2, 2, 2, 2)), mat1.m[2].n), m[i].n);
@@ -391,13 +667,43 @@ public:
 
 		return *this;
 	}
+
+#endif // SIMD_ETALON_ALT*
 };
 
 } // namespace etal
 
+#if SIMD_ETALON
+namespace space = etal;
+
+#elif SIMD_SCALAR
+namespace space = scal;
+
+namespace scal
+{
+typedef ivect< 2, int32_t > ivect2;
+typedef ivect< 3, int32_t > ivect3;
+typedef ivect< 4, int32_t > ivect4;
+
+typedef vect< 2, float > vect2;
+typedef vect< 3, float > vect3;
+typedef vect< 4, float > vect4;
+
+typedef hamilton< float > quat;
+
+typedef matx< 3, float > matx3;
+typedef matx< 4, float > matx4;
+
+} // namespace scal
+
+#else
+namespace space = simd;
+
+#endif
+
 std::istream& operator >> (
 	std::istream& str,
-	SIMD_NAMESPACE::matx4& a)
+	space::matx4& a)
 {
 	float t[4][4];
 
@@ -421,7 +727,7 @@ std::istream& operator >> (
 	str >> t[3][2];
 	str >> t[3][3];
 
-	a = SIMD_NAMESPACE::matx4(t);
+	a = space::matx4(t);
 
 	return str;
 }
@@ -454,7 +760,7 @@ std::ostream& operator << (
 
 std::ostream& operator << (
 	std::ostream& str,
-	const SIMD_NAMESPACE::matx4& a)
+	const space::matx4& a)
 {
 	return str <<
 		formatter(a.get(0, 0)) << " " << formatter(a.get(0, 1)) << " " << formatter(a.get(0, 2)) << " " << formatter(a.get(0, 3)) << '\n' <<
@@ -468,8 +774,19 @@ static const size_t reps = size_t(1e+7) * 6;
 static const size_t nthreads = SIMD_NUM_THREADS;
 static const size_t one_less = nthreads - 1;
 
-SIMD_NAMESPACE::matx4 ma[2];
-SIMD_NAMESPACE::matx4 ra[nthreads] __attribute__ ((aligned(CACHELINE_SIZE)));
+space::matx4 ma[2] __attribute__ ((aligned(CACHELINE_SIZE))) = {
+	space::matx4(
+		 1,  0,  0,  0,
+		 0,  1,  0,  0,
+		 0,  0,  1,  0,
+		 0,  0,  0,  1),
+	space::matx4(
+		 1,  2,  3,  4,
+		 5,  6,  7,  8,
+		 9, 10, 11, 12,
+		13, 14, 15, 16)
+};
+space::matx4 ra[nthreads] __attribute__ ((aligned(CACHELINE_SIZE)));
 
 template < bool >
 struct compile_assert;
@@ -480,7 +797,7 @@ struct compile_assert< true >
 	compile_assert() {}
 };
 
-static compile_assert< sizeof(SIMD_NAMESPACE::matx4) / CACHELINE_SIZE * CACHELINE_SIZE == sizeof(SIMD_NAMESPACE::matx4) > assert_ra_element_size;
+static compile_assert< sizeof(space::matx4) / CACHELINE_SIZE * CACHELINE_SIZE == sizeof(space::matx4) > assert_ra_element_size;
 
 enum {
 	BARRIER_START,
@@ -494,42 +811,55 @@ struct compute_arg
 {
 	pthread_t thread;
 	size_t id;
-	size_t offset;
+	uint64_t dt;
 
 	compute_arg()
 	: thread(0)
 	, id(0)
-	, offset(0)
-	{
+	, dt(0) {
 	}
 
 	compute_arg(
-		const size_t arg_id,
-		const size_t arg_offs)
+		const size_t arg_id)
 	: thread(0)
 	, id(arg_id)
-	, offset(arg_offs)
-	{
+	, dt(0) {
 	}
 };
 
-static void*
-compute(
-	void* arg)
-{
-	const compute_arg* const carg = reinterpret_cast< compute_arg* >(arg);
-	const size_t id = carg->id;
-	const size_t offset = carg->offset;
+size_t obfuscator; // invariance obfuscator
 
-	pthread_barrier_wait(barrier + BARRIER_START);
+static inline __attribute__ ((always_inline)) void workload(
+	const size_t id,
+	const size_t count) {
 
-	for (size_t i = 0; i < reps; ++i)
-	{
+	const size_t offset = obfuscator;
+
+	for (size_t i = 0; i < count; ++i) {
 		const size_t offs0 = i * offset + 0;
 		const size_t offs1 = i * offset + 1;
 
-		ra[id + offs0] = SIMD_NAMESPACE::matx4().mul(ma[offs0], ma[offs1]);
+		ra[id + offs0] = space::matx4().mul(ma[offs0], ma[offs1]);
 	}
+}
+
+static void*
+compute(
+	void* arg) {
+
+	compute_arg* const carg = reinterpret_cast< compute_arg* >(arg);
+	const size_t id = carg->id;
+
+	pthread_barrier_wait(barrier + BARRIER_START);
+
+	// warm up the engines
+	workload(id, reps / 10);
+
+	const uint64_t t0 = timer_nsec();
+	workload(id, reps);
+
+	const uint64_t dt = timer_nsec() - t0;
+	carg->dt = dt;
 
 	pthread_barrier_wait(barrier + BARRIER_FINISH);
 
@@ -543,12 +873,16 @@ class workforce_t
 	bool successfully_init;
 
 public:
-	workforce_t(const size_t offset);
+	workforce_t();
 	~workforce_t();
 
-	bool is_successfully_init() const
-	{
+	bool is_successfully_init() const {
 		return successfully_init;
+	}
+
+	uint64_t get_dt(const size_t i) const {
+		assert(one_less > i);
+		return record[i].dt;
 	}
 };
 
@@ -565,10 +899,9 @@ report_err(
 }
 
 
-workforce_t::workforce_t(
-	const size_t offset) :
-	successfully_init(false)
-{
+workforce_t::workforce_t()
+: successfully_init(false) {
+
 	for (size_t i = 0; i < sizeof(barrier) / sizeof(barrier[0]); ++i)
 	{
 		const int r = pthread_barrier_init(barrier + i, NULL, nthreads);
@@ -583,7 +916,7 @@ workforce_t::workforce_t(
 	for (size_t i = 0; i < one_less; ++i)
 	{
 		const size_t id = i + 1;
-		record[i] = compute_arg(id, offset);
+		record[i] = compute_arg(id);
 
 		struct scoped_t
 		{
@@ -662,20 +995,7 @@ workforce_t::~workforce_t()
 }
 
 
-#if __SSE__
-static std::ostream& operator << (
-	std::ostream& str,
-	const __m128i a)
-{
-	str << std::hex << "{ 0x" <<
-		uint32_t(a[0] >>  0) << ", 0x" <<
-		uint32_t(a[0] >> 32) << ", 0x" <<
-		uint32_t(a[1] >>  0) << ", 0x" <<
-		uint32_t(a[1] >> 32) << " }" << std::dec;
-	return str;
-}
-
-class formatter_m128
+class formatter_float
 {
 	union {
 		uint32_t u;
@@ -683,7 +1003,7 @@ class formatter_m128
 	};
 
 public:
-	formatter_m128(const float a)
+	formatter_float(const float a)
 	: f(a) {
 	}
 
@@ -694,7 +1014,7 @@ public:
 
 static std::ostream& operator << (
 	std::ostream& str,
-	const formatter_m128 a)
+	const formatter_float a)
 {
 	str << 
 		(a.get() >> 31) << ":" <<
@@ -703,26 +1023,41 @@ static std::ostream& operator << (
 	return str;
 }
 
+#if SIMD_SCALAR
+namespace conf = scal;
+
+#else
+namespace conf = simd;
+
+#endif
 static std::ostream& operator << (
 	std::ostream& str,
-	const __m128 a)
+	const conf::vect2& a)
 {
-	str << "{ " <<
-		a[0] << ", " <<
-		a[1] << ", " <<
-		a[2] << ", " <<
-		a[3] << " } " << std::hex << "[ " <<
-		formatter_m128(a[0]) << ", " <<
-		formatter_m128(a[1]) << ", " <<
-		formatter_m128(a[2]) << ", " <<
-		formatter_m128(a[3]) << " ]" << std::dec;
-	return str;
+	return str <<
+		formatter_float(a.get(0)) << " " << formatter_float(a.get(1));
 }
 
-#endif // __SSE__
+static std::ostream& operator << (
+	std::ostream& str,
+	const conf::vect3& a)
+{
+	return str <<
+		formatter_float(a.get(0)) << " " << formatter_float(a.get(1)) << " " << formatter_float(a.get(2));
+}
+
+static std::ostream& operator << (
+	std::ostream& str,
+	const conf::vect4& a)
+{
+	return str <<
+		formatter_float(a.get(0)) << " " << formatter_float(a.get(1)) << " " << formatter_float(a.get(2)) << " " << formatter_float(a.get(3));
+}
+
 static bool
 conformance()
 {
+
 #if SIMD_SCALAR
 	using namespace scal;
 
@@ -730,7 +1065,6 @@ conformance()
 	using namespace simd;
 
 #endif
-
 	bool success = true;
 
 	const vect2 v2(1.f, 2.f);
@@ -917,6 +1251,18 @@ conformance()
 	{
 		std::cerr << "failed test at line " << __LINE__ << std::endl;
 		success = false;
+
+		std::cout <<
+			vect2().div(v2, vect2(*reinterpret_cast< const float(*)[2] >(f))) << std::endl <<
+			vect2(v2[0] / f[0], v2[1] / f[1]) << std::endl;
+
+		std::cout <<
+			vect3().div(v3, vect3(*reinterpret_cast< const float(*)[3] >(f))) << std::endl <<
+			vect3(v3[0] / f[0], v3[1] / f[1], v3[2] / f[2]) << std::endl;
+
+		std::cout <<
+			vect4().div(v4, vect4(*reinterpret_cast< const float(*)[4] >(f))) << std::endl <<
+			vect4(v4[0] / f[0], v4[1] / f[1], v4[2] / f[2], v4[3] / f[3]) << std::endl;
 	}
 
 	if (vect2().div(v2, precision2) != vect2(v2[0] / precision2[0], v2[1] / precision2[1]) ||
@@ -1032,70 +1378,59 @@ conformance()
 		success = false;
 
 		std::cout <<
-			vect3(nv3[0] / nv3.norm(), nv3[1] / nv3.norm(), nv3[2] / nv3.norm()).normalise().getn() << std::endl <<
-			vect3().normalise(nv3).getn() << std::endl;
+			vect3(nv3[0] / nv3.norm(), nv3[1] / nv3.norm(), nv3[2] / nv3.norm()).normalise() << std::endl <<
+			vect3().normalise(nv3) << std::endl;
 
 		std::cout <<
-			vect4(nv4[0] / nv4.norm(), nv4[1] / nv4.norm(), nv4[2] / nv4.norm(), nv4[3] / nv4.norm()).normalise().getn() << std::endl <<
-			vect4().normalise(nv4).getn() << std::endl;
+			vect4(nv4[0] / nv4.norm(), nv4[1] / nv4.norm(), nv4[2] / nv4.norm(), nv4[3] / nv4.norm()).normalise() << std::endl <<
+			vect4().normalise(nv4) << std::endl;
 	}
 
 	return success;
 }
 
 
-int
-main(
+int main(
 	int argc,
 	char** argv)
 {
+#if SIMD_TEST_CONFORMANCE
 	std::cout << "conformance test.." << std::endl;
 	std::cout << (conformance() ? "passed" : "failed") << std::endl;
 
+#endif
 	std::cout << "performance test.." << std::endl;
 
-	size_t obfuscator; // invariance obfuscator
 	std::ifstream in("vect.input");
 
-	if (in.is_open())
-	{
+	if (in.is_open()) {
 		in >> ma[0];
 		in >> ma[1];
-		in >> obfuscator;
 		in.close();
 	}
-	else
-	{
-		std::cout << "enter ma0: ";
-		std::cin >> ma[0];
-		std::cout << "enter ma1: ";
-		std::cin >> ma[1];
-		std::cout << "enter 0: ";
-		std::cin >> obfuscator;
-	}
 
-	const workforce_t workforce(obfuscator);
+	const workforce_t workforce;
 
-	if (!workforce.is_successfully_init())
-	{
+	if (!workforce.is_successfully_init()) {
 		std::cerr << "failed to raise workforce; bailing out" << std::endl;
 		return -1;
 	}
 
-	// let the workforce start their engines
-	const timespec ts = { 0, one_less * 100000000 };
-	nanosleep(&ts, NULL);
-
-	compute_arg carg(0, obfuscator);
-
-	const uint64_t t0 = timer_nsec();
+	compute_arg carg(0);
 
 	compute(&carg);
 
-	const uint64_t dt = timer_nsec() - t0;
-	const double sec = double(dt) * 1e-9;
+	double sec = carg.dt * 1e-9;
 
-	std::cout << "elapsed time: " << sec << " s" << std::endl;
+	std::cout << "elapsed time: " << sec << " s";
+
+	for (size_t i = 0; i < one_less; ++i) {
+		const double isec = workforce.get_dt(i) * 1e-9;
+		std::cout << ", " << isec << " s";
+		sec += isec;
+	}
+
+	std::cout << " (" << sec / nthreads << " s)" << std::endl;
 
 	for (size_t i = 0; i < sizeof(ra) / sizeof(ra[0]); ++i)
 		std::cout << ra[i];

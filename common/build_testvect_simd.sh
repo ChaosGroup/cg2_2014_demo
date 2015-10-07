@@ -10,16 +10,28 @@ CFLAGS=(
 	-fno-exceptions
 	-fno-rtti
 	-fstrict-aliasing
+# Use reciprocals instead of division
 	-DVECT_SIMD_SSE_DIV_AS_RCP
+# Use reciprocal sqrt instead if sqrt and division
 #	-DVECT_SIMD_SSE_SQRT_DIV_AS_RSQRT
+# Perform arithmetic conformace tests as well
+#	-DSIMD_TEST_CONFORMANCE
 # Use as many worker threads, including the main thread
-	-DSIMD_NUM_THREADS=1
+	-DSIMD_NUM_THREADS=`lscpu | grep ^"CPU(s)" | sed s/^[^[:digit:]]*//`
 # Worker thread affinity stride (for control over physical/logical CPU distribution)
 	-DSIMD_THREAD_AFFINITY_STRIDE=1
 # Natural alignment of any SIMD type (might be overridden in the architecture-dependant sections below)
 	-DSIMD_ALIGNMENT=16
 # For the performance test, use matx4 from etal namespace instead of counterpart from simd/scal namespace
 #	-DSIMD_ETALON
+# Alternative etalon v0 (in combination with SIMD_ETALON above); clang++-3.6 recommended
+#	-DSIMD_ETALON_ALT0
+# Alternative etalon v1 (in combination with SIMD_ETALON above); clang++-3.6 recommended
+#	-DSIMD_ETALON_ALT1
+# Alternative etalon v2 (in combination with SIMD_ETALON above); clang++-3.6 recommended
+#	-DSIMD_ETALON_ALT2
+# Alternative etalon v3 (in combination with SIMD_ETALON above)
+#	-DSIMD_ETALON_ALT3
 # Use manual unrolling of innermost loops under -DSIMD_ETALON
 #	-DSIMD_ETALON_MANUAL_UNROLL
 # Use vector templates from scal namespace in both conformance and performance tests
@@ -29,17 +41,17 @@ CFLAGS=(
 # Produce asm listings instead of binaries
 #	-S
 )
-if [[ $CC == "g++" ]]; then
+if [[ ${CC:0:3} == "g++" ]]; then
 	CFLAGS+=(
 		-ffast-math
 	)
 
-elif [[ $CC == "clang++" ]]; then
+elif [[ ${CC:0:7} == "clang++" ]]; then
 	CFLAGS+=(
 		-ffp-contract=fast
 	)
 
-elif [[ $CC == "icpc" ]]; then
+elif [[ ${CC:0:4} == "icpc" ]]; then
 	CFLAGS+=(
 		-fp-model fast=2
 #		-unroll-aggressive
