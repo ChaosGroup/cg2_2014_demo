@@ -11,16 +11,16 @@ CFLAGS=(
 	-fno-rtti
 	-fstrict-aliasing
 # Use reciprocals instead of division
-	-DVECT_SIMD_SSE_DIV_AS_RCP
+	-DVECT_SIMD_DIV_AS_RCP
 # Use reciprocal sqrt instead if sqrt and division
-#	-DVECT_SIMD_SSE_SQRT_DIV_AS_RSQRT
+#	-DVECT_SIMD_SQRT_DIV_AS_RSQRT
 # Perform arithmetic conformace tests as well
 #	-DSIMD_TEST_CONFORMANCE
 # Use as many worker threads, including the main thread
 	-DSIMD_NUM_THREADS=`lscpu | grep ^"CPU(s)" | sed s/^[^[:digit:]]*//`
 # Worker thread affinity stride (for control over physical/logical CPU distribution)
 	-DSIMD_THREAD_AFFINITY_STRIDE=1
-# Natural alignment of any SIMD type (might be overridden in the architecture-dependant sections below)
+# Minimal alignment of any SIMD type (might be overridden in the architecture-dependant sections below)
 	-DSIMD_ALIGNMENT=16
 # For the performance test, use matx4 from etal namespace instead of counterpart from simd/scal namespace
 #	-DSIMD_ETALON
@@ -32,8 +32,12 @@ CFLAGS=(
 #	-DSIMD_ETALON_ALT2
 # Alternative etalon v3 (in combination with SIMD_ETALON above)
 #	-DSIMD_ETALON_ALT3
-# Use manual unrolling of innermost loops under -DSIMD_ETALON
-#	-DSIMD_ETALON_MANUAL_UNROLL
+# Alternative etalon v4 (in combination with SIMD_ETALON above); ARMv7 only
+#	-DSIMD_ETALON_ALT4
+# Alternative etalon v5 (in combination with SIMD_ETALON above); Intel MIC only
+#	-DSIMD_ETALON_ALT5
+# Use manual unrolling of innermost loops
+#	-DSIMD_MANUAL_UNROLL
 # Use vector templates from scal namespace in both conformance and performance tests
 #	-DSIMD_SCALAR
 # Use vector templates from platform-agnostic rend namespace in performance tests
@@ -55,7 +59,8 @@ elif [[ ${CC:0:4} == "icpc" ]]; then
 	CFLAGS+=(
 		-fp-model fast=2
 #		-unroll-aggressive
-#		-no-opt-prefetch
+		-opt-prefetch=0
+		-opt-streaming-cache-evict=0
 	)
 fi
 
@@ -75,12 +80,20 @@ if [[ $HOSTTYPE == "arm" ]]; then
 			-march=native
 			-mtune=native
 			-marm
-#			-mfpu=neon
-# Intrinsics yield better results for now
-#			-DSIMD_AUTOVECT=SIMD_4WAY
+			-mfpu=neon
 			-DCACHELINE_SIZE=32
 		)
 	fi
+
+elif [[ $HOSTTYPE == "aarch64" ]]; then
+
+	CFLAGS+=(
+#		-march=native
+#		-mtune=native
+#		-mfpu=neon
+#		-DSIMD_AUTOVECT=SIMD_4WAY
+		-DCACHELINE_SIZE=64
+	)
 
 elif [[ $HOSTTYPE == "x86_64" ]]; then
 
@@ -88,12 +101,12 @@ elif [[ $HOSTTYPE == "x86_64" ]]; then
 # Set -march and -mtune accordingly:
 		-march=native
 		-mtune=native
-# For SSE, establish a baseline:
-#		-mfpmath=sse
+# For MIC, set 512-bit alignment:
 #		-mmic
+#		-DSIMD_ALIGNMENT=64
 # Use xmm intrinsics with SSE (rather than autovectorization) to level the
 # ground with altivec
-#		-DSIMD_AUTOVECT=SIMD_4WAY
+#		-DSIMD_AUTOVECT=SIMD_8WAY
 # For AVX, disable any SSE which might be enabled by default:
 #		-mno-sse
 #		-mno-sse2
@@ -103,7 +116,6 @@ elif [[ $HOSTTYPE == "x86_64" ]]; then
 #		-mno-sse4.1
 #		-mno-sse4.2
 #		-mavx
-#		-DSIMD_AUTOVECT=SIMD_4WAY
 # For AVX with FMA/FMA4 (cumulative to above):
 #		-mfma4
 #		-mfma
