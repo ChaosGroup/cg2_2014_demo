@@ -34,7 +34,7 @@
 		#define SIMD_INTRINSICS SIMD_ALTIVEC
 	#elif __SSE__ == 1
 		#define SIMD_INTRINSICS SIMD_SSE
-	#elif __ARM_NEON__ == 1
+	#elif __ARM_NEON__ == 1 || __ARM_NEON == 1
 		#define SIMD_INTRINSICS SIMD_NEON
 	#elif __MIC__ == 1
 		#define SIMD_INTRINSICS SIMD_MIC
@@ -1750,15 +1750,27 @@ vect< 3, NATIVE_T >::div(
 	this->setn(0, _mm512_mask_mul_ps(this->getn(), __mmask16(7), src0.getn(), rcp));
 
 #elif SIMD_INTRINSICS == SIMD_NEON
-	// three-iteration Newton-Raphson refinement (hardware-assisted) for 1 / x:
+	// two-iteration Newton-Raphson refinement (hardware-assisted) for 1 / x:
 	// est' = est * (2 - est * x)
 	const float32x4_t est = vrecpeq_f32(src1.getn()); // max relative error = unknown, but ARM suggest 2-3 iterations
+
+#if 0
 	const float32x4_t es1 = vmulq_f32(est, vrecpsq_f32(est, src1.getn()));
 	const float32x4_t es2 = vmulq_f32(es1, vrecpsq_f32(es1, src1.getn()));
 	const float32x4_t rcp = vmulq_f32(es2, vrecpsq_f32(es2, src1.getn()));
 
-	// todo: compute the residual to account for proper rounding
+#else
+	const float32x4_t es1 = vmulq_f32(est, vrecpsq_f32(est, src1.getn()));
+	const float32x4_t rcp = vmulq_f32(es1, vrecpsq_f32(es1, src1.getn()));
+
+#endif
 	this->setn(0, vmulq_f32(src0.getn(), rcp));
+
+	// since we used a reciprocal to get Q = A / B, compute the residual R = A - B * Q to obtain the correctly rounded Q' = Q + R * rcp
+	// note: in clang 3.4 compile-time fp constants seem to be computed using round-down/round-to-zero under __OPTIMIZE__, which is
+	// inconsistent with the run-time default round-to-nearest and leads to unit-test failures under said compiler
+	const float32x4_t res = vsubq_f32(src0.getn(), vmulq_f32(src1.getn(), this->getn()));
+	this->setn(0, vaddq_f32(this->getn(), vmulq_f32(res, rcp)));
 
 #else
 #error unhandled SIMD_INTRINSICS target
@@ -2439,15 +2451,27 @@ vect< 4, NATIVE_T >::div(
 	this->setn(0, _mm512_mask_mul_ps(this->getn(), __mmask16(15), src0.getn(), rcp));
 
 #elif SIMD_INTRINSICS == SIMD_NEON
-	// three-iteration Newton-Raphson refinement (hardware-assisted) for 1 / x:
+	// two-iteration Newton-Raphson refinement (hardware-assisted) for 1 / x:
 	// est' = est * (2 - est * x)
 	const float32x4_t est = vrecpeq_f32(src1.getn()); // max relative error = unknown, but ARM suggest 2-3 iterations
+
+#if 0
 	const float32x4_t es1 = vmulq_f32(est, vrecpsq_f32(est, src1.getn()));
 	const float32x4_t es2 = vmulq_f32(es1, vrecpsq_f32(es1, src1.getn()));
 	const float32x4_t rcp = vmulq_f32(es2, vrecpsq_f32(es2, src1.getn()));
 
-	// todo: compute the residual to account for proper rounding
+#else
+	const float32x4_t es1 = vmulq_f32(est, vrecpsq_f32(est, src1.getn()));
+	const float32x4_t rcp = vmulq_f32(es1, vrecpsq_f32(es1, src1.getn()));
+
+#endif
 	this->setn(0, vmulq_f32(src0.getn(), rcp));
+
+	// since we used a reciprocal to get Q = A / B, compute the residual R = A - B * Q to obtain the correctly rounded Q' = Q + R * rcp
+	// note: in clang 3.4 compile-time fp constants seem to be computed using round-down/round-to-zero under __OPTIMIZE__, which is
+	// inconsistent with the run-time default round-to-nearest and leads to unit-test failures under said compiler
+	const float32x4_t res = vsubq_f32(src0.getn(), vmulq_f32(src1.getn(), this->getn()));
+	this->setn(0, vaddq_f32(this->getn(), vmulq_f32(res, rcp)));
 
 #else
 #error unhandled SIMD_INTRINSICS target

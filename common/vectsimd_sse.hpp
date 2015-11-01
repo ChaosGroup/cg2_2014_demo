@@ -1300,7 +1300,7 @@ vect< 3, __m128 >::div(
 	const base::vect< float, 3, __m128 >& src0,
 	const base::vect< float, 3, __m128 >& src1)
 {
-#if VECT_SIMD_SSE_DIV_AS_RCP == 1
+#if VECT_SIMD_DIV_AS_RCP == 1
 	// one-iteration Newton-Raphson refinement for 1 / x:
 	// est' = est + est * (1 - est * x)
 	const __m128 est = _mm_rcp_ps(src1.getn()); // max relative error = 1.5 * 2^-12
@@ -1317,10 +1317,10 @@ vect< 3, __m128 >::div(
 	const __m128 res = _mm_sub_ps(src0.getn(), _mm_mul_ps(src1.getn(), this->getn()));
 	this->setn(0, _mm_add_ps(this->getn(), _mm_mul_ps(res, rcp)));
 
-#else // VECT_SIMD_SSE_DIV_AS_RCP == 1
+#else // VECT_SIMD_DIV_AS_RCP == 1
 	this->setn(0, _mm_div_ps(src0.getn(), src1.getn()));
 
-#endif // VECT_SIMD_SSE_DIV_AS_RCP == 1
+#endif // VECT_SIMD_DIV_AS_RCP == 1
 	return *this;
 }
 
@@ -1363,7 +1363,7 @@ vect< 3, __m128 >::normalise(
 
 #endif
 
-#if VECT_SIMD_SSE_SQRT_DIV_AS_RSQRT == 1
+#if VECT_SIMD_SQRT_DIV_AS_RSQRT == 1
 	// one-iteration Newton-Raphson refinement for 1 / sqrt(x):
 	// est' = -0.5 * est * ((x * est) * est - 3)
 	const __m128 est = _mm_rsqrt_ps(sqr); // max relative error = 1.5 * 2^-12
@@ -1629,7 +1629,7 @@ vect< 4, __m128 >::div(
 	const base::vect< float, 4, __m128 >& src0,
 	const base::vect< float, 4, __m128 >& src1)
 {
-#if VECT_SIMD_SSE_DIV_AS_RCP == 1
+#if VECT_SIMD_DIV_AS_RCP == 1
 	// one-iteration Newton-Raphson refinement for 1 / x:
 	// est' = est + est * (1 - est * x)
 	const __m128 est = _mm_rcp_ps(src1.getn()); // max relative error = 1.5 * 2^-12
@@ -1646,11 +1646,10 @@ vect< 4, __m128 >::div(
 	const __m128 res = _mm_sub_ps(src0.getn(), _mm_mul_ps(src1.getn(), this->getn()));
 	this->setn(0, _mm_add_ps(this->getn(), _mm_mul_ps(res, rcp)));
 
-#else // VECT_SIMD_SSE_DIV_AS_RCP == 1
+#else // VECT_SIMD_DIV_AS_RCP == 1
 	this->setn(0, _mm_div_ps(src0.getn(), src1.getn()));
 
-#endif // VECT_SIMD_SSE_DIV_AS_RCP == 1
-
+#endif // VECT_SIMD_DIV_AS_RCP == 1
 	return *this;
 }
 
@@ -1693,7 +1692,7 @@ vect< 4, __m128 >::normalise(
 
 #endif
 
-#if VECT_SIMD_SSE_SQRT_DIV_AS_RSQRT == 1
+#if VECT_SIMD_SQRT_DIV_AS_RSQRT == 1
 	// one-iteration Newton-Raphson refinement for 1 / sqrt(x):
 	// est' = -0.5 * est * ((x * est) * est - 3)
 	const __m128 est = _mm_rsqrt_ps(sqr); // max relative error = 1.5 * 2^-12
