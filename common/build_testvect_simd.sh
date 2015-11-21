@@ -36,6 +36,10 @@ CFLAGS=(
 #	-DSIMD_ETALON_ALT4
 # Alternative etalon v5 (in combination with SIMD_ETALON above); Intel MIC only
 #	-DSIMD_ETALON_ALT5
+# Increase iteration workload by factor of 4; kills ALT1 performance on Sandy Bridge, unless DUBIOUS_AVX_OPTIMISATION is enabled
+#	-DSIMD_WORKLOAD_ITERATION_DENSITY_X4
+# Use read-port depressurising in ALT1 on AVX; only situation this has been known to help is with dense iteration workloads on Sandy Bridge
+#	-DDUBIOUS_AVX_OPTIMISATION 
 # Use manual unrolling of innermost loops
 #	-DSIMD_MANUAL_UNROLL
 # Use vector templates from scal namespace in both conformance and performance tests

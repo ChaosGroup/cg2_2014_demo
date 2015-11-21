@@ -637,6 +637,7 @@ public:
 		}
 
 #elif SIMD_INTRINSICS == SIMD_NEON
+#warning ok
 		for (unsigned i = 0; i < 4; ++i) {
 
 			// clang generates the same output from both versions; see SIMD_ETALON_ALT4 for desired output from the first version
@@ -1033,14 +1034,35 @@ static inline __attribute__ ((always_inline)) void workload(
 		const size_t offs0 = i * offset + 0;
 		const size_t offs1 = i * offset + 1;
 
+#if SIMD_WORKLOAD_ITERATION_DENSITY_X4
+		const size_t offs2 = (i + 1) * offset + 0;
+		const size_t offs3 = (i + 1) * offset + 1;
+		const size_t offs4 = (i + 2) * offset + 0;
+		const size_t offs5 = (i + 2) * offset + 1;
+		const size_t offs6 = (i + 3) * offset + 0;
+		const size_t offs7 = (i + 3) * offset + 1;
+
+#endif
 		// issue with intel compiler (icpc 14.0.4 20140805) where it won't amortize the temporary;
 		// it gets written on the stack first and only then moved to the destination
 #if __MIC__ == 0
 		ra[id + offs0] = space::matx4().mul(ma[offs0], ma[offs1]);
 
+#if SIMD_WORKLOAD_ITERATION_DENSITY_X4
+		ra[id + offs2] = space::matx4().mul(ma[offs2], ma[offs3]);
+		ra[id + offs4] = space::matx4().mul(ma[offs4], ma[offs5]);
+		ra[id + offs6] = space::matx4().mul(ma[offs6], ma[offs7]);
+
+#endif
 #else
 		ra[id + offs0].mul(ma[offs0], ma[offs1]);
 
+#if SIMD_WORKLOAD_ITERATION_DENSITY_X4
+		ra[id + offs2].mul(ma[offs2], ma[offs3]);
+		ra[id + offs4].mul(ma[offs4], ma[offs5]);
+		ra[id + offs6].mul(ma[offs6], ma[offs7]);
+
+#endif
 #endif
 	}
 }
