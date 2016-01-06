@@ -18,8 +18,10 @@ CFLAGS=(
 #	-DSIMD_TEST_CONFORMANCE
 # Use as many worker threads, including the main thread
 	-DSIMD_NUM_THREADS=`lscpu | grep ^"CPU(s)" | sed s/^[^[:digit:]]*//`
+# Enforce worker thread affinity
+	-DSIMD_THREAD_AFFINITY=0
 # Worker thread affinity stride (for control over physical/logical CPU distribution)
-	-DSIMD_THREAD_AFFINITY_STRIDE=1
+#	-DSIMD_THREAD_AFFINITY_STRIDE=1
 # Minimal alignment of any SIMD type (might be overridden in the architecture-dependant sections below)
 	-DSIMD_ALIGNMENT=16
 # For the performance test, use matx4 from etal namespace instead of counterpart from simd/scal namespace
@@ -86,6 +88,14 @@ if [[ $HOSTTYPE == "arm" ]]; then
 			-marm
 			-mfpu=neon
 			-DCACHELINE_SIZE=32
+		)
+	elif [[ $UNAME_MACHINE == "aarch64" ]]; then # for armv8 devices with aarch64 kernels + armv7 userspaces
+
+		CFLAGS+=(
+			-march=armv7-a
+			-marm
+			-mfpu=neon
+			-DCACHELINE_SIZE=64
 		)
 	fi
 
