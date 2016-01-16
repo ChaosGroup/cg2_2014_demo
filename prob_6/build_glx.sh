@@ -6,6 +6,7 @@ COMMON=../common
 SOURCE=(
 	$COMMON/platform_glx.cpp
 	$COMMON/util_gl.cpp
+	$COMMON/util_eth.cpp
 	$COMMON/prim_rgb_view.cpp
 	$COMMON/get_file_size.cpp
 	problem_7.cpp
@@ -55,6 +56,9 @@ CFLAGS=(
 # Clang static code analysis:
 #	--analyze
 	-DCLANG_QUIRK_0001=1
+# Two-node distributed rendering by nodes on the same LAN; a node can be either a core or a supplement -- uncomment one; number gives the ratio of core / supplement workload, and is the same for both
+#	-DDR_CORE=2
+#	-DDR_SUPPLEMENT=2
 )
 # For non-native or tweaked architecture targets, comment out 'native' and uncomment the correct target architecture and flags
 TARGET=(

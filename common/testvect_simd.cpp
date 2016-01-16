@@ -1139,7 +1139,7 @@ workforce_t::workforce_t()
 		const size_t id = i + 1;
 		record[i] = compute_arg(id);
 
-#if SIMD_SET_AFFINITY
+#if SIMD_THREAD_AFFINITY
 		struct scoped_t {
 			pthread_attr_t attr;
 			bool successfully_init;
@@ -1171,7 +1171,7 @@ workforce_t::workforce_t()
 
 		cpu_set_t affin;
 		CPU_ZERO(&affin);
-		CPU_SET(id * SIMD_THREAD_AFFINITY_STRIDE, &affin);
+		CPU_SET(id * SIMD_THREAD_AFFINITY, &affin);
 
 		const int ra = pthread_attr_setaffinity_np(&scoped.attr, sizeof(affin), &affin);
 
@@ -1182,10 +1182,10 @@ workforce_t::workforce_t()
 
 		const int r = pthread_create(&record[i].thread, &scoped.attr, compute, record + i);
 
-#else // SIMD_SET_AFFINITY == 0
+#else // SIMD_THREAD_AFFINITY == 0
 		const int r = pthread_create(&record[i].thread, 0, compute, record + i);
 
-#endif // SIMD_SET_AFFINITY
+#endif // SIMD_THREAD_AFFINITY
 
 		if (0 != r) {
 			report_err(__FUNCTION__, __LINE__, i, r);

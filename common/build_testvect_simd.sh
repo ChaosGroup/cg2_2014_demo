@@ -18,10 +18,8 @@ CFLAGS=(
 #	-DSIMD_TEST_CONFORMANCE
 # Use as many worker threads, including the main thread
 	-DSIMD_NUM_THREADS=`lscpu | grep ^"CPU(s)" | sed s/^[^[:digit:]]*//`
-# Enforce worker thread affinity
-	-DSIMD_THREAD_AFFINITY=0
-# Worker thread affinity stride (for control over physical/logical CPU distribution)
-#	-DSIMD_THREAD_AFFINITY_STRIDE=1
+# Enforce worker thread affinity; value represents affinity stride (for control over physical/logical CPU distribution)
+#	-DSIMD_THREAD_AFFINITY=1
 # Minimal alignment of any SIMD type (might be overridden in the architecture-dependant sections below)
 	-DSIMD_ALIGNMENT=16
 # For the performance test, use matx4 from etal namespace instead of counterpart from simd/scal namespace

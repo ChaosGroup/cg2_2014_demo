@@ -9,8 +9,12 @@
 #include <iomanip>
 #include <pthread.h>
 
+#if DR_CORE && DR_SUPPLEMENT
+#error cannot be both a core and a supplement
+#endif
+
 #if FRAMEGRAB_RATE != 0
-	#include <png.h>
+#include <png.h>
 #endif
 
 #include "sse_mathfun.h"
@@ -19,6 +23,9 @@
 #include "vectsimd_sse.hpp"
 #include "prim_rgb_view.hpp"
 #include "array.hpp"
+#if DR_CORE || DR_SUPPLEMENT
+#include "util_eth.hpp"
+#endif
 #include "problem_7.hpp"
 
 // verify iostream-free status
@@ -40,6 +47,8 @@ static const char arg_screen[]		= "screen";
 static const char arg_bitness[]		= "bitness";
 static const char arg_fsaa[]		= "fsaa";
 static const char arg_nframes[]		= "frames";
+static const char arg_iface[]		= "iface";
+static const char arg_peer[]		= "peer";
 
 static const size_t nthreads = WORKFORCE_NUM_THREADS;
 static const size_t one_less = nthreads - 1;
@@ -357,6 +366,10 @@ compute(
 	const unsigned w = carg->w;
 	const unsigned h = carg->h;
 
+#if DR_SUPPLEMENT
+	const unsigned ww = carg->w / DR_SUPPLEMENT;
+
+#endif
 	pthread_barrier_t* const barrier_start = barrier + BARRIER_START;
 	pthread_barrier_t* const barrier_finish = barrier + BARRIER_FINISH;
 
@@ -384,26 +397,47 @@ frame_loop:
 		{
 			const unsigned cursor = __atomic_fetch_add(&worker[effective_id].cursor, batch, __ATOMIC_RELAXED);
 
+#if DR_SUPPLEMENT
+			if (cursor >= ww * h / unsigned(nthreads))
+				break;
+
+#else
 			if (cursor >= w * h / unsigned(nthreads))
 				break;
 
+#endif
 			for (unsigned ci = 0; ci < batch; ++ci)
 			{
 				const unsigned linear = cursor * nthreads + effective_id * batch + ci;
+
+#if DR_SUPPLEMENT
+				const unsigned y = linear / ww;
+				const unsigned x = linear % ww;
+
+				if ((y ^ x) % 2 == frame % 2)
+					continue;
+
+#else
 				const unsigned y = linear / w;
 				const unsigned x = linear % w;
 
 				if ((y ^ x) % 2 != frame % 2)
 					continue;
 
+#endif
 				const simd::vect3 offs = simd::vect3().add(
 					simd::vect3(cam[1]).mul((int(y) * 2 - int(h)) * (1.f / h)),
 					simd::vect3(cam[0]).mul((int(x) * 2 - int(w)) * (1.f / w)));
 
 				const Ray ray(cam[3], simd::vect3().add(cam[2], offs));
 
-				shade(*ts, ray, carg->hit, carg->seed, framebuffer[y * w + x]);
+#if DR_SUPPLEMENT
+				shade(*ts, ray, carg->hit, carg->seed, framebuffer[linear / 2]);
 
+#else
+				shade(*ts, ray, carg->hit, carg->seed, framebuffer[linear]);
+
+#endif
 #if COLORIZE_THREADS == 1
 				framebuffer[y * w + x][id % 4] += 32;
 
@@ -790,16 +824,22 @@ public:
 	}
 };
 
+struct Param {
+	unsigned w;             // frame width
+	unsigned h;             // frame height
+	unsigned bitness[4];    // rgba bitness
+	unsigned fsaa;          // fsaa number of samples
+	unsigned frames;        // frames to run
+	uint64_t peer_mac;      // MAC of DR peer
+	const char* iface_name; // name of LAN iface
+	unsigned iface_namelen; // length of iface name
+};
 
 static int
 parse_cli(
 	const int argc,
 	char** const argv,
-	unsigned (& bitness)[4],
-	unsigned& w,
-	unsigned& h,
-	unsigned& fsaa,
-	unsigned& frames)
+	Param& param)
 {
 	const unsigned prefix_len = strlen(arg_prefix);
 	bool success = true;
@@ -814,7 +854,7 @@ parse_cli(
 
 		if (!strcmp(argv[i] + prefix_len, arg_screen))
 		{
-			if (!(++i < argc) || !validate_fullscreen(argv[i], w, h))
+			if (!(++i < argc) || !validate_fullscreen(argv[i], param.w, param.h))
 				success = false;
 
 			continue;
@@ -822,7 +862,7 @@ parse_cli(
 
 		if (!strcmp(argv[i] + prefix_len, arg_bitness))
 		{
-			if (!(++i < argc) || !validate_bitness(argv[i], bitness))
+			if (!(++i < argc) || !validate_bitness(argv[i], param.bitness))
 				success = false;
 
 			continue;
@@ -830,7 +870,7 @@ parse_cli(
 
 		if (!strcmp(argv[i] + prefix_len, arg_fsaa))
 		{
-			if (!(++i < argc) || (1 != sscanf(argv[i], "%u", &fsaa)))
+			if (!(++i < argc) || (1 != sscanf(argv[i], "%u", &param.fsaa)))
 				success = false;
 
 			continue;
@@ -838,23 +878,77 @@ parse_cli(
 
 		if (!strcmp(argv[i] + prefix_len, arg_nframes))
 		{
-			if (!(++i < argc) || (1 != sscanf(argv[i], "%u", &frames)))
+			if (!(++i < argc) || (1 != sscanf(argv[i], "%u", &param.frames)))
 				success = false;
 
 			continue;
 		}
 
+#if DR_CORE || DR_SUPPLEMENT
+		if (!strcmp(argv[i] + prefix_len, arg_iface))
+		{
+			if (++i < argc && IFNAMSIZ > (param.iface_namelen = strlen(argv[i])))
+			{
+				param.iface_name = argv[i];
+				continue;
+			}
+			success = false;
+			continue;
+		}
+
+		if (!strcmp(argv[i] + prefix_len, arg_peer))
+		{
+			uint8_t target[6];
+			if (++i < argc && 6 == sscanf(argv[i], "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
+					&target[0],
+					&target[1],
+					&target[2],
+					&target[3],
+					&target[4],
+					&target[5]))
+			{
+				param.peer_mac = // little endian store
+					uint64_t(target[0]) <<  0 |
+					uint64_t(target[1]) <<  8 |
+					uint64_t(target[2]) << 16 |
+					uint64_t(target[3]) << 24 |
+					uint64_t(target[4]) << 32 |
+					uint64_t(target[5]) << 40;
+				continue;
+			}
+			success = false;
+			continue;
+		}
+
+#endif
 		success = false;
 	}
 
+#if DR_CORE || DR_SUPPLEMENT
+	if (!success || !param.peer_mac || !param.iface_name)
+	{
+		stream::cerr << "usage: " << argv[0] << " [<option> ...] <dr_option> ...\n"
+
+#else
 	if (!success)
 	{
 		stream::cerr << "usage: " << argv[0] << " [<option> ...]\n"
+
+#endif
 			"options (multiple args to an option must constitute a single string, eg. -foo \"a b c\"):\n"
 			"\t" << arg_prefix << arg_screen << " <width> <height> <Hz>\t\t: set fullscreen output of specified geometry and refresh\n"
 			"\t" << arg_prefix << arg_bitness << " <r> <g> <b> <a>\t\t: set GLX config of specified RGBA bitness; default is screen's bitness\n"
 			"\t" << arg_prefix << arg_fsaa << " <positive_integer>\t\t: set GL fullscreen antialiasing; default is none\n"
-			"\t" << arg_prefix << arg_nframes << " <unsigned_integer>\t\t: set number of frames to run; default is max unsigned int\n";
+			"\t" << arg_prefix << arg_nframes << " <unsigned_integer>\t\t: set number of frames to run; default is max unsigned int\n"
+
+#if DR_CORE || DR_SUPPLEMENT
+			"\t" << arg_prefix << arg_peer << " <oct0:oct1:oct2:oct3:oct4:oct5>\t: MAC of distributed-rendering peer\n"
+			"\t" << arg_prefix << arg_iface << " <name>\t\t\t\t: name of NIC providing connection to the DR peer\n";
+
+#else
+			;
+
+#endif
 
 		return 1;
 	}
@@ -1129,6 +1223,7 @@ class Scene1 : public virtual Scene
 	float generation;
 
 	Array< Voxel > content;
+	uint32_t seed;
 
 	bool update(
 		Timeslice& scene,
@@ -1156,6 +1251,7 @@ bool Scene1::init(
 	accum_y = 0.f;
 	accum_time = 0.f;
 	generation = grid_rows;
+	seed = 42;
 
 	if (!content.setCapacity(grid_rows * grid_cols))
 		return false;
@@ -1168,7 +1264,7 @@ bool Scene1::init(
 		{
 			content.addElement(Voxel(
 				simd::vect3(x * unit,        y * unit,        0.f),
-				simd::vect3(x * unit + unit, y * unit + unit, alt * (rand() % 4 + 1))));
+				simd::vect3(x * unit + unit, y * unit + unit, alt * (rand_r(&seed) % 4 + 1))));
 		}
 
 	return scene.set_payload_array(content);
@@ -1192,7 +1288,7 @@ inline bool Scene1::update(
 	{
 		content.getMutable(index) = Voxel(
 			simd::vect3(x * unit,        y * unit,        0.f),
-			simd::vect3(x * unit + unit, y * unit + unit, alt * (rand() % 4 + 1)));
+			simd::vect3(x * unit + unit, y * unit + unit, alt * (rand_r(&seed) % 4 + 1)));
 	}
 
 	return scene.set_payload_array(content);
@@ -2095,23 +2191,27 @@ int main(
 	const unsigned default_w = 512;
 	const unsigned default_h = 512;
 
-	unsigned fsaa = 0;
-	unsigned w = default_w;
-	unsigned h = default_h;
-	unsigned bitness[4] = { 0 };
-	unsigned frames = -1U;
+	Param param = {
+		default_w, // param.w 
+		default_h, // param.h 
+		{ 0 },     // param.bitness
+		0,         // param.fsaa
+		-1U,       // param.frames
+		0,         // param.peer_mac
+		0,         // param.iface_name
+		0          // param.iface_namelen
+	};
 
-	const int result_cli = parse_cli(
-		argc,
-		argv,
-		bitness,
-		w,
-		h,
-		fsaa,
-		frames);
+	const int result_cli = parse_cli(argc, argv, param);
 
 	if (0 != result_cli)
 		return result_cli;
+
+	const unsigned w = param.w;
+	const unsigned h = param.h;
+	unsigned (& bitness)[4] = param.bitness;
+	const unsigned fsaa = param.fsaa;
+	const unsigned frames = param.frames;
 
 #if DIVISION_OF_LABOR_VER == 2
 	if (w * h % (nthreads * batch))
@@ -2124,6 +2224,22 @@ int main(
 	if (w * h % batch)
 	{
 		stream::cerr << "error: screen resolution product must be multiple of " << batch << '\n';
+		return -1;
+	}
+
+#endif
+
+#if DR_CORE || DR_SUPPLEMENT
+#if DR_CORE
+	const unsigned dr_ratio = DR_CORE;
+
+#else
+	const unsigned dr_ratio = DR_SUPPLEMENT;
+
+#endif
+	if (w % (dr_ratio * 2))
+	{
+		stream::cerr << "error: screen resolution width must be multiple of " << dr_ratio * 2 << '\n';
 		return -1;
 	}
 
@@ -2246,13 +2362,76 @@ int main(
 
 	glEnable(GL_CULL_FACE);
 
+	const size_t frame_size = w * h * sizeof(uint8_t[4]); // our rendering produces RGBA8 pixels
+
+	const size_t cacheline_size = 64;
+	const size_t cacheline_pad = cacheline_size - 1;
+
+#if DR_CORE || DR_SUPPLEMENT
+	const compile_assert< 0 == eth::packet_size % sizeof(uint8_t[4]) > assert_eth_packet_size_multiple_of_pixel;
+	const size_t pixels_per_packet = eth::packet_size / sizeof(uint8_t[4]);
+	const size_t peer_frame_size = frame_size / (dr_ratio * 2); // for supplement frames take interleave into account
+	const size_t packet_count = peer_frame_size / eth::packet_size + (peer_frame_size % eth::packet_size ? 1 : 0);
+	const size_t room_for_header = cacheline_size; // must be a cacheline_size multiple to preserve the framebuffer alignment
+
+#endif
+#if DR_CORE
+	const size_t room_for_packets = eth::frame_max_size * packet_count;
+
 	const testbed::scoped_ptr< uint8_t[4], generic_free > unaligned_fb(
-		reinterpret_cast< uint8_t(*)[4] >(malloc(w * h * sizeof(uint8_t[4]) + 63)));
+		reinterpret_cast< uint8_t(*)[4] >(malloc(room_for_header + frame_size + room_for_packets + cacheline_pad)));
 
+#elif DR_SUPPLEMENT
+	const testbed::scoped_ptr< uint8_t[4], generic_free > unaligned_fb(
+		reinterpret_cast< uint8_t(*)[4] >(malloc(room_for_header + frame_size + cacheline_pad)));
+
+#else
+	const testbed::scoped_ptr< uint8_t[4], generic_free > unaligned_fb(
+		reinterpret_cast< uint8_t(*)[4] >(malloc(frame_size + cacheline_pad)));
+
+#endif
+
+#if DR_CORE || DR_SUPPLEMENT
 	// get that buffer cacheline aligned
-	uint8_t (* const framebuffer)[4] = reinterpret_cast< uint8_t(*)[4] >(uintptr_t(unaligned_fb()) + uintptr_t(63) & ~uintptr_t(63));
-	memset(framebuffer, 0, w * h * sizeof(*framebuffer));
+	uint8_t (* const framebuffer)[4] = reinterpret_cast< uint8_t(*)[4] >((uintptr_t(unaligned_fb()) + uintptr_t(cacheline_pad) & ~uintptr_t(cacheline_pad)) + uintptr_t(cacheline_size));
+	memset(framebuffer, 0, frame_size);
 
+#else
+	// get that buffer cacheline aligned
+	uint8_t (* const framebuffer)[4] = reinterpret_cast< uint8_t(*)[4] >(uintptr_t(unaligned_fb()) + uintptr_t(cacheline_pad) & ~uintptr_t(cacheline_pad));
+	memset(framebuffer, 0, frame_size);
+
+#endif
+#if DR_CORE || DR_SUPPLEMENT
+#if DR_CORE
+	int8_t* const packets_start = reinterpret_cast< int8_t* >(framebuffer + w * h);
+	for (size_t i = 0; i < packet_count; ++i)
+		memset(packets_start + eth::frame_header_len + i * eth::frame_max_size, 0xff, eth::packet_size);
+
+#endif
+	// get an ethernet socket
+	const eth::scoped< int, eth::close_file_descriptor > fddr(
+		socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ALL)));
+
+	if (0 > fddr) {
+		stream::cerr << "error: cannot create socket for DR\n";
+		return -1;
+	}
+
+	sockaddr_ll saddr;
+
+	if (!init_ethhdr_and_saddr(fddr, param.iface_name, param.iface_namelen, param.peer_mac,
+			*reinterpret_cast< ethhdr* >(reinterpret_cast< int8_t* >(framebuffer) - eth::frame_header_len), saddr)) {
+		return -1;
+	}
+
+	// bind socket to specified iface (for the receiving part)
+	if (0 > bind(fddr, reinterpret_cast< sockaddr* >(&saddr), sizeof(saddr))) {
+		stream::cerr << "error: cannot bind to iface\n";
+		return -1;
+	}
+
+#endif
 	workforce_t workforce(framebuffer, w, h);
 
 	if (!workforce.is_successfully_init())
@@ -2278,10 +2457,15 @@ int main(
 		const float dt = 1.0 / FRAMEGRAB_RATE;
 
 #else
+#if DR_CORE || DR_SUPPLEMENT
+		const float dt = 1.0 / 30;
+
+#else
 		const uint64_t tframe = timer_nsec();
 		const float dt = double(tframe - tlast) * 1e-9;
 		tlast = tframe;
 
+#endif
 #endif
 
 		// upate run time (we aren't supposed to run long - fp32 should do) and beat time
@@ -2397,7 +2581,80 @@ int main(
 		compute_arg carg(0, nframes, cam, timeline.getElement(c::scene_selector), framebuffer, w, h);
 		compute(&carg);
 
-#if VISUALIZE != 0
+#if DR_CORE
+		const ssize_t sent = sendto(fddr, reinterpret_cast< int8_t* >(framebuffer) - eth::frame_header_len, eth::frame_min_size, 0, reinterpret_cast< sockaddr* >(&saddr), sizeof(saddr));
+
+		if (eth::frame_min_size != sent) {
+			stream::cerr << "error: sendto() failed to send ack for frame " << nframes << '\n';
+			return -1;
+		}
+
+		int8_t *packet_frame = packets_start;
+		uint32_t linear = 0;
+		const uint32_t part_w = w / (dr_ratio * 2);
+		const uint32_t part_frame = h * part_w;
+
+		for (size_t i = 0; i < packet_count; ++i, packet_frame += eth::frame_max_size) {
+			const ssize_t recv = recvfrom(fddr, packet_frame, eth::frame_max_size, 0, 0, 0);
+
+			if (0 > recv) {
+				stream::cerr << "error: recvfrom() failed to receive packet " << i << " from frame " << nframes << '\n';
+				return -1;
+			}
+		}
+
+		packet_frame = packets_start;
+
+		for (size_t i = 0; i < packet_count; ++i, packet_frame += eth::frame_max_size) {
+			uint8_t (*packet_payload)[4] = reinterpret_cast< uint8_t (*)[4] >(packet_frame + eth::frame_header_len);
+
+			size_t j = 0;
+			do {
+				const uint32_t y = linear / part_w;
+				const uint32_t x = linear % part_w;
+				const uint32_t checker_offset = nframes % 2 ^ y % 2 ^ 1; // inverse checker to core's
+
+				framebuffer[y * w + x * 2 + checker_offset][0] = packet_payload[j][0];
+				framebuffer[y * w + x * 2 + checker_offset][1] = packet_payload[j][1];
+				framebuffer[y * w + x * 2 + checker_offset][2] = packet_payload[j][2];
+				framebuffer[y * w + x * 2 + checker_offset][3] = packet_payload[j][3];
+			} while (++linear != part_frame && ++j < pixels_per_packet);
+
+			if (linear == part_frame)
+				break;
+		}
+
+#elif DR_SUPPLEMENT
+		const ssize_t recv = recvfrom(fddr, reinterpret_cast< int8_t* >(framebuffer) + peer_frame_size, eth::frame_min_size, 0, 0, 0);
+
+		if (eth::frame_min_size != recv) {
+			stream::cerr << "error: recvfrom() failed to receive ack for frame " << nframes << '(' << recv << ")\n";
+			return -1;
+		}
+
+		int8_t *packet_frame = reinterpret_cast< int8_t* >(framebuffer) - eth::frame_header_len;
+
+		for (size_t i = 0; i < packet_count - 1; ++i, packet_frame += eth::packet_size) {
+			const ssize_t sent = sendto(fddr, packet_frame, eth::frame_max_size, 0, reinterpret_cast< sockaddr* >(&saddr), sizeof(saddr));
+
+			if (0 > sent) {
+				stream::cerr << "error: sendto() failed to send packet " << i << " from frame " << nframes << '\n';
+				return -1;
+			}
+
+			memcpy(packet_frame + eth::packet_size, packet_frame, eth::frame_header_len);
+		}
+
+		const ssize_t sent = sendto(fddr, packet_frame, eth::frame_max_size, 0, reinterpret_cast< sockaddr* >(&saddr), sizeof(saddr));
+
+		if (0 > sent) {
+			stream::cerr << "error: sendto() failed to send packet " << packet_count - 1 << " from frame " << nframes << '\n';
+			return -1;
+		}
+
+#endif
+
+#if DR_SUPPLEMENT == 0 && VISUALIZE != 0
 		testbed::rgbv::render(framebuffer, c::contrast_middle, c::contrast_k, c::blur_split);
 
 #if FRAMEGRAB_RATE != 0
