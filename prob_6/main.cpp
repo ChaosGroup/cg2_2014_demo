@@ -2445,6 +2445,10 @@ int main(
 	const uint64_t t0 = timer_nsec();
 	uint64_t tlast = t0;
 
+#if DR_CORE || DR_SUPPLEMENT
+	float dt = 0;
+
+#endif
 #if VISUALIZE != 0
 	while (testbed::processEvents(input) && nframes != frames)
 
@@ -2457,17 +2461,18 @@ int main(
 		const float dt = 1.0 / FRAMEGRAB_RATE;
 
 #else
-#if DR_CORE || DR_SUPPLEMENT
-		const float dt = 1.0 / 30;
+#if DR_CORE
+		const uint64_t tframe = timer_nsec();
+		const float last_dt = double(tframe - tlast) * 1e-9;
+		tlast = tframe;
 
-#else
+#elif DR_SUPPLEMENT == 0
 		const uint64_t tframe = timer_nsec();
 		const float dt = double(tframe - tlast) * 1e-9;
 		tlast = tframe;
 
 #endif
 #endif
-
 		// upate run time (we aren't supposed to run long - fp32 should do) and beat time
 		c::accum_time += dt;
 		c::accum_beat   = wrap_at_period(c::accum_beat   + dt, c::beat_period);
@@ -2582,6 +2587,8 @@ int main(
 		compute(&carg);
 
 #if DR_CORE
+		dt = last_dt;
+		*reinterpret_cast< float* >(framebuffer) = last_dt;
 		const ssize_t sent = sendto(fddr, reinterpret_cast< int8_t* >(framebuffer) - eth::frame_header_len, eth::frame_min_size, 0, reinterpret_cast< sockaddr* >(&saddr), sizeof(saddr));
 
 		if (eth::frame_min_size != sent) {
@@ -2632,6 +2639,8 @@ int main(
 			return -1;
 		}
 
+		dt = *reinterpret_cast< float* >(reinterpret_cast< int8_t* >(framebuffer) + peer_frame_size + eth::frame_header_len);
+
 		int8_t *packet_frame = reinterpret_cast< int8_t* >(framebuffer) - eth::frame_header_len;
 
 		for (size_t i = 0; i < packet_count - 1; ++i, packet_frame += eth::packet_size) {
@@ -2667,15 +2676,15 @@ int main(
 		++nframes;
 	}
 
-	const uint64_t dt = timer_nsec() - t0;
+	const uint64_t sequence_dt = timer_nsec() - t0;
 
 	stream::cout << "compute_arg size: " << sizeof(compute_arg) <<
 		"\nworker threads: " << nthreads << "\nambient occlusion rays per pixel: " << ao_probe_count <<
 		"\ntotal frames rendered: " << nframes << '\n';
 
-	if (dt)
+	if (sequence_dt)
 	{
-		const double sec = double(dt) * 1e-9;
+		const double sec = double(sequence_dt) * 1e-9;
 
 		stream::cout << "elapsed time: " << sec << " s"
 			"\naverage FPS: " << nframes / sec << '\n';
