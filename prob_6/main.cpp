@@ -363,11 +363,23 @@ compute(
 {
 	compute_arg* const carg = reinterpret_cast< compute_arg* >(arg);
 	uint8_t (* const framebuffer)[4] = carg->framebuffer;
+
+#if FB_RES_FIXED_W
+	const unsigned w = FB_RES_FIXED_W;
+
+#else
 	const unsigned w = carg->w;
+
+#endif
+#if FB_RES_FIXED_H
+	const unsigned h = FB_RES_FIXED_H;
+
+#else
 	const unsigned h = carg->h;
 
+#endif
 #if DR_SUPPLEMENT
-	const unsigned ww = carg->w / DR_SUPPLEMENT;
+	const unsigned ww = w / DR_SUPPLEMENT;
 
 #endif
 	pthread_barrier_t* const barrier_start = barrier + BARRIER_START;
@@ -2207,8 +2219,20 @@ int main(
 	if (0 != result_cli)
 		return result_cli;
 
+#if FB_RES_FIXED_W
+	const unsigned w = FB_RES_FIXED_W;
+
+#else
 	const unsigned w = param.w;
+
+#endif
+#if FB_RES_FIXED_H
+	const unsigned h = FB_RES_FIXED_H;
+
+#else
 	const unsigned h = param.h;
+
+#endif
 	unsigned (& bitness)[4] = param.bitness;
 	const unsigned fsaa = param.fsaa;
 	const unsigned frames = param.frames;
