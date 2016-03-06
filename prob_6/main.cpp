@@ -315,15 +315,15 @@ shade(
 
 #if 0
 		if (!ts.traverse_litest(probe0, hit))
-			data += cos_decl;
+			data += cos_decl0;
 
 		if (!ts.traverse_litest(probe1, hit))
-			data += cos_decl;
+			data += cos_decl1;
 	}
 
-	pixel[0] = std::min(255.f, data * (float(1.414213562 * 255.) / ao_probe_count));
-	pixel[1] = std::min(255.f, data * (float(1.414213562 * 255.) / ao_probe_count));
-	pixel[2] = std::min(255.f, data * (float(1.414213562 * 255.) / ao_probe_count));
+	pixel[0] = data * (255.f / ao_probe_count);
+	pixel[1] = data * (255.f / ao_probe_count);
+	pixel[2] = data * (255.f / ao_probe_count);
 
 #else
 		if (!ts.traverse_litest(probe0, hit))
