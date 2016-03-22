@@ -13,15 +13,17 @@
 #error cannot be both a core and a supplement
 #endif
 
-#if FRAMEGRAB_RATE != 0
+#if DR_SUPPLEMENT == 0 && FRAMEGRAB_RATE != 0
 #include <png.h>
 #endif
 
 #include "sse_mathfun.h"
-#include "testbed.hpp"
 #include "stream.hpp"
 #include "vectsimd_sse.hpp"
+#if DR_SUPPLEMENT == 0
+#include "testbed.hpp"
 #include "prim_rgb_view.hpp"
+#endif
 #include "array.hpp"
 #if DR_CORE || DR_SUPPLEMENT
 #include "util_eth.hpp"
@@ -872,6 +874,7 @@ parse_cli(
 			continue;
 		}
 
+#if DR_SUPPLEMENT == 0
 		if (!strcmp(argv[i] + prefix_len, arg_bitness))
 		{
 			if (!(++i < argc) || !validate_bitness(argv[i], param.bitness))
@@ -888,6 +891,7 @@ parse_cli(
 			continue;
 		}
 
+#endif
 		if (!strcmp(argv[i] + prefix_len, arg_nframes))
 		{
 			if (!(++i < argc) || (1 != sscanf(argv[i], "%u", &param.frames)))
@@ -949,18 +953,20 @@ parse_cli(
 #endif
 			"options (multiple args to an option must constitute a single string, eg. -foo \"a b c\"):\n"
 			"\t" << arg_prefix << arg_screen << " <width> <height> <Hz>\t\t: set fullscreen output of specified geometry and refresh\n"
+
+#if DR_SUPPLEMENT == 0
 			"\t" << arg_prefix << arg_bitness << " <r> <g> <b> <a>\t\t: set GLX config of specified RGBA bitness; default is screen's bitness\n"
 			"\t" << arg_prefix << arg_fsaa << " <positive_integer>\t\t: set GL fullscreen antialiasing; default is none\n"
+
+#endif
 			"\t" << arg_prefix << arg_nframes << " <unsigned_integer>\t\t: set number of frames to run; default is max unsigned int\n"
 
 #if DR_CORE || DR_SUPPLEMENT
 			"\t" << arg_prefix << arg_peer << " <oct0:oct1:oct2:oct3:oct4:oct5>\t: MAC of distributed-rendering peer\n"
-			"\t" << arg_prefix << arg_iface << " <name>\t\t\t\t: name of NIC providing connection to the DR peer\n";
-
-#else
-			;
+			"\t" << arg_prefix << arg_iface << " <name>\t\t\t\t: name of NIC providing connection to the DR peer\n"
 
 #endif
+			;
 
 		return 1;
 	}
@@ -2268,7 +2274,7 @@ int main(
 	}
 
 #endif
-#if VISUALIZE != 0
+#if DR_SUPPLEMENT == 0 && VISUALIZE != 0
 	const int result_gl = testbed::initGL(
 		w,
 		h,
@@ -2473,7 +2479,7 @@ int main(
 	float dt = 0;
 
 #endif
-#if VISUALIZE != 0
+#if DR_SUPPLEMENT == 0 && VISUALIZE != 0
 	while (testbed::processEvents(input) && nframes != frames)
 
 #else
@@ -2531,6 +2537,7 @@ int main(
 			(scene[c::scene_selector]->get_offset_y() - centre[1]) * rcp_extent,
 			(scene[c::scene_selector]->get_offset_z() - centre[2]) * rcp_extent, 1.f);
 
+#if DR_CORE == 0 && DR_SUPPLEMENT == 0
 		// obligatory manual controls
 		if (input & testbed::INPUT_MASK_ACTION)
 		{
@@ -2539,6 +2546,8 @@ int main(
 			c::scene_selector = reset_at_period(c::scene_selector + 1, scene_count);
 		}
 
+#endif
+#if DR_SUPPLEMENT == 0
 		if (input & testbed::INPUT_MASK_OPTION_1)
 		{
 			input &= ~testbed::INPUT_MASK_OPTION_1;
@@ -2546,6 +2555,8 @@ int main(
 			c::blur_split *= -1.f;
 		}
 
+#endif
+#if DR_CORE == 0 && DR_SUPPLEMENT == 0
 		const float angular_step = float(M_PI_4) * dt;
 
 		if (input & testbed::INPUT_MASK_UP)
@@ -2574,6 +2585,7 @@ int main(
 		if (input & testbed::INPUT_MASK_ALT_RIGHT)
 			c::pos_x += linear_step;
 
+#endif
 		c::azim = wrap_at_period(c::azim, float(M_PI * 2.0));
 
 		const simd::vect4 eye(
