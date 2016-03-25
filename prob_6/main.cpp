@@ -1,4 +1,3 @@
-#include <GL/gl.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -13,8 +12,11 @@
 #error cannot be both a core and a supplement
 #endif
 
-#if DR_SUPPLEMENT == 0 && FRAMEGRAB_RATE != 0
+#if DR_SUPPLEMENT == 0 && VISUALIZE != 0
+#include <GL/gl.h>
+#if FRAMEGRAB_RATE != 0
 #include <png.h>
+#endif
 #endif
 
 #include "sse_mathfun.h"
@@ -2390,8 +2392,6 @@ int main(
 		_mm_set1_ps(.5f));
 	const float rcp_extent = 1.f / std::max(extent[0], std::max(extent[1], extent[2]));
 
-	glEnable(GL_CULL_FACE);
-
 	const size_t frame_size = w * h * sizeof(uint8_t[4]); // our rendering produces RGBA8 pixels
 
 	const size_t cacheline_size = 64;
@@ -2470,7 +2470,10 @@ int main(
 		return -1;
 	}
 
+#if DR_SUPPLEMENT == 0 && VISUALIZE != 0
 	GLuint input = 0;
+
+#endif
 	unsigned nframes = 0;
 	const uint64_t t0 = timer_nsec();
 	uint64_t tlast = t0;
