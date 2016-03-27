@@ -7,7 +7,7 @@
 #include "cmath_fix"
 #include <sstream>
 
-#include "testbed.hpp"
+#include "platform.hpp"
 #include "scoped.hpp"
 #include "stream.hpp"
 #include "prim_rgb_view.hpp"

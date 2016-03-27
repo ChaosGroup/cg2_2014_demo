@@ -15,7 +15,7 @@
 #include "xrandr_util.hpp"
 #endif
 
-#include "testbed.hpp"
+#include "platform.hpp"
 #include "stream.hpp"
 
 

@@ -1,4 +1,3 @@
-#include <GL/gl.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -10,9 +9,9 @@
 #include <pthread.h>
 
 #include "sse_mathfun.h"
-#include "testbed.hpp"
 #include "stream.hpp"
 #include "vectsimd_sse.hpp"
+#include "platform.hpp"
 #include "prim_rgb_view.hpp"
 #include "array.hpp"
 #include "problem_7.hpp"
@@ -354,9 +353,21 @@ compute(
 {
 	compute_arg* const carg = reinterpret_cast< compute_arg* >(arg);
 	uint8_t (* const framebuffer)[4] = carg->framebuffer;
+
+#if FB_RES_FIXED_W
+	const unsigned w = FB_RES_FIXED_W;
+
+#else
 	const unsigned w = carg->w;
+
+#endif
+#if FB_RES_FIXED_H
+	const unsigned h = FB_RES_FIXED_H;
+
+#else
 	const unsigned h = carg->h;
 
+#endif
 	pthread_barrier_t* const barrier_start = barrier + BARRIER_START;
 	pthread_barrier_t* const barrier_finish = barrier + BARRIER_FINISH;
 
@@ -402,7 +413,7 @@ frame_loop:
 
 				const Ray ray(simd::vect3().add(cam[3], offs), cam[2]);
 
-				shade(*ts, ray, carg->hit, carg->seed, framebuffer[y * w + x]);
+				shade(*ts, ray, carg->hit, carg->seed, framebuffer[linear]);
 
 #if COLORIZE_THREADS == 1
 				framebuffer[y * w + x][id % 4] += 32;
@@ -790,16 +801,19 @@ public:
 	}
 };
 
+struct Param {
+	unsigned w;             // frame width
+	unsigned h;             // frame height
+	unsigned bitness[4];    // rgba bitness
+	unsigned fsaa;          // fsaa number of samples
+	unsigned frames;        // frames to run
+};
 
 static int
 parse_cli(
 	const int argc,
 	char** const argv,
-	unsigned (& bitness)[4],
-	unsigned& w,
-	unsigned& h,
-	unsigned& fsaa,
-	unsigned& frames)
+	Param& param)
 {
 	const unsigned prefix_len = strlen(arg_prefix);
 	bool success = true;
@@ -814,7 +828,7 @@ parse_cli(
 
 		if (!strcmp(argv[i] + prefix_len, arg_screen))
 		{
-			if (!(++i < argc) || !validate_fullscreen(argv[i], w, h))
+			if (!(++i < argc) || !validate_fullscreen(argv[i], param.w, param.h))
 				success = false;
 
 			continue;
@@ -822,7 +836,7 @@ parse_cli(
 
 		if (!strcmp(argv[i] + prefix_len, arg_bitness))
 		{
-			if (!(++i < argc) || !validate_bitness(argv[i], bitness))
+			if (!(++i < argc) || !validate_bitness(argv[i], param.bitness))
 				success = false;
 
 			continue;
@@ -830,7 +844,7 @@ parse_cli(
 
 		if (!strcmp(argv[i] + prefix_len, arg_fsaa))
 		{
-			if (!(++i < argc) || (1 != sscanf(argv[i], "%u", &fsaa)))
+			if (!(++i < argc) || (1 != sscanf(argv[i], "%u", &param.fsaa)))
 				success = false;
 
 			continue;
@@ -838,7 +852,7 @@ parse_cli(
 
 		if (!strcmp(argv[i] + prefix_len, arg_nframes))
 		{
-			if (!(++i < argc) || (1 != sscanf(argv[i], "%u", &frames)))
+			if (!(++i < argc) || (1 != sscanf(argv[i], "%u", &param.frames)))
 				success = false;
 
 			continue;
@@ -1287,23 +1301,36 @@ int main(
 	const unsigned default_w = 512;
 	const unsigned default_h = 512;
 
-	unsigned fsaa = 0;
-	unsigned w = default_w;
-	unsigned h = default_h;
-	unsigned bitness[4] = { 0 };
-	unsigned frames = -1U;
-
-	const int result_cli = parse_cli(
-		argc,
-		argv,
-		bitness,
-		w,
-		h,
-		fsaa,
-		frames);
+	Param param = {
+		default_w, // param.w 
+		default_h, // param.h 
+		{ 0 },     // param.bitness
+		0,         // param.fsaa
+		-1U,       // param.frames
+	};
+ 
+	const int result_cli = parse_cli(argc, argv, param);
 
 	if (0 != result_cli)
 		return result_cli;
+
+#if FB_RES_FIXED_W
+	const unsigned w = FB_RES_FIXED_W;
+
+#else
+	const unsigned w = param.w;
+
+#endif
+#if FB_RES_FIXED_H
+	const unsigned h = FB_RES_FIXED_H;
+
+#else
+	const unsigned h = param.h;
+
+#endif
+	unsigned (& bitness)[4] = param.bitness;
+	const unsigned fsaa = param.fsaa;
+	const unsigned frames = param.frames;
 
 #if DIVISION_OF_LABOR_VER == 2
 	if (w * h % (nthreads * batch))
@@ -1386,14 +1413,17 @@ int main(
 
 	simd::matx4 rot = simd::matx4().identity();
 
-	glEnable(GL_CULL_FACE);
+	const size_t frame_size = w * h * sizeof(uint8_t[4]); // our rendering produces RGBA8 pixels
+	
+	const size_t cacheline_size = 64;
+	const size_t cacheline_pad = cacheline_size - 1;
 
 	const testbed::scoped_ptr< uint8_t[4], generic_free > unaligned_fb(
-		reinterpret_cast< uint8_t(*)[4] >(malloc(w * h * sizeof(uint8_t[4]) + 63)));
+		reinterpret_cast< uint8_t(*)[4] >(malloc(frame_size + cacheline_pad)));
 
 	// get that buffer cacheline aligned
-	uint8_t (* const framebuffer)[4] = reinterpret_cast< uint8_t(*)[4] >(uintptr_t(unaligned_fb()) + uintptr_t(63) & ~uintptr_t(63));
-	memset(framebuffer, 0, w * h * sizeof(*framebuffer));
+	uint8_t (* const framebuffer)[4] = reinterpret_cast< uint8_t(*)[4] >(uintptr_t(unaligned_fb()) + uintptr_t(cacheline_pad) & ~uintptr_t(cacheline_pad));
+	memset(framebuffer, 0, frame_size);
 
 	workforce_t workforce(framebuffer, w, h);
 

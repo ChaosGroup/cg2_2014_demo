@@ -30,6 +30,9 @@ CFLAGS=(
 	-DMINIMAL_TREE=1
 # Show on screen what was rendered
 	-DVISUALIZE=1
+# Fixed framebuffer geometry
+#	-DFB_RES_FIXED_W=512
+#	-DFB_RES_FIXED_H=512
 # Vector aliasing control
 #	-DVECTBASE_MINIMISE_ALIASING=1
 # High-precision ray reciprocal direction

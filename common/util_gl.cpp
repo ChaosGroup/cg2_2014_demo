@@ -6,7 +6,7 @@
 #include <sstream>
 #include <iomanip>
 
-#include "testbed.hpp"
+#include "platform.hpp"
 #include "get_file_size.hpp"
 #include "scoped.hpp"
 #include "stream.hpp"

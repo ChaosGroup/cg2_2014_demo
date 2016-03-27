@@ -12,18 +12,16 @@
 #error cannot be both a core and a supplement
 #endif
 
-#if DR_SUPPLEMENT == 0 && VISUALIZE != 0
+#if DR_SUPPLEMENT == 0 && VISUALIZE != 0 && FRAMEGRAB_RATE != 0
 #include <GL/gl.h>
-#if FRAMEGRAB_RATE != 0
 #include <png.h>
-#endif
 #endif
 
 #include "sse_mathfun.h"
 #include "stream.hpp"
 #include "vectsimd_sse.hpp"
 #if DR_SUPPLEMENT == 0
-#include "testbed.hpp"
+#include "platform.hpp"
 #include "prim_rgb_view.hpp"
 #endif
 #include "array.hpp"

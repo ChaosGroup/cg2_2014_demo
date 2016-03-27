@@ -7,7 +7,7 @@
 #include "cmath_fix"
 
 #include "vectsimd_sse.hpp"
-#include "testbed.hpp"
+#include "platform.hpp"
 #include "scoped.hpp"
 #include "stream.hpp"
 #include "prim_mesh.hpp"

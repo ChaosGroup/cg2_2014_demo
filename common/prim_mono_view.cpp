@@ -6,7 +6,7 @@
 #include <assert.h>
 #include "cmath_fix"
 
-#include "testbed.hpp"
+#include "platform.hpp"
 #include "scoped.hpp"
 #include "stream.hpp"
 #include "prim_mono_view.hpp"
