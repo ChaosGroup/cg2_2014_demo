@@ -18,7 +18,7 @@
 #include "pure_macro.hpp"
 #include "cl_util.hpp"
 #include "cl_wrap.hpp"
-#include "testbed.hpp"
+#include "platform.hpp"
 #include "prim_mono_view.hpp"
 #include "scoped.hpp"
 #include "stream.hpp"
@@ -1951,8 +1951,14 @@ int main(int argc, char** argv) {
 	const scoped_ptr< cl_mem, scoped_functor > release_dst(dst_d);
 
 	for (size_t i = 0; i < sizeof(dst_d) / sizeof(dst_d[0]); ++i) {
+
+#if DEPRECATED_CreateFromGLTexture2D
+		dst_d[i] = clCreateFromGLTexture(context, CL_MEM_WRITE_ONLY, GL_TEXTURE_RECTANGLE, 0, tex_name[i], &success);
+
+#else
 		dst_d[i] = clCreateFromGLTexture2D(context, CL_MEM_WRITE_ONLY, GL_TEXTURE_RECTANGLE, 0, tex_name[i], &success);
 
+#endif
 		if (reportCLError(success)) {
 			stream::cerr << "error creating image for result\n";
 			return -1;

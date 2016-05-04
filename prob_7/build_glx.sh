@@ -11,7 +11,7 @@ SOURCE=(
 	problem_6.cpp
 	cl_util.cpp
 	cl_wrap.cpp
-	main_cl.cpp
+	main_cl_interop.cpp
 )
 CFLAGS=(
 	-ansi
@@ -27,6 +27,7 @@ CFLAGS=(
 	-DGLX_GLXEXT_PROTOTYPES
 	-DGLCOREARB_PROTOTYPES
 	-DGL_GLEXT_PROTOTYPES
+	-DDEPRECATED_CreateFromGLTexture2D
 # Framegrab rate
 #	-DFRAMEGRAB_RATE=30
 # Case-specific optimisation

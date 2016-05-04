@@ -12,7 +12,7 @@
 #include "pure_macro.hpp"
 #include "cl_util.hpp"
 #include "cl_wrap.hpp"
-#include "testbed.hpp"
+#include "platform.hpp"
 #include "prim_mono_view.hpp"
 #include "scoped.hpp"
 #include "stream.hpp"
