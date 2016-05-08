@@ -18,7 +18,7 @@ Formula used for the normalisation:
 | iMX53 Cortex-A8           | 2-way            | 2.23             | clang++ 3.5, NEON via inline asm               |
 | RK3368 Cortex-A53         | 2-way            | 2.40             | clang++ 3.5, A32 NEON via inline asm           |
 | RK3368 Cortex-A53         | 2-way            | 2.46             | clang++ 3.6, A64 NEON via generic vectors      |
-| MT8163A Cortex-A53        | 2-way            | 2.38             | clang++-3.6, A32 NEON via generic vectors      |
+| MT8163A Cortex-A53        | 2-way            | 2.38             | clang++-3.6, A32 NEON via inline asm           |
 | AppliedMicro X-Gene 1     | 2-way            | 2.71             | clang++ 3.5, A64 NEON via generic vectors      |
 | Apple A7                  | 4-way            | 11.07            | apple clang++ 7.0.0, A64 NEON via intrinsics   |
 | Apple A8                  | 4-way            | 12.19            | apple clang++ 7.0.0, A64 NEON via intrinsics   |
