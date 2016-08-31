@@ -574,7 +574,7 @@ public:
 	}
 
 #elif SIMD_ETALON_ALT5
-#if SIMD_INTRINSICS != SIMD_MIC && SIMD_ALIGNMENT != 64
+#if SIMD_INTRINSICS != SIMD_MIC || SIMD_ALIGNMENT != 64
 	#error MIC target and SIMD_ALIGNMENT of 64 required
 #endif
 
