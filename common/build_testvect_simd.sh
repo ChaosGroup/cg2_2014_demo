@@ -137,7 +137,6 @@ elif [[ $HOSTTYPE == "aarch64" ]]; then
 
 	CFLAGS+=(
 		-march=armv8-a
-		-mfpu=neon
 		-DCACHELINE_SIZE=64
 	)
 
