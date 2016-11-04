@@ -9,7 +9,7 @@ Formula used for the normalisation:
 | CPU                       | N-way SIMD ALUs  | flops/clock/core | remarks                                        |
 | ------------------------- | ---------------- | ---------------- | ---------------------------------------------- |
 | IBM PowerPC 750CL         | 2-way            | 1.51             | g++ 4.6, paired-singles via generic vectors    |
-| AMD Bobcat                | 2-way            | 1.47             | clang++ 3.4, SSE2 via intrinsics               |
+| AMD Bobcat                | 2-way            | 1.38             | clang++ 3.5, SSE2 via intrinsics               |
 | Intel Sandy Bridge        | 8-way            | 9.04             | clang++ 3.6, AVX256 via generic vectors        |
 | Intel Ivy Bridge (no SMT) | 8-way            | 8.82             | clang++ 3.6, AVX256 via generic vectors        |
 | Intel Ivy Bridge          | 8-way            | 9.09             | clang++ 3.6, AVX256 via generic vectors        |
@@ -20,7 +20,7 @@ Formula used for the normalisation:
 | RK3368 Cortex-A53         | 2-way            | 2.48             | clang++ 3.6, A64 NEON via intrinsics           |
 | MT8163A Cortex-A53        | 2-way            | 2.38             | clang++ 3.6, A32 NEON via inline asm           |
 | MT8163A Cortex-A53        | 2-way            | 2.46             | clang++ 3.6, A64 NEON via intrinsics           |
-| AppliedMicro X-Gene 1     | 2-way            | 2.71             | clang++ 3.5, A64 NEON via generic vectors      |
+| AppliedMicro X-Gene 1     | 2-way            | 2.71             | clang++ 3.5, A64 NEON via intrinsics           |
 | Apple A7                  | 4-way            | 11.07            | apple clang++ 7.0.0, A64 NEON via intrinsics   |
 | Apple A8                  | 4-way            | 12.19            | apple clang++ 7.0.0, A64 NEON via intrinsics   |
 | Apple A9                  | 4-way            | 16.79            | apple clang++ 7.0.0, A64 NEON via intrinsics   |
