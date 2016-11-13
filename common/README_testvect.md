@@ -26,4 +26,4 @@ Formula used for the normalisation:
 | Apple A8                  | 4-way            | 12.19            | apple clang++ 7.0.0, A64 NEON via intrinsics       |
 | Apple A9                  | 4-way            | 16.79            | apple clang++ 7.0.0, A64 NEON via intrinsics       |
 
-[^1]: This is not a mistake - clang++-3.5 -mtune=native produces worse scheduling for btver1 on this code than no tune.
+[^1]: This is not a mistake - clang++-3.5 -mtune=btver1 produces worse scheduling for this code than no tune.
