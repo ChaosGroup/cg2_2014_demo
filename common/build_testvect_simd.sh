@@ -5,6 +5,25 @@ TARGET=testvect_simd
 SOURCE=(
 	testvect_simd.cpp
 )
+LFLAGS=(
+	-lstdc++
+	-lpthread
+)
+
+if [[ ${MACHTYPE} =~ "-apple-darwin" ]]; then
+	NUM_LOGICAL_CORES=`sysctl hw.ncpu | sed s/^[^[:digit:]]*//`
+	SOURCE+=(
+		pthread_barrier.cpp
+	)
+elif [[ ${MACHTYPE} =~ "-linux-" ]]; then
+	NUM_LOGICAL_CORES=`lscpu | grep ^"CPU(s)" | sed s/^[^[:digit:]]*//`
+	LFLAGS+=(
+		-lrt
+	)
+else
+	echo Unknown platform
+	exit 255
+fi
 CFLAGS=(
 	-pipe
 	-fno-exceptions
@@ -17,7 +36,7 @@ CFLAGS=(
 # Perform arithmetic conformace tests as well
 #	-DSIMD_TEST_CONFORMANCE
 # Use as many worker threads, including the main thread
-	-DSIMD_NUM_THREADS=`lscpu | grep ^"CPU(s)" | sed s/^[^[:digit:]]*//`
+	-DSIMD_NUM_THREADS=$NUM_LOGICAL_CORES
 # Enforce worker thread affinity; value represents affinity stride (for control over physical/logical CPU distribution)
 #	-DSIMD_THREAD_AFFINITY=1
 # Minimal alignment of any SIMD type (might be overridden in the architecture-dependant sections below)
@@ -67,12 +86,6 @@ elif [[ ${CC:0:4} == "icpc" ]]; then
 		-opt-streaming-cache-evict=0
 	)
 fi
-
-LFLAGS=(
-	-lstdc++
-	-lrt
-	-lpthread
-)
 
 if [[ $HOSTTYPE == "arm" ]]; then
 

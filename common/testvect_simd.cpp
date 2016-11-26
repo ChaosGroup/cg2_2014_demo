@@ -2,9 +2,12 @@
 #include <fstream>
 #include <iomanip>
 #include <cassert>
-#include <time.h>
 #include <stdint.h>
 #include <pthread.h>
+#include "timer.h"
+#if __APPLE__ != 0
+	#include "pthread_barrier.h"
+#endif
 
 #if SIMD_SCALAR
 	#include "vectscal.hpp"
@@ -59,22 +62,6 @@
 #elif SIMD_INTRINSICS == SIMD_MIC
 	#include <immintrin.h>
 #endif
-
-static uint64_t
-timer_nsec() {
-
-#if defined(CLOCK_MONOTONIC_RAW)
-	const clockid_t clockid = CLOCK_MONOTONIC_RAW;
-
-#else
-	const clockid_t clockid = CLOCK_MONOTONIC;
-
-#endif
-	timespec t;
-	clock_gettime(clockid, &t);
-
-	return t.tv_sec * 1000000000ULL + t.tv_nsec;
-}
 
 #if SIMD_ETALON || SIMD_AUTOVECT
 namespace etal {
