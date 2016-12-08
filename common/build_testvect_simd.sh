@@ -68,20 +68,20 @@ CFLAGS=(
 # Produce asm listings instead of binaries
 #	-S
 )
-if [[ ${CC:0:3} == "g++" ]]; then
+CC_FILENAME=${CC##*/}
+if [[ ${CC_FILENAME:0:3} == "g++" ]]; then
 	CFLAGS+=(
 		-ffast-math
 	)
 
-elif [[ ${CC:0:7} == "clang++" ]]; then
+elif [[ ${CC_FILENAME:0:7} == "clang++" ]]; then
 	CFLAGS+=(
 		-ffp-contract=fast
 	)
 
-elif [[ ${CC:0:4} == "icpc" ]]; then
+elif [[ ${CC_FILENAME:0:4} == "icpc" ]]; then
 	CFLAGS+=(
 		-fp-model fast=2
-#		-unroll-aggressive
 		-opt-prefetch=0
 		-opt-streaming-cache-evict=0
 	)
