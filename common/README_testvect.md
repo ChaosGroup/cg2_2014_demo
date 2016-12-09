@@ -11,7 +11,7 @@ Formula used for the normalisation:
 | IBM PowerPC 750CL         | 2-way            | 1.51             | g++ 4.6, paired-singles via generic vectors        |
 | AMD Bobcat                | 2-way            | 1.38             | clang++ 3.5, SSE2 via intrinsics, native tune [^1] |
 | AMD Bobcat                | 2-way            | 1.42             | clang++ 3.5, SSE2 via intrinsics, generic tune     |
-| Intel Core2 T5600         | 4-way            | 3.05             | clang++ 3.4, SSE2 via intrinsics
+| Intel Core2 T5600         | 4-way            | 3.05             | clang++ 3.4, SSE2 via intrinsics                   |
 | Intel Sandy Bridge        | 8-way            | 9.04             | clang++ 3.6, AVX256 via generic vectors            |
 | Intel Ivy Bridge (no SMT) | 8-way            | 8.82             | clang++ 3.6, AVX256 via generic vectors            |
 | Intel Ivy Bridge          | 8-way            | 9.09             | clang++ 3.6, AVX256 via generic vectors            |
