@@ -1769,6 +1769,13 @@ public:
 	// quaternion product of argument and this
 	hamilton& qmull(
 		const hamilton& src);
+
+	// conjugate of this
+	hamilton& conj();
+
+	// conjugate of argument
+	hamilton& conj(
+		const hamilton& src);
 };
 
 
@@ -1840,6 +1847,23 @@ hamilton< NATIVE_T >::qmull(
 	const hamilton< NATIVE_T >& src)
 {
 	return *this = hamilton().qmul(src, *this);
+}
+
+
+template < typename NATIVE_T >
+inline hamilton< NATIVE_T >&
+hamilton< NATIVE_T>::conj(
+	const hamilton< NATIVE_T >& src)
+{
+	return *this = hamilton().mul(src, vect< 4, NATIVE_T >(-1.f, -1.f, -1.f,  1.f));
+}
+
+
+template < typename NATIVE_T >
+inline hamilton< NATIVE_T >&
+hamilton< NATIVE_T>::conj()
+{
+	return this->conj(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2127,15 +2151,15 @@ inline matx< 3, __m128 >::matx(
 	const hamilton< __m128 >& q)
 {
 	this->set(0, 0, 1.f - 2.f * (q[1] * q[1] + q[2] * q[2]));
-	this->set(0, 1, 2.f * (q[0] * q[1] + q[2] * q[3]));
-	this->set(0, 2, 2.f * (q[0] * q[2] - q[1] * q[3]));
+	this->set(0, 1,       2.f * (q[0] * q[1] + q[2] * q[3]));
+	this->set(0, 2,       2.f * (q[0] * q[2] - q[1] * q[3]));
 
-	this->set(1, 0, 2.f * (q[0] * q[1] - q[2] * q[3]));
+	this->set(1, 0,       2.f * (q[0] * q[1] - q[2] * q[3]));
 	this->set(1, 1, 1.f - 2.f * (q[0] * q[0] + q[2] * q[2]));
-	this->set(1, 2, 2.f * (q[1] * q[2] + q[0] * q[3]));
+	this->set(1, 2,       2.f * (q[1] * q[2] + q[0] * q[3]));
 
-	this->set(2, 0, 2.f * (q[0] * q[2] + q[1] * q[3]));
-	this->set(2, 1, 2.f * (q[1] * q[2] - q[0] * q[3]));
+	this->set(2, 0,       2.f * (q[0] * q[2] + q[1] * q[3]));
+	this->set(2, 1,       2.f * (q[1] * q[2] - q[0] * q[3]));
 	this->set(2, 2, 1.f - 2.f * (q[0] * q[0] + q[1] * q[1]));
 }
 
@@ -2245,17 +2269,17 @@ inline matx< 4, __m128 >::matx(
 	const hamilton< __m128 >& q)
 {
 	this->set(0, 0, 1.f - 2.f * (q[1] * q[1] + q[2] * q[2]));
-	this->set(0, 1, 2.f * (q[0] * q[1] + q[2] * q[3]));
-	this->set(0, 2, 2.f * (q[0] * q[2] - q[1] * q[3]));
+	this->set(0, 1,       2.f * (q[0] * q[1] + q[2] * q[3]));
+	this->set(0, 2,       2.f * (q[0] * q[2] - q[1] * q[3]));
 	this->set(0, 3, 0.f);
 
-	this->set(1, 0, 2.f * (q[0] * q[1] - q[2] * q[3]));
+	this->set(1, 0,       2.f * (q[0] * q[1] - q[2] * q[3]));
 	this->set(1, 1, 1.f - 2.f * (q[0] * q[0] + q[2] * q[2]));
-	this->set(1, 2, 2.f * (q[1] * q[2] + q[0] * q[3]));
+	this->set(1, 2,       2.f * (q[1] * q[2] + q[0] * q[3]));
 	this->set(1, 3, 0.f);
 
-	this->set(2, 0, 2.f * (q[0] * q[2] + q[1] * q[3]));
-	this->set(2, 1, 2.f * (q[1] * q[2] - q[0] * q[3]));
+	this->set(2, 0,       2.f * (q[0] * q[2] + q[1] * q[3]));
+	this->set(2, 1,       2.f * (q[1] * q[2] - q[0] * q[3]));
 	this->set(2, 2, 1.f - 2.f * (q[0] * q[0] + q[1] * q[1]));
 	this->set(2, 3, 0.f);
 
