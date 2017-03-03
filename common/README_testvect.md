@@ -19,6 +19,7 @@ Formula used for the normalisation:
 | Intel Xeon Phi / KNC      | 16-way           | 6.62             | icpc 14.0.4, MIC via intrinsics                    |
 | iMX53 Cortex-A8           | 2-way            | 2.23             | clang++ 3.5, NEON via inline asm                   |
 | Exynos 5422 Cortex-A15    | 4-way            | 3.82             | clang++ 3.8, NEON via inline asm                   |
+| Exynos 5422 Cortex-A7     | 2-way            | 1.02             | clang++ 3.8, NEON via inline asm                   |
 | RK3368 Cortex-A53         | 2-way            | 2.40             | clang++ 3.5, A32 NEON via inline asm               |
 | RK3368 Cortex-A53         | 2-way            | 2.48             | clang++ 3.6, A64 NEON via intrinsics               |
 | MT8163A Cortex-A53        | 2-way            | 2.38             | clang++ 3.6, A32 NEON via inline asm               |
