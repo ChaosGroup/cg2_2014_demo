@@ -89,39 +89,69 @@ fi
 
 if [[ $HOSTTYPE == "arm" ]]; then
 
+	# clang can fail auto-detecting the host armv7/armv8 cpu on some setups; collect all part numbers
+	UARCH=`cat /proc/cpuinfo | grep "^CPU part" | sed s/^[^[:digit:]]*//`
+
+	# in order of preference, in case of big.LITTLE (armv7 and armv8 lumped together)
+	if   [ `echo $UARCH | grep -c 0xd09` -ne 0 ]; then
+		CFLAGS+=(
+			-march=armv8-a
+			-mtune=cortex-a73
+		)
+	elif [ `echo $UARCH | grep -c 0xd08` -ne 0 ]; then
+		CFLAGS+=(
+			-march=armv8-a
+			-mtune=cortex-a72
+		)
+	elif [ `echo $UARCH | grep -c 0xd07` -ne 0 ]; then
+		CFLAGS+=(
+			-march=armv8-a
+			-mtune=cortex-a57
+		)
+	elif [ `echo $UARCH | grep -c 0xd03` -ne 0 ]; then
+		CFLAGS+=(
+			-march=armv8-a
+			-mtune=cortex-a53
+		)
+	elif [ `echo $UARCH | grep -c 0xc0f` -ne 0 ]; then
+		CFLAGS+=(
+			-march=armv7-a
+			-mtune=cortex-a15
+		)
+	elif [ `echo $UARCH | grep -c 0xc0e` -ne 0 ]; then
+		CFLAGS+=(
+			-march=armv7-a
+			-mtune=cortex-a17
+		)
+	elif [ `echo $UARCH | grep -c 0xc09` -ne 0 ]; then
+		CFLAGS+=(
+			-march=armv7-a
+			-mtune=cortex-a9
+		)
+	elif [ `echo $UARCH | grep -c 0xc08` -ne 0 ]; then
+		CFLAGS+=(
+			-march=armv7-a
+			-mtune=cortex-a8
+		)
+	elif [ `echo $UARCH | grep -c 0xc07` -ne 0 ]; then
+		CFLAGS+=(
+			-march=armv7-a
+			-mtune=cortex-a7
+		)
+	fi
+
 	UNAME_MACHINE=`uname -m`
 
 	if [[ $UNAME_MACHINE == "armv7l" ]]; then
 
 		CFLAGS+=(
-			-march=native
-			-mtune=native
 			-marm
 			-mfpu=neon
 			-DCACHELINE_SIZE=32
 		)
 	elif [[ $UNAME_MACHINE == "aarch64" ]]; then # for armv8 devices with aarch64 kernels + armv7 userspaces
 
-		# clang can fail auto-detecting the host armv8 cpu on some setups; collect all part numbers
-		UARCH=`cat /proc/cpuinfo | grep "^CPU part" | sed s/^[^[:digit:]]*//`
-
-		# choose in order of preference, in case of big.LITTLE
-		if [ `echo $UARCH | grep -c 0xd08` -ne 0 ]; then
-			CFLAGS+=(
-				-mtune=cortex-a72
-			)
-		elif [ `echo $UARCH | grep -c 0xd07` -ne 0 ]; then
-			CFLAGS+=(
-				-mtune=cortex-a57
-			)
-		elif [ `echo $UARCH | grep -c 0xd03` -ne 0 ]; then
-			CFLAGS+=(
-				-mtune=cortex-a53
-			)
-		fi
-
 		CFLAGS+=(
-			-march=armv7-a
 			-marm
 			-mfpu=neon
 			-DCACHELINE_SIZE=64
@@ -134,7 +164,11 @@ elif [[ $HOSTTYPE == "aarch64" ]]; then
 	UARCH=`cat /proc/cpuinfo | grep "^CPU part" | sed s/^[^[:digit:]]*//`
 
 	# choose in order of preference, in case of big.LITTLE
-	if [ `echo $UARCH | grep -c 0xd08` -ne 0 ]; then
+	if   [ `echo $UARCH | grep -c 0xd09` -ne 0 ]; then
+		CFLAGS+=(
+			-mtune=cortex-a73
+		)
+	elif [ `echo $UARCH | grep -c 0xd08` -ne 0 ]; then
 		CFLAGS+=(
 			-mtune=cortex-a72
 		)
