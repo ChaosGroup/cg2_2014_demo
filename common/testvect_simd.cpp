@@ -1066,10 +1066,10 @@ compute(
 	// warm up the engines
 	workload(id, reps / 10);
 
-	const uint64_t t0 = timer_nsec();
+	const uint64_t t0 = timer_ns();
 	workload(id, reps);
 
-	const uint64_t dt = timer_nsec() - t0;
+	const uint64_t dt = timer_ns() - t0;
 	carg->dt = dt;
 
 	pthread_barrier_wait(barrier + BARRIER_FINISH);

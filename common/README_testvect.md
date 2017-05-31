@@ -1,7 +1,7 @@
 Measurements
 ------------
 
-Results normalized per clock; on multi-core systems the average from all cores is taken; SMT taken into account on SMT-capable CPUs.
+Multiply 4x4 matrices; results normalized per clock; on multi-core systems the average from all cores is taken; SMT taken into account on SMT-capable CPUs.
 Formula used for the normalisation:
 
 	flops_per_matrix * matrix_count * threads_per_core / (CPU_freq * duration)
@@ -25,6 +25,7 @@ Formula used for the normalisation:
 | MT8163A Cortex-A53        | 2-way            | 2.38             | clang++ 3.6, A32 NEON via inline asm               |
 | MT8163A Cortex-A53        | 2-way            | 2.46             | clang++ 3.6, A64 NEON via intrinsics               |
 | AppliedMicro X-Gene 1     | 2-way            | 2.71             | clang++ 3.5, A64 NEON via intrinsics               |
+| ARMADA 8040 Cortex-A72    | 4-way            | 4.47             | clang++ 3.5, A64 NEON via intrinsics               |
 | Apple A7                  | 4-way            | 11.07            | apple clang++ 7.0.0, A64 NEON via intrinsics       |
 | Apple A8                  | 4-way            | 12.19            | apple clang++ 7.0.0, A64 NEON via intrinsics       |
 | Apple A9                  | 4-way            | 16.79            | apple clang++ 7.0.0, A64 NEON via intrinsics       |

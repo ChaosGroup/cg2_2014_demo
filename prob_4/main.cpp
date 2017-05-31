@@ -1,13 +1,13 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <time.h>
 #include <string>
 #include <cstring>
 #include <sstream>
 #include <iomanip>
 #include <pthread.h>
 
+#include "timer.h"
 #include "sse_mathfun.h"
 #include "stream.hpp"
 #include "vectsimd_sse.hpp"
@@ -668,24 +668,6 @@ workforce_t::update(
 		record[i].cam[2] = cam[2];
 		record[i].cam[3] = cam[3];
 	}
-}
-
-
-static uint64_t
-timer_nsec()
-{
-#if defined(CLOCK_MONOTONIC_RAW)
-	const clockid_t clockid = CLOCK_MONOTONIC_RAW;
-
-#else
-	const clockid_t clockid = CLOCK_MONOTONIC;
-
-#endif
-
-	timespec t;
-	clock_gettime(clockid, &t);
-
-	return t.tv_sec * 1000000000ULL + t.tv_nsec;
 }
 
 
@@ -1463,7 +1445,7 @@ int main(
 #endif
 	GLuint input = 0;
 	unsigned nframes = 0;
-	const uint64_t t0 = timer_nsec();
+	const uint64_t t0 = timer_ns();
 
 #if VISUALIZE != 0
 	while (testbed::processEvents(input) && nframes != frames)
@@ -1551,7 +1533,7 @@ int main(
 		++nframes;
 	}
 
-	const uint64_t dt = timer_nsec() - t0;
+	const uint64_t dt = timer_ns() - t0;
 
 	stream::cout << "compute_arg size: " << sizeof(compute_arg) <<
 		"\nworker threads: " << nthreads << "\nambient occlusion rays per pixel: " << ao_probe_count <<

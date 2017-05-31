@@ -1,7 +1,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <time.h>
 #include <string>
 #include <cstring>
 #include <sstream>
@@ -13,6 +12,7 @@
 #include <png.h>
 #endif
 
+#include "timer.h"
 #include "sse_mathfun.h"
 #include "stream.hpp"
 #include "vectsimd_sse.hpp"
@@ -669,24 +669,6 @@ workforce_t::update(
 		record[i].cam[2] = cam[2];
 		record[i].cam[3] = cam[3];
 	}
-}
-
-
-static uint64_t
-timer_nsec()
-{
-#if defined(CLOCK_MONOTONIC_RAW)
-	const clockid_t clockid = CLOCK_MONOTONIC_RAW;
-
-#else
-	const clockid_t clockid = CLOCK_MONOTONIC;
-
-#endif
-
-	timespec t;
-	clock_gettime(clockid, &t);
-
-	return t.tv_sec * 1000000000ULL + t.tv_nsec;
 }
 
 
@@ -1903,7 +1885,7 @@ bool ActionContrastBeat::start(
 		return false;
 
 	c::contrast_middle = .5f;
-	c::contrast_k = 1.f + pow_ps(sin_ps(_mm_set_ss(_mm_andnot_ps(_mm_set_ss(-0.f), _mm_set_ss(-.5f + c::accum_beat / c::beat_period))[0] * float(M_PI))), _mm_set1_ps(64.f))[0];
+	c::contrast_k = 1.f + pow_ps(sin_ps(_mm_andnot_ps(_mm_set_ss(-0.f), _mm_set_ss(float(-M_PI_2) + float(M_PI) * c::accum_beat / c::beat_period))), _mm_set1_ps(64.f))[0];
 
 	lifespan = duration - delay;
 	return true;
@@ -1920,7 +1902,7 @@ bool ActionContrastBeat::frame(
 		return false;
 	}
 
-	c::contrast_k = 1.f + pow_ps(sin_ps(_mm_set_ss(_mm_andnot_ps(_mm_set_ss(-0.f), _mm_set_ss(-.5f + c::accum_beat / c::beat_period))[0] * float(M_PI))), _mm_set1_ps(64.f))[0];
+	c::contrast_k = 1.f + pow_ps(sin_ps(_mm_andnot_ps(_mm_set_ss(-0.f), _mm_set_ss(float(-M_PI_2) + float(M_PI) * c::accum_beat / c::beat_period))), _mm_set1_ps(64.f))[0];
 
 	lifespan -= dt;
 	return true;
@@ -2299,7 +2281,7 @@ int main(
 
 #endif
 	unsigned nframes = 0;
-	const uint64_t t0 = timer_nsec();
+	const uint64_t t0 = timer_ns();
 	uint64_t tlast = t0;
 
 #if VISUALIZE != 0
@@ -2314,7 +2296,7 @@ int main(
 		const float dt = 1.0 / FRAMEGRAB_RATE;
 
 #else
-		const uint64_t tframe = timer_nsec();
+		const uint64_t tframe = timer_ns();
 		const float dt = double(tframe - tlast) * 1e-9;
 		tlast = tframe;
 
@@ -2354,6 +2336,7 @@ int main(
 			(scene[c::scene_selector]->get_offset_y() - centre[1]) * rcp_extent,
 			(scene[c::scene_selector]->get_offset_z() - centre[2]) * rcp_extent, 1.f);
 
+#if VISUALIZE != 0
 		// obligatory manual controls
 		if (input & testbed::INPUT_MASK_ACTION)
 		{
@@ -2397,6 +2380,7 @@ int main(
 		if (input & testbed::INPUT_MASK_ALT_RIGHT)
 			c::pos_x += linear_step;
 
+#endif
 		c::azim = wrap_at_period(c::azim, float(M_PI * 2.0));
 
 		const simd::vect4 eye(
@@ -2446,7 +2430,7 @@ int main(
 		++nframes;
 	}
 
-	const uint64_t dt = timer_nsec() - t0;
+	const uint64_t dt = timer_ns() - t0;
 
 	stream::cout << "compute_arg size: " << sizeof(compute_arg) <<
 		"\nworker threads: " << nthreads << "\nambient occlusion rays per pixel: " << ao_probe_count <<

@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include "timer.h"
 #include "sse_mathfun.h"
 #include "vectsimd_sse.hpp"
 #include "pure_macro.hpp"
@@ -125,22 +126,6 @@ public:
 };
 
 } // namespace testbed
-
-
-static uint64_t timer_nsec() {
-#if defined(CLOCK_MONOTONIC_RAW)
-	const clockid_t clockid = CLOCK_MONOTONIC_RAW;
-
-#else
-	const clockid_t clockid = CLOCK_MONOTONIC;
-
-#endif
-
-	timespec t;
-	clock_gettime(clockid, &t);
-
-	return t.tv_sec * 1000000000ULL + t.tv_nsec;
-}
 
 
 static bool validate_fullscreen(
@@ -2786,13 +2771,13 @@ int main(int argc, char** argv) {
 
 	GLuint input = 0;
 	size_t frame = 0;
-	const uint64_t t0 = timer_nsec();
+	const uint64_t t0 = timer_ns();
 	uint64_t tlast = t0;
 
 	while (testbed::processEvents(input) && frame != size_t(frames)) {
 
 		// produce source for the new frame
-		const uint64_t tframe = timer_nsec();
+		const uint64_t tframe = timer_ns();
 		const float dt = double(tframe - tlast) * 1e-9;
 		tlast = tframe;
 
@@ -3012,7 +2997,7 @@ int main(int argc, char** argv) {
 		++frame;
 	}
 
-	const uint64_t dt = timer_nsec() - t0;
+	const uint64_t dt = timer_ns() - t0;
 
 	stream::cout << "total frames rendered: " << frame << '\n';
 
