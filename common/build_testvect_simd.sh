@@ -49,7 +49,7 @@ CFLAGS=(
 #	-DSIMD_ETALON_ALT1
 # Alternative etalon v2 (in combination with SIMD_ETALON above); clang++-3.6 recommended
 #	-DSIMD_ETALON_ALT2
-# Alternative etalon v3 (in combination with SIMD_ETALON above)
+# Alternative etalon v3 (in combination with SIMD_ETALON above); SSE4.1 only
 #	-DSIMD_ETALON_ALT3
 # Alternative etalon v4 (in combination with SIMD_ETALON above); ARMv7 only
 #	-DSIMD_ETALON_ALT4
