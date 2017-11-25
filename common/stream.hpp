@@ -107,7 +107,7 @@ public:
 
 	const in& operator >>(int64_t& a) const {
 		if (0 != file)
-#if _MSC_VER
+#if _MSC_VER || __APPLE__
 			fscanf(file, "%lld", &a);
 
 #else
@@ -119,7 +119,7 @@ public:
 
 	const in& operator >>(uint64_t& a) const {
 		if (0 != file)
-#if _MSC_VER
+#if _MSC_VER || __APPLE__
 			fscanf(file, "%llu", &a);
 
 #else
@@ -129,6 +129,19 @@ public:
 		return *this;
 	}
 
+#if CLANG_QUIRK_0002 != 0
+#if _LP64 == 1
+	const in& operator >>(size_t& a) const {
+		return *this >> reinterpret_cast< uint64_t& >(a);
+	}
+
+#else
+	const in& operator >>(size_t& a) const {
+		return *this >> reinterpret_cast< uint32_t& >(a);
+	}
+
+#endif
+#endif
 	const in& operator >>(float& a) const {
 		if (0 != file)
 			fscanf(file, "%f", &a);
@@ -460,6 +473,19 @@ public:
 		return *this;
 	}
 
+#if CLANG_QUIRK_0002 != 0
+#if _LP64 == 1
+	out& operator <<(const size_t a) {
+		return *this << reinterpret_cast< const uint64_t& >(a);
+	}
+
+#else
+	out& operator <<(const size_t a) {
+		return *this << reinterpret_cast< const uint32_t& >(a);
+	}
+
+#endif
+#endif
 	out& operator <<(const float a) {
 		if (0 == file)
 			return *this;
@@ -533,6 +559,17 @@ public:
 
 	out& operator <<(const std::_Fillobj<char>& arg) {
 		fillchar = arg._Fill;
+		return *this;
+	}
+
+#elif __clang__ != 0 && __APPLE__ != 0
+	out& operator<<(const std::__iom_t6& a) {
+		width = reinterpret_cast< const int& >(a); // std::__iom_t6::__n_
+		return *this;
+	}
+
+	out& operator<<(const std::__iom_t4<char>& a) {
+		fillchar = reinterpret_cast< const char& >(a); // std::__iom_t4<char>::__fill_
 		return *this;
 	}
 

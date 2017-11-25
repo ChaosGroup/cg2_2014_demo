@@ -6,29 +6,35 @@
 #include <sstream>
 #include <iomanip>
 #include <pthread.h>
+#if __APPLE__ != 0
+#include "pthread_barrier.h"
+#endif
 
 #if DR_CORE && DR_SUPPLEMENT
 #error cannot be both a core and a supplement
 #endif
 
-#if DR_SUPPLEMENT == 0 && VISUALIZE != 0 && FRAMEGRAB_RATE != 0
-#include <GL/gl.h>
 #include <png.h>
+#ifndef Z_BEST_COMPRESSION
+#define Z_BEST_COMPRESSION 9
 #endif
 
 #include "timer.h"
 #include "sse_mathfun.h"
 #include "stream.hpp"
 #include "vectsimd_sse.hpp"
-#if DR_SUPPLEMENT == 0
+#include "array.hpp"
+#include "problem_7.hpp"
+
+#if DR_SUPPLEMENT == 0 && VISUALIZE != 0
+#include <GL/gl.h>
 #include "platform.hpp"
 #include "prim_rgb_view.hpp"
 #endif
-#include "array.hpp"
+
 #if DR_CORE || DR_SUPPLEMENT
 #include "util_eth.hpp"
 #endif
-#include "problem_7.hpp"
 
 // verify iostream-free status
 #if _GLIBCXX_IOSTREAM
@@ -978,8 +984,6 @@ public:
 };
 
 
-#if FRAMEGRAB_RATE != 0
-
 namespace testbed
 {
 
@@ -997,15 +1001,40 @@ public:
 
 } // namespace testbed
 
+enum IMAGE_FORMAT {
+	IMAGE_FORMAT_GRAY,
+	IMAGE_FORMAT_RGB,
+	IMAGE_FORMAT_RGBX
+};
 
 static bool
 write_png(
-	const bool grayscale,
+	const IMAGE_FORMAT src_format,
 	const unsigned w,
 	const unsigned h,
 	void* const bits,
 	FILE* const fp)
 {
+	size_t pixel_size;
+	int color_type;
+
+	switch (src_format) {
+	case IMAGE_FORMAT_GRAY:
+		pixel_size = sizeof(png_byte);
+		color_type = PNG_COLOR_TYPE_GRAY;
+		break;
+	case IMAGE_FORMAT_RGB:
+		pixel_size = sizeof(png_byte[3]);
+		color_type = PNG_COLOR_TYPE_RGB;
+		break;
+	case IMAGE_FORMAT_RGBX:
+		pixel_size = sizeof(png_byte[4]);
+		color_type = PNG_COLOR_TYPE_RGB;
+		break;
+	default: // unknown src format
+		return false;
+	}
+
 	png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 
 	if (!png_ptr)
@@ -1013,28 +1042,17 @@ write_png(
 
 	png_infop info_ptr = png_create_info_struct(png_ptr);
 
-	if (!info_ptr)
-	{
-		png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+	if (!info_ptr) {
+		png_destroy_write_struct(&png_ptr, (png_infopp) NULL);
 		return false;
 	}
 
 	// declare any RAII before the longjump, lest no destruction at longjump
 	const testbed::scoped_ptr< png_bytep, generic_free > row((png_bytepp) malloc(sizeof(png_bytep) * h));
 
-	if (setjmp(png_jmpbuf(png_ptr)))
-	{
+	if (setjmp(png_jmpbuf(png_ptr))) {
 		png_destroy_write_struct(&png_ptr, &info_ptr);
 		return false;
-	}
-
-	size_t pixel_size = sizeof(png_byte[3]);
-	int color_type = PNG_COLOR_TYPE_RGB;
-
-	if (grayscale)
-	{
-		pixel_size = sizeof(png_byte);
-		color_type = PNG_COLOR_TYPE_GRAY;
 	}
 
 	for (size_t i = 0; i < h; ++i)
@@ -1043,14 +1061,17 @@ write_png(
 	png_init_io(png_ptr, fp);
 	png_set_compression_level(png_ptr, Z_BEST_COMPRESSION);
 	png_set_IHDR(png_ptr, info_ptr, w, h, 8, color_type, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-	png_set_rows(png_ptr, info_ptr, row());
-	png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
+	png_write_info(png_ptr, info_ptr);
+	if (IMAGE_FORMAT_RGBX == src_format)
+		png_set_filler(png_ptr, 0, PNG_FILLER_AFTER);
+	png_write_image(png_ptr, row());
+	png_write_end(png_ptr, info_ptr);
 
 	png_destroy_write_struct(&png_ptr, &info_ptr);
 	return true;
 }
 
-
+#if DR_SUPPLEMENT == 0 && VISUALIZE != 0 && FRAMEGRAB != 0
 static bool
 saveViewport(
 	const unsigned viewport_x,
@@ -1072,19 +1093,24 @@ saveViewport(
 
 	const testbed::scoped_ptr< FILE, testbed::scoped_functor > file(fopen(name, "wb"));
 
-	if (0 == file())
-	{
+	if (0 == file()) {
 		stream::cerr << "failure opening framegrab file '" << name << "'\n";
 		return false;
 	}
 
-	size_t pixel_size = sizeof(GLubyte[3]);
-	GLenum format = GL_RGB;
+	size_t pixel_size;
+	GLenum format;
+	IMAGE_FORMAT format_png;
 
-	if (grayscale)
-	{
+	if (grayscale) {
 		pixel_size = sizeof(GLubyte);
 		format = GL_RED;
+		format_png = IMAGE_FORMAT_GRAY;
+	}
+	else {
+		pixel_size = sizeof(GLubyte[3]);
+		format = GL_RGB;
+		format_png = IMAGE_FORMAT_RGB;
 	}
 
 	const unsigned pixels_len = viewport_h * viewport_w * pixel_size;
@@ -1093,8 +1119,7 @@ saveViewport(
 	glFinish();
 	glReadPixels(viewport_x, viewport_y, viewport_w, viewport_h, format, GL_UNSIGNED_BYTE, pixels());
 
-	if (!write_png(grayscale, viewport_w, viewport_h, pixels(), file()))
-	{
+	if (!write_png(format_png, viewport_w, viewport_h, pixels(), file())) {
 		stream::cerr << "failure writing framegrab file '" << name << "'\n";
 		return false;
 	}
@@ -1102,8 +1127,7 @@ saveViewport(
 	return true;
 }
 
-#endif // FRAMEGRAB_RATE != 0
-
+#endif
 static inline float
 wrap_at_period(
 	const float x,
@@ -2478,8 +2502,8 @@ int main(
 
 #endif
 	{
-#if FRAMEGRAB_RATE != 0
-		const float dt = 1.0 / FRAMEGRAB_RATE;
+#if FRAME_RATE != 0
+		const float dt = 1.0 / FRAME_RATE;
 
 #else
 #if DR_CORE
@@ -2695,7 +2719,7 @@ int main(
 #if DR_SUPPLEMENT == 0 && VISUALIZE != 0
 		testbed::rgbv::render(framebuffer, c::contrast_middle, c::contrast_k, c::blur_split);
 
-#if FRAMEGRAB_RATE != 0
+#if FRAMEGRAB != 0
 		saveViewport(0, 0, w, h, nframes);
 
 #endif
@@ -2719,5 +2743,23 @@ int main(
 			"\naverage FPS: " << nframes / sec << '\n';
 	}
 
+#if VISUALIZE == 0
+	if (nframes) {
+		const char* const name = "last_frame.png";
+		stream::cout << "saving framegrab as '" << name << "'\n";
+		const testbed::scoped_ptr< FILE, testbed::scoped_functor > file(fopen(name, "wb"));
+
+		if (0 == file()) {
+			stream::cerr << "failure opening framegrab file '" << name << "'\n";
+			return -1;
+		}
+
+		if (!write_png(IMAGE_FORMAT_RGBX, w, h, framebuffer, file())) {
+			stream::cerr << "failure writing framegrab file '" << name << "'\n";
+			return -1;
+		}
+	}
+
+#endif
 	return 0;
 }

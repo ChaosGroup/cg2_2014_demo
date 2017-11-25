@@ -48,7 +48,7 @@ CFLAGS=(
 # Number of workforce threads (normally equating the number of logical cores)
 	-DWORKFORCE_NUM_THREADS=`lscpu | grep ^"CPU(s)" | sed s/^[^[:digit:]]*//`
 # Make workforce threads sticky (NUMA, etc)
-	-DWORKFORCE_THREADS_STICKY=`lscpu | grep ^"NUMA node(s)" | echo "\`sed s/^[^[:digit:]]*//\` > 1" | bc`
+	-DWORKFORCE_THREADS_STICKY=`lscpu | grep ^"Socket(s)" | echo "\`sed s/^[^[:digit:]]*//\` > 1" | bc`
 # Colorize the output of individual threads
 #	-DCOLORIZE_THREADS=1
 # Threading model 'division of labor' alternatives: 0, 1, 2

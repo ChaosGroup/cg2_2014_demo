@@ -42,7 +42,7 @@ CFLAGS=(
 # Number of workforce threads (normally equating the number of logical cores)
 	-DWORKFORCE_NUM_THREADS=`lscpu | grep ^"CPU(s)" | sed s/^[^[:digit:]]*//`
 # Make workforce threads sticky (NUMA, etc)
-	-DWORKFORCE_THREADS_STICKY=`lscpu | grep ^"NUMA node(s)" | echo "\`sed s/^[^[:digit:]]*//\` > 1" | bc`
+	-DWORKFORCE_THREADS_STICKY=`lscpu | grep ^"Socket(s)" | echo "\`sed s/^[^[:digit:]]*//\` > 1" | bc`
 # Colorize the output of individual threads
 #	-DCOLORIZE_THREADS=1
 # Threading model 'division of labor' alternatives: 0, 1, 2
@@ -57,24 +57,34 @@ CFLAGS=(
 #	-DDRAW_TREE_CELLS=1
 # Clang static code analysis:
 #	--analyze
+# Compiler quirk 0001: control definition location of routines posing entry points to recursion for more efficient inlining
 	-DCLANG_QUIRK_0001=1
+# Compiler quirk 0002: type size_t is unrelated to same-size type uint*_t
+#	-DCLANG_QUIRK_0002=1
 )
 # For non-native or tweaked architecture targets, comment out 'native' and uncomment the correct target architecture and flags
 TARGET=(
 	native
+	native
 # AMD Bobcat:
 #	btver1
+#	btver1
 # AMD Jaguar:
+#	btver2
 #	btver2
 # note: Jaguars have 4-wide SIMD, so our avx256 code is not beneficial to them
 #	-mno-avx
 # Intel Core2
 #	core2
+#	core2
 # Intel Nehalem
+#	corei7
 #	corei7
 # Intel Sandy Bridge
 #	corei7-avx
+#	corei7-avx
 # Intel Ivy Bridge
+#	core-avx-i
 #	core-avx-i
 )
 LFLAGS=(
@@ -112,6 +122,6 @@ else
 	)
 fi
 
-BUILD_CMD=$CC" -o "$BINARY" "${CFLAGS[@]}" -march="${TARGET[0]}" -mtune="${TARGET[@]}" "${SOURCE[@]}" "${LFLAGS[@]}
+BUILD_CMD=$CC" -o "$BINARY" "${CFLAGS[@]}" -march="${TARGET[0]}" -mtune="${TARGET[@]:1}" "${SOURCE[@]}" "${LFLAGS[@]}
 echo $BUILD_CMD
 CCC_ANALYZER_CPLUSPLUS=1 $BUILD_CMD

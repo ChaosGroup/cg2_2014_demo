@@ -25,8 +25,10 @@ CFLAGS=(
 	-DGLX_GLXEXT_PROTOTYPES
 	-DGLCOREARB_PROTOTYPES
 	-DGL_GLEXT_PROTOTYPES
-# Framegrab rate
-#	-DFRAMEGRAB_RATE=30
+# Grab every frame to PNG
+#	-DFRAMEGRAB=1
+# Fixed framerate
+#	-DFRAME_RATE=30
 # Case-specific optimisation
 	-DMINIMAL_TREE=1
 # Show on screen what was rendered
@@ -43,7 +45,7 @@ CFLAGS=(
 # Number of workforce threads (normally equating the number of logical cores)
 	-DWORKFORCE_NUM_THREADS=`lscpu | grep ^"CPU(s)" | sed s/^[^[:digit:]]*//`
 # Make workforce threads sticky (NUMA, etc)
-	-DWORKFORCE_THREADS_STICKY=`lscpu | grep ^"NUMA node(s)" | echo "\`sed s/^[^[:digit:]]*//\` > 1" | bc`
+	-DWORKFORCE_THREADS_STICKY=`lscpu | grep ^"Socket(s)" | echo "\`sed s/^[^[:digit:]]*//\` > 1" | bc`
 # Colorize the output of individual threads
 #	-DCOLORIZE_THREADS=1
 # Threading model 'division of labor' alternatives: 0, 1, 2
@@ -58,7 +60,10 @@ CFLAGS=(
 #	-DDRAW_TREE_CELLS=1
 # Clang static code analysis:
 #	--analyze
+# Compiler quirk 0001: control definition location of routines posing entry points to recursion for more efficient inlining
 	-DCLANG_QUIRK_0001=1
+# Compiler quirk 0002: type size_t is unrelated to same-size type uint*_t
+#	-DCLANG_QUIRK_0002=1
 # Two-node distributed rendering by nodes on the same LAN; a node can be either a core or a supplement -- uncomment one; number gives the ratio of core / supplement workload, and is the same for both
 #	-DDR_CORE=2
 #	-DDR_SUPPLEMENT=2
@@ -66,19 +71,26 @@ CFLAGS=(
 # For non-native or tweaked architecture targets, comment out 'native' and uncomment the correct target architecture and flags
 TARGET=(
 	native
+	native
 # AMD Bobcat:
 #	btver1
+#	btver1
 # AMD Jaguar:
+#	btver2
 #	btver2
 # note: Jaguars have 4-wide SIMD, so our avx256 code is not beneficial to them
 #	-mno-avx
 # Intel Core2
 #	core2
+#	core2
 # Intel Nehalem
+#	corei7
 #	corei7
 # Intel Sandy Bridge
 #	corei7-avx
+#	corei7-avx
 # Intel Ivy Bridge
+#	core-avx-i
 #	core-avx-i
 )
 LFLAGS=(
@@ -91,7 +103,7 @@ LFLAGS=(
 	`ldconfig -p | grep -m 1 ^[[:space:]]libGL.so | sed "s/^.\+ //"`
 	-lX11
 	-lpthread
-#	-lpng12
+	-lpng12
 )
 
 if [[ $1 == "debug" ]]; then
@@ -116,6 +128,6 @@ else
 	)
 fi
 
-BUILD_CMD=$CC" -o "$BINARY" "${CFLAGS[@]}" -march="${TARGET[0]}" -mtune="${TARGET[@]}" "${SOURCE[@]}" "${LFLAGS[@]}
+BUILD_CMD=$CC" -o "$BINARY" "${CFLAGS[@]}" -march="${TARGET[0]}" -mtune="${TARGET[@]:1}" "${SOURCE[@]}" "${LFLAGS[@]}
 echo $BUILD_CMD
 CCC_ANALYZER_CPLUSPLUS=1 $BUILD_CMD
