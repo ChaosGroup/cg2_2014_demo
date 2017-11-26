@@ -33,3 +33,8 @@ Many things are controlled at build time, via macro definitions in the build scr
 * WORKFORCE_NUM_THREADS - Number of workforce threads (normally equating the number of logical cores)
 * WORKFORCE_THREADS_STICKY - Make workforce threads sticky (NUMA, etc)
 * AO_NUM_RAYS - Number of AO rays per pixel
+
+Screengrabs of aogun0
+---------------------
+
+![suboptimal arrangement](images/ao064_default_hmm_t.png "suboptimal block arrangement per default seed") ![optimal arrangement](images/ao064_default_opt_t.png "optimal arrangement per default seed")
