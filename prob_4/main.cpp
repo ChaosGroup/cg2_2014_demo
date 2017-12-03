@@ -1383,15 +1383,15 @@ int main(
 	const __m128 extent = _mm_mul_ps(
 		_mm_sub_ps(bbox_max, bbox_min),
 		_mm_set1_ps(.5f));
-	const float rcp_extent = .875f / std::max(extent[0], std::max(extent[1], extent[2]));
+	const float max_extent = std::max(extent[0], std::max(extent[1], extent[2])) / .875f;
 
-	const simd::matx4 pan_n_zoom(
-		rcp_extent, 0.f, 0.f, 0.f,
-		0.f, rcp_extent, 0.f, 0.f,
-		0.f, 0.f, rcp_extent, 0.f,
-		-centre[0] * rcp_extent,
-		-centre[1] * rcp_extent,
-		-centre[2] * rcp_extent, 1.f);
+	const simd::matx4 zoom_n_pan(
+		max_extent, 0.f, 0.f, 0.f,
+		0.f, max_extent, 0.f, 0.f,
+		0.f, 0.f, max_extent, 0.f,
+		centre[0],
+		centre[1],
+		centre[2], 1.f);
 
 	simd::matx4 rot = simd::matx4().identity();
 
@@ -1494,16 +1494,19 @@ int main(
 		if (input & testbed::INPUT_MASK_RIGHT)
 			azim -= angular_step;
 
-		rot.set(3, simd::vect4(0.f, 0.f, 0.f, 1.f));
 		rot.mulr(matx4_rotate(decl, 1.f, 0.f, 0.f));
 		rot.mulr(matx4_rotate(azim, 0.f, 1.f, 0.f));
-		rot.set(3, simd::vect4(0.f, 0.f, -1.f, 1.f));
 
-		const simd::matx4 post_op = simd::matx4().mul(pan_n_zoom, rot);
+		// forward: pan * zoom * rot * eyep
+		// inverse: (eyep)-1 * rotT * (zoom)-1 * (pan)-1
 
-		const simd::matx4 mv_inv = simd::matx4().inverse(post_op);
-		const simd::vect3 cam[] =
-		{
+		const simd::matx4 mv_inv = simd::matx4(
+			1.f, 0.f, 0.f, 0.f,
+			0.f, 1.f, 0.f, 0.f,
+			0.f, 0.f, 1.f, 0.f,
+			0.f, 0.f, 1.f, 1.f).mulr(simd::matx4().transpose(rot)).mulr(zoom_n_pan);
+
+		const simd::vect3 cam[] = {
 			simd::vect3(mv_inv[0][0], mv_inv[0][1], mv_inv[0][2]),
 			simd::vect3(mv_inv[1][0], mv_inv[1][1], mv_inv[1][2]).mul(float(h) / w),
 			simd::vect3(mv_inv[2][0], mv_inv[2][1], mv_inv[2][2]).normalise().negate(),
