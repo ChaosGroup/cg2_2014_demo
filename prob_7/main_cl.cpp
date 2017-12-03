@@ -7,14 +7,21 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <cmath>
 #include "timer.h"
-#include "sse_mathfun.h"
-#include "vectsimd_sse.hpp"
+#include "vectnative.hpp"
 #include "pure_macro.hpp"
 #include "cl_util.hpp"
 #include "cl_wrap.hpp"
+#if VISUALIZE != 0
 #include "platform.hpp"
 #include "prim_mono_view.hpp"
+#else
+#include <png.h>
+#ifndef Z_BEST_COMPRESSION
+#define Z_BEST_COMPRESSION 9
+#endif
+#endif
 #include "scoped.hpp"
 #include "stream.hpp"
 #include "array.hpp"
@@ -107,6 +114,7 @@ public:
 	}
 };
 
+#if VISUALIZE != 0
 template <>
 class scoped_functor< GLuint > {
 public:
@@ -116,6 +124,7 @@ public:
 	}
 };
 
+#endif
 template < typename T >
 class generic_free {
 public:
@@ -127,7 +136,73 @@ public:
 
 } // namespace testbed
 
+#if VISUALIZE == 0
+namespace testbed {
 
+template <>
+class scoped_functor< FILE > {
+public:
+	void operator()(FILE* arg) {
+		assert(0 != arg);
+		fclose(arg);
+	}
+};
+
+} // namespace testbed
+
+static bool
+write_png(
+	const bool grayscale,
+	const unsigned w,
+	const unsigned h,
+	void* const bits,
+	FILE* const fp)
+{
+	using testbed::scoped_ptr;
+	using testbed::generic_free;
+
+	png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+
+	if (!png_ptr)
+		return false;
+
+	png_infop info_ptr = png_create_info_struct(png_ptr);
+
+	if (!info_ptr) {
+		png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+		return false;
+	}
+
+	// declare any RAII before the longjump, lest no destruction at longjump
+	const scoped_ptr< png_bytep, generic_free > row((png_bytepp) malloc(sizeof(png_bytep) * h));
+
+	if (setjmp(png_jmpbuf(png_ptr))) {
+		png_destroy_write_struct(&png_ptr, &info_ptr);
+		return false;
+	}
+
+	size_t pixel_size = sizeof(png_byte[3]);
+	int color_type = PNG_COLOR_TYPE_RGB;
+
+	if (grayscale) {
+		pixel_size = sizeof(png_byte);
+		color_type = PNG_COLOR_TYPE_GRAY;
+	}
+
+	for (size_t i = 0; i < h; ++i)
+		row()[i] = (png_bytep) bits + w * (h - 1 - i) * pixel_size;
+
+	png_init_io(png_ptr, fp);
+	png_set_compression_level(png_ptr, Z_BEST_COMPRESSION);
+	png_set_IHDR(png_ptr, info_ptr, w, h, 8, color_type, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+	png_set_rows(png_ptr, info_ptr, row());
+	png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
+
+	png_destroy_write_struct(&png_ptr, &info_ptr);
+	return true;
+}
+
+#endif // VISUALIZE
 static bool validate_fullscreen(
 	const char* const string,
 	unsigned& screen_w,
@@ -315,8 +390,98 @@ parse_cli(
 	return 0;
 }
 
+#if 0
+static matx4 inverse(const matx4& src) {
+	// compute cofactors of the transpose, Intel style (AP-928)
+	__m128 row0, row1, row2, row3, tmp1;
 
-class matx3_rotate : public simd::matx3 {
+	tmp1 = _mm_movelh_ps(src[0].getn(), src[1].getn());
+	row1 = _mm_movelh_ps(src[2].getn(), src[3].getn());
+	row0 = _mm_shuffle_ps(tmp1, row1, 0x88);
+	row1 = _mm_shuffle_ps(row1, tmp1, 0xdd);
+
+	tmp1 = _mm_movehl_ps(src[1].getn(), src[0].getn());
+	row3 = _mm_movehl_ps(src[3].getn(), src[2].getn());
+	row2 = _mm_shuffle_ps(tmp1, row3, 0x88);
+	row3 = _mm_shuffle_ps(row3, tmp1, 0xdd);
+
+	__m128 minor0, minor1, minor2, minor3;
+
+	tmp1 = _mm_mul_ps(row2, row3);
+	tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xb1);
+	minor0 = _mm_mul_ps(row1, tmp1);
+	minor1 = _mm_mul_ps(row0, tmp1);
+	tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4e);
+	minor0 = _mm_sub_ps(_mm_mul_ps(row1, tmp1), minor0);
+	minor1 = _mm_sub_ps(_mm_mul_ps(row0, tmp1), minor1);
+	minor1 = _mm_shuffle_ps(minor1, minor1, 0x4e);
+
+	tmp1 = _mm_mul_ps(row1, row2);
+	tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xb1);
+	minor0 = _mm_add_ps(_mm_mul_ps(row3, tmp1), minor0);
+	minor3 = _mm_mul_ps(row0, tmp1);
+	tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4e);
+	minor0 = _mm_sub_ps(minor0, _mm_mul_ps(row3, tmp1));
+	minor3 = _mm_sub_ps(_mm_mul_ps(row0, tmp1), minor3);
+	minor3 = _mm_shuffle_ps(minor3, minor3, 0x4e);
+
+	tmp1 = _mm_mul_ps(_mm_shuffle_ps(row1, row1, 0x4e), row3);
+	tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xb1);
+	row2 = _mm_shuffle_ps(row2, row2, 0x4e);
+	minor0 = _mm_add_ps(_mm_mul_ps(row2, tmp1), minor0);
+	minor2 = _mm_mul_ps(row0, tmp1);
+	tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4e);
+	minor0 = _mm_sub_ps(minor0, _mm_mul_ps(row2, tmp1));
+	minor2 = _mm_sub_ps(_mm_mul_ps(row0, tmp1), minor2);
+	minor2 = _mm_shuffle_ps(minor2, minor2, 0x4e);
+
+	tmp1 = _mm_mul_ps(row0, row1);
+	tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xb1);
+	minor2 = _mm_add_ps(_mm_mul_ps(row3, tmp1), minor2);
+	minor3 = _mm_sub_ps(_mm_mul_ps(row2, tmp1), minor3);
+	tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4e);
+	minor2 = _mm_sub_ps(_mm_mul_ps(row3, tmp1), minor2);
+	minor3 = _mm_sub_ps(minor3, _mm_mul_ps(row2, tmp1));
+
+	tmp1 = _mm_mul_ps(row0, row3);
+	tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xb1);
+	minor1 = _mm_sub_ps(minor1, _mm_mul_ps(row2, tmp1));
+	minor2 = _mm_add_ps(_mm_mul_ps(row1, tmp1), minor2);
+	tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4e);
+	minor1 = _mm_add_ps(_mm_mul_ps(row2, tmp1), minor1);
+	minor2 = _mm_sub_ps(minor2, _mm_mul_ps(row1, tmp1));
+
+	tmp1 = _mm_mul_ps(row0, row2);
+	tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0xb1);
+	minor1 = _mm_add_ps(_mm_mul_ps(row3, tmp1), minor1);
+	minor3 = _mm_sub_ps(minor3, _mm_mul_ps(row1, tmp1));
+	tmp1 = _mm_shuffle_ps(tmp1, tmp1, 0x4e);
+	minor1 = _mm_sub_ps(minor1, _mm_mul_ps(row3, tmp1));
+	minor3 = _mm_add_ps(_mm_mul_ps(row1, tmp1), minor3);
+
+	__m128 det;
+	det = _mm_mul_ps(row0, minor0);
+	det = _mm_add_ps(_mm_shuffle_ps(det, det, 0x4e), det);
+	det = _mm_add_ss(_mm_shuffle_ps(det, det, 0xb1), det);
+	det = _mm_div_ss(_mm_set_ss(1.f), det);
+	det = _mm_shuffle_ps(det, det, _MM_SHUFFLE(0, 0, 0, 0));
+
+	return matx4(
+		_mm_mul_ps(det, minor0),
+		_mm_mul_ps(det, minor1),
+		_mm_mul_ps(det, minor2),
+		_mm_mul_ps(det, minor3));
+}
+
+#else
+static matx4 transpose(const matx4& src) {
+	simd::f32x4 r0, r1, r2, r3;
+	simd::transpose4x4(src[0], src[1], src[2], src[3], r0, r1, r2, r3);
+	return matx4(r0, r1, r2, r3);
+}
+
+#endif
+class matx3_rotate : public matx3 {
 	matx3_rotate();
 
 public:
@@ -326,22 +491,21 @@ public:
 		const float y,
 		const float z) {
 
-		__m128 sin_ang;
-		__m128 cos_ang;
-		sincos_ps(_mm_set_ss(a), &sin_ang, &cos_ang);
+		simd::f32x4 sin_ang;
+		simd::f32x4 cos_ang;
+		simd::sincos(simd::f32x4(a, simd::flag_zero()), sin_ang, cos_ang);
 
 		const float sin_a = sin_ang[0];
 		const float cos_a = cos_ang[0];
 
-		static_cast< simd::matx3& >(*this) = simd::matx3(
-			x * x + cos_a * (1 - x * x),         x * y - cos_a * (x * y) + sin_a * z, x * z - cos_a * (x * z) - sin_a * y,
-			y * x - cos_a * (y * x) - sin_a * z, y * y + cos_a * (1 - y * y),         y * z - cos_a * (y * z) + sin_a * x,
-			z * x - cos_a * (z * x) + sin_a * y, z * y - cos_a * (z * y) - sin_a * x, z * z + cos_a * (1 - z * z));
+		m[0] = simd::f32x4(x * x + cos_a * (1 - x * x),         x * y - cos_a * (x * y) + sin_a * z, x * z - cos_a * (x * z) - sin_a * y, simd::flag_zero());
+		m[1] = simd::f32x4(y * x - cos_a * (y * x) - sin_a * z, y * y + cos_a * (1 - y * y),         y * z - cos_a * (y * z) + sin_a * x, simd::flag_zero());
+		m[2] = simd::f32x4(z * x - cos_a * (z * x) + sin_a * y, z * y - cos_a * (z * y) - sin_a * x, z * z + cos_a * (1 - z * z),         simd::flag_zero());
 	}
 };
 
 
-class matx4_rotate : public simd::matx4 {
+class matx4_rotate : public matx4 {
 	matx4_rotate();
 
 public:
@@ -351,18 +515,17 @@ public:
 		const float y,
 		const float z) {
 
-		__m128 sin_ang;
-		__m128 cos_ang;
-		sincos_ps(_mm_set_ss(a), &sin_ang, &cos_ang);
+		simd::f32x4 sin_ang;
+		simd::f32x4 cos_ang;
+		simd::sincos(simd::f32x4(a, simd::flag_zero()), sin_ang, cos_ang);
 
 		const float sin_a = sin_ang[0];
 		const float cos_a = cos_ang[0];
 
-		static_cast< simd::matx4& >(*this) = simd::matx4(
-			x * x + cos_a * (1 - x * x),         x * y - cos_a * (x * y) + sin_a * z, x * z - cos_a * (x * z) - sin_a * y, 0.f,
-			y * x - cos_a * (y * x) - sin_a * z, y * y + cos_a * (1 - y * y),         y * z - cos_a * (y * z) + sin_a * x, 0.f,
-			z * x - cos_a * (z * x) + sin_a * y, z * y - cos_a * (z * y) - sin_a * x, z * z + cos_a * (1 - z * z),         0.f,
-			0.f,                                 0.f,                                 0.f,                                 1.f);
+		m[0] = simd::f32x4(x * x + cos_a * (1 - x * x),         x * y - cos_a * (x * y) + sin_a * z, x * z - cos_a * (x * z) - sin_a * y, 0.f);
+		m[1] = simd::f32x4(y * x - cos_a * (y * x) - sin_a * z, y * y + cos_a * (1 - y * y),         y * z - cos_a * (y * z) + sin_a * x, 0.f);
+		m[2] = simd::f32x4(z * x - cos_a * (z * x) + sin_a * y, z * y - cos_a * (z * y) - sin_a * x, z * z + cos_a * (1 - z * z),         0.f);
+		m[3] = simd::f32x4(0.f,                                 0.f,                                 0.f,                                 1.f);
 	}
 };
 
@@ -372,8 +535,10 @@ wrap_at_period(
 	const float x,
 	const float period) {
 
-	const __m128 mask = _mm_cmpge_ss(_mm_set_ss(x), _mm_set_ss(period));
-	return x - _mm_and_ps(mask, _mm_set_ss(period))[0];
+	const simd::f32x4 vx = simd::f32x4(x, simd::flag_zero());
+	const simd::f32x4 vperiod = simd::f32x4(period, simd::flag_zero());
+	const simd::u32x4 mask = vx >= vperiod;
+	return x - simd::mask(vperiod, mask)[0];
 }
 
 
@@ -382,8 +547,10 @@ reset_at_period(
 	const int32_t x,
 	const int32_t period) {
 
-	const __m128i mask = _mm_cmplt_epi32(_mm_cvtsi32_si128(x), _mm_cvtsi32_si128(period));
-	return _mm_and_si128(mask, _mm_cvtsi32_si128(x))[0];
+	const simd::s32x4 vx = simd::s32x4(x, simd::flag_zero());
+	const simd::s32x4 vperiod = simd::s32x4(period, simd::flag_zero());
+	const simd::u32x4 mask = vx < vperiod;
+	return simd::mask(vx, mask)[0];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -483,6 +650,7 @@ class Scene1 : public virtual Scene {
 	float generation;
 
 	Array< Voxel > content;
+	BBox contentBox;
 
 	bool update(
 		Timeslice& scene,
@@ -492,6 +660,8 @@ class Scene1 : public virtual Scene {
 		const float dt);
 
 public:
+	Scene1() : contentBox(BBox::flag_noinit()) {}
+
 	// virtual from Scene
 	bool init(
 		Timeslice& scene);
@@ -516,15 +686,20 @@ bool Scene1::init(
 
 	const float unit = dist_unit;
 	const float alt = unit * .5f;
+	contentBox = BBox();
 
 	for (int y = 0; y < grid_rows; ++y)
 		for (int x = 0; x < grid_cols; ++x) {
-			content.addElement(Voxel(
-				simd::vect3(x * unit,        y * unit,        0.f),
-				simd::vect3(x * unit + unit, y * unit + unit, alt * (rand() % 4 + 1))));
+			const BBox box(
+				vect3(x * unit,        y * unit,        0.f),
+				vect3(x * unit + unit, y * unit + unit, alt * (rand() % 4 + 1)),
+				BBox::flag_direct());
+
+			contentBox.grow(box);
+			content.addElement(Voxel(box.get_min(), box.get_max()));
 		}
 
-	return scene.set_payload_array(content);
+	return scene.set_payload_array(content, contentBox);
 }
 
 
@@ -535,19 +710,26 @@ inline bool Scene1::update(
 	const float unit = dist_unit;
 	const float alt = unit * .5f;
 	size_t index = 0;
+	contentBox = BBox();
 
-	for (index = 0; index < (grid_rows - 1) * grid_cols; ++index)
+	for (index = 0; index < (grid_rows - 1) * grid_cols; ++index) {
+		contentBox.grow(content.getElement(index + grid_cols).get_bbox());
 		content.getMutable(index) = content.getElement(index + grid_cols);
+	}
 
 	const float y = generation;
 
 	for (int x = 0; x < grid_cols; ++x, ++index) {
-		content.getMutable(index) = Voxel(
-			simd::vect3(x * unit,        y * unit,        0.f),
-			simd::vect3(x * unit + unit, y * unit + unit, alt * (rand() % 4 + 1)));
+		const BBox box(
+			vect3(x * unit,        y * unit,        0.f),
+			vect3(x * unit + unit, y * unit + unit, alt * (rand() % 4 + 1)),
+			BBox::flag_direct());
+
+		contentBox.grow(box);
+		content.getMutable(index) = Voxel(box.get_min(), box.get_max());
 	}
 
-	return scene.set_payload_array(content);
+	return scene.set_payload_array(content, contentBox);
 }
 
 
@@ -565,12 +747,12 @@ inline void Scene1::camera(
 	accum_x = wrap_at_period(accum_x + dt, period_x);
 	accum_y = wrap_at_period(accum_y + dt, period_y);
 
-	__m128 sin_xy;
-	__m128 cos_x;
-	sincos_ps(_mm_setr_ps(
+	simd::f32x4 sin_xy;
+	simd::f32x4 cos_x;
+	simd::sincos(simd::f32x4(
 		accum_x / period_x * float(M_PI * 2.0),
 		accum_y / period_y * float(M_PI * 2.0), 0.f, 0.f),
-		&sin_xy, &cos_x);
+		sin_xy, cos_x);
 
 	cam_x = sin_xy[0] * deviate_x;
 	cam_y = sin_xy[1] * deviate_y;
@@ -590,7 +772,7 @@ bool Scene1::frame(
 	accum_time += dt;
 
 	if (accum_time < update_period)
-		return scene.set_payload_array(content);
+		return scene.set_payload_array(content, contentBox);
 
 	accum_time -= update_period;
 
@@ -647,16 +829,21 @@ bool Scene2::init(
 		return false;
 
 	const float unit = dist_unit;
+	BBox contentBox;
 
 	for (int y = 0; y < grid_rows; ++y)
 		for (int x = 0; x < grid_cols; ++x) {
-			content.addElement(Voxel(
-				simd::vect3(x * unit,        y * unit,        0.f),
-				simd::vect3(x * unit + unit, y * unit + unit, 1.f)));
+			const BBox box(
+				vect3(x * unit,        y * unit,        0.f),
+				vect3(x * unit + unit, y * unit + unit, 1.f),
+				BBox::flag_direct());
+
+			contentBox.grow(box);
+			content.addElement(Voxel(box.get_min(), box.get_max()));
 
 		}
 
-	return scene.set_payload_array(content);
+	return scene.set_payload_array(content, contentBox);
 }
 
 
@@ -668,22 +855,26 @@ inline bool Scene2::update(
 
 	accum_time = wrap_at_period(accum_time + dt, period);
 
-	const float time_factor = sin_ps(_mm_set_ss(accum_time / period * float(M_PI * 2.0)))[0];
+	const float time_factor = simd::sin(simd::f32x4(accum_time / period * float(M_PI * 2.0), simd::flag_zero()))[0];
 
 	const float unit = dist_unit;
 	const float alt = unit * .5f;
 	size_t index = 0;
+	BBox contentBox;
 
 	for (int y = 0; y < grid_rows; ++y)
 		for (int x = 0; x < grid_cols; ++x, ++index) {
-			const __m128 sin_xy = sin_ps(_mm_setr_ps(x * alt, y * alt, 0.f, 0.f));
+			const simd::f32x4 sin_xy = simd::sin(simd::f32x4(x * alt, y * alt, 0.f, 0.f));
+			const BBox box(
+				vect3(x * unit,        y * unit,        0.f),
+				vect3(x * unit + unit, y * unit + unit, 1.f + time_factor * unit * (sin_xy[0] * sin_xy[1])),
+				BBox::flag_direct());
 
-			content.getMutable(index) = Voxel(
-				simd::vect3(x * unit,        y * unit,        0.f),
-				simd::vect3(x * unit + unit, y * unit + unit, 1.f + time_factor * unit * (sin_xy[0] * sin_xy[1])));
+			contentBox.grow(box);
+			content.getMutable(index) = Voxel(box.get_min(), box.get_max());
 		}
 
-	return scene.set_payload_array(content);
+	return scene.set_payload_array(content, contentBox);
 }
 
 
@@ -701,12 +892,12 @@ inline void Scene2::camera(
 	accum_x = wrap_at_period(accum_x + dt, period_x);
 	accum_y = wrap_at_period(accum_y + dt, period_y);
 
-	__m128 sin_xy;
-	__m128 cos_x;
-	sincos_ps(_mm_setr_ps(
+	simd::f32x4 sin_xy;
+	simd::f32x4 cos_x;
+	simd::sincos(simd::f32x4(
 		accum_x / period_x * float(M_PI * 2.0),
 		accum_y / period_y * float(M_PI * 2.0), 0.f, 0.f),
-		&sin_xy, &cos_x);
+		sin_xy, cos_x);
 
 	cam_x = sin_xy[0] * deviate_x;
 	cam_y = sin_xy[1] * deviate_y;
@@ -772,34 +963,45 @@ bool Scene3::init(
 		return false;
 
 	const float radius = main_radius;
+	BBox contentBox;
 
 	for (int i = 0; i < queue_length; ++i) {
 		const float angle = float(M_PI * 2.0) * (i / float(queue_length));
-		const float sin_i = sin_ps(_mm_set_ss(i / float(queue_length) * float(M_PI * 16.0)))[0];
+		const float sin_i = simd::sin(simd::f32x4(i / float(queue_length) * float(M_PI * 16.0), simd::flag_zero()))[0];
 
 		{
 			const matx3_rotate rot(angle, 0.f, 0.f, 1.f);
-			const simd::vect3 pos = simd::vect3(radius + sin_i, 0.f, sin_i).mul(rot);
+			const vect3 pos = vect3(radius + sin_i, 0.f, sin_i) * rot;
+			const BBox box(
+				pos - vect3(.5f),
+				pos + vect3(.5f),
+				BBox::flag_direct());
 
-			content.addElement(Voxel(
-				simd::vect3().sub(pos, simd::vect3(.5f, .5f, .5f)),
-				simd::vect3().add(pos, simd::vect3(.5f, .5f, .5f))));
+			contentBox.grow(box);
+			content.addElement(Voxel(box.get_min(), box.get_max()));
 		}
 		{
 			const matx3_rotate rot(-angle, 0.f, 0.f, 1.f);
-			const simd::vect3 pos = simd::vect3(radius * .5f + sin_i, 0.f, sin_i).mul(rot);
+			const vect3 pos = vect3(radius * .5f + sin_i, 0.f, sin_i) * rot;
+			const BBox box(
+				pos - vect3(.25f),
+				pos + vect3(.25f),
+				BBox::flag_direct());
 
-			content.addElement(Voxel(
-				simd::vect3().sub(pos, simd::vect3(.25f, .25f, .25f)),
-				simd::vect3().add(pos, simd::vect3(.25f, .25f, .25f))));
+			contentBox.grow(box);
+			content.addElement(Voxel(box.get_min(), box.get_max()));
 		}
 	}
 
-	content.addElement(Voxel(
-		simd::vect3(-main_radius, -main_radius, -.25f),
-		simd::vect3(+main_radius, +main_radius, +.25f)));
+	const BBox box(
+		vect3(-main_radius, -main_radius, -.25f),
+		vect3(+main_radius, +main_radius, +.25f),
+		BBox::flag_direct());
 
-	return scene.set_payload_array(content);
+	contentBox.grow(box);
+	content.addElement(Voxel(box.get_min(), box.get_max()));
+
+	return scene.set_payload_array(content, contentBox);
 }
 
 
@@ -813,10 +1015,11 @@ inline bool Scene3::update(
 
 	const float radius = main_radius;
 	size_t index = 0;
+	BBox contentBox;
 
 	for (int i = 0; i < queue_length; ++i, index += 2) {
 		const float angle = float(M_PI * 2.0) * (i / float(queue_length)) + accum_time * float(M_PI * 2.0) / period;
-		const __m128 sin_iz = sin_ps(_mm_setr_ps(
+		const simd::f32x4 sin_iz = simd::sin(simd::f32x4(
 			i / float(queue_length) * float(M_PI * 16.0),
 			i / float(queue_length) * float(M_PI * 16.0) + accum_time * float(M_PI * 32.0) / period, 0.f, 0.f));
 		const float sin_i = sin_iz[0];
@@ -824,25 +1027,32 @@ inline bool Scene3::update(
 
 		{
 			const matx3_rotate rot(angle, 0.f, 0.f, 1.f);
+			const vect3 pos = vect3(radius + sin_i, 0.f, sin_z) * rot;
+			const BBox box(
+				pos - vect3(.5f),
+				pos + vect3(.5f),
+				BBox::flag_direct());
 
-			const simd::vect3 pos = simd::vect3(radius + sin_i, 0.f, sin_z).mul(rot);
-
-			content.getMutable(index + 0) = Voxel(
-				simd::vect3().sub(pos, simd::vect3(.5f, .5f, .5f)),
-				simd::vect3().add(pos, simd::vect3(.5f, .5f, .5f)));
+			contentBox.grow(box);
+			content.getMutable(index + 0) = Voxel(box.get_min(), box.get_max());
 		}
 		{
 			const matx3_rotate rot(-angle, 0.f, 0.f, 1.f);
+			const vect3 pos = vect3(radius * .5f + sin_i, 0.f, sin_z) * rot;
+			const BBox box(
+				pos - vect3(.35f),
+				pos + vect3(.35f),
+				BBox::flag_direct());
 
-			const simd::vect3 pos = simd::vect3(radius * .5f + sin_i, 0.f, sin_z).mul(rot);
-
-			content.getMutable(index + 1) = Voxel(
-				simd::vect3().sub(pos, simd::vect3(.35f, .35f, .35f)),
-				simd::vect3().add(pos, simd::vect3(.35f, .35f, .35f)));
+			contentBox.grow(box);
+			content.getMutable(index + 1) = Voxel(box.get_min(), box.get_max());
 		}
 	}
 
-	return scene.set_payload_array(content);
+	// account for the last element which is never updated
+	contentBox.grow(content.getElement(index).get_bbox());
+
+	return scene.set_payload_array(content, contentBox);
 }
 
 
@@ -1180,7 +1390,7 @@ bool ActionViewSplit::start(
 	if (delay >= duration)
 		return false;
 
-	c::blur_split = sin_ps(_mm_set_ss(c::accum_beat * float(M_PI * 2.0 / c::beat_period)))[0] * .25f;
+	c::blur_split = simd::sin(simd::f32x4(c::accum_beat * float(M_PI * 2.0 / c::beat_period), simd::flag_zero()))[0] * .25f;
 
 	lifespan = duration - delay;
 	return true;
@@ -1193,7 +1403,7 @@ bool ActionViewSplit::frame(
 	if (dt >= lifespan)
 		return false;
 
-	c::blur_split = sin_ps(_mm_set_ss(c::accum_beat * float(M_PI * 2.0 / c::beat_period)))[0] * .25f;
+	c::blur_split = simd::sin(simd::f32x4(c::accum_beat * float(M_PI * 2.0 / c::beat_period), simd::flag_zero()))[0] * .25f;
 
 	lifespan -= dt;
 	return true;
@@ -1221,7 +1431,7 @@ bool ActionContrastBeat::start(
 		return false;
 
 	c::contrast_middle = .5f;
-	c::contrast_k = 1.f + pow_ps(sin_ps(_mm_set_ss(_mm_andnot_ps(_mm_set_ss(-0.f), _mm_set_ss(-.5f + c::accum_beat / c::beat_period))[0] * float(M_PI))), _mm_set1_ps(64.f))[0];
+	c::contrast_k = 1.f + simd::pow(simd::sin(simd::abs(simd::f32x4(float(-M_PI_2) + float(M_PI) * c::accum_beat / c::beat_period, simd::flag_zero()))), simd::f32x4(64.f))[0];
 
 	lifespan = duration - delay;
 	return true;
@@ -1237,7 +1447,7 @@ bool ActionContrastBeat::frame(
 		return false;
 	}
 
-	c::contrast_k = 1.f + pow_ps(sin_ps(_mm_set_ss(_mm_andnot_ps(_mm_set_ss(-0.f), _mm_set_ss(-.5f + c::accum_beat / c::beat_period))[0] * float(M_PI))), _mm_set1_ps(64.f))[0];
+	c::contrast_k = 1.f + simd::pow(simd::sin(simd::abs(simd::f32x4(float(-M_PI_2) + float(M_PI) * c::accum_beat / c::beat_period, simd::flag_zero()))), simd::f32x4(64.f))[0];
 
 	lifespan -= dt;
 	return true;
@@ -1264,7 +1474,7 @@ bool ActionCameraSnake::start(
 	if (delay >= duration)
 		return false;
 
-	c::azim += sin_ps(_mm_set_ss(c::accum_beat_2 * float(M_PI / c::beat_period)))[0] * float(M_PI / 4.0) * delay;
+	c::azim += simd::sin(simd::f32x4(c::accum_beat_2 * float(M_PI / c::beat_period), simd::flag_zero()))[0] * float(M_PI / 4.0) * delay;
 
 	lifespan = duration - delay;
 	return true;
@@ -1277,7 +1487,7 @@ bool ActionCameraSnake::frame(
 	if (dt >= lifespan)
 		return false;
 
-	c::azim += sin_ps(_mm_set_ss(c::accum_beat_2 * float(M_PI / c::beat_period)))[0] * float(M_PI / 4.0) * dt;
+	c::azim += simd::sin(simd::f32x4(c::accum_beat_2 * float(M_PI / c::beat_period), simd::flag_zero()))[0] * float(M_PI / 4.0) * dt;
 
 	lifespan -= dt;
 	return true;
@@ -1304,7 +1514,7 @@ bool ActionCameraBounce::start(
 	if (delay >= duration)
 		return false;
 
-	c::azim += cos_ps(_mm_set_ss(c::accum_beat_2 * float(M_PI / c::beat_period)))[0] * float(M_PI / 4.0) * delay;
+	c::azim += simd::cos(simd::f32x4(c::accum_beat_2 * float(M_PI / c::beat_period), simd::flag_zero()))[0] * float(M_PI / 4.0) * delay;
 
 	lifespan = duration - delay;
 	return true;
@@ -1317,7 +1527,7 @@ bool ActionCameraBounce::frame(
 	if (dt >= lifespan)
 		return false;
 
-	c::azim += cos_ps(_mm_set_ss(c::accum_beat_2 * float(M_PI / c::beat_period)))[0] * float(M_PI / 4.0) * dt;
+	c::azim += simd::cos(simd::f32x4(c::accum_beat_2 * float(M_PI / c::beat_period), simd::flag_zero()))[0] * float(M_PI / 4.0) * dt;
 
 	lifespan -= dt;
 	return true;
@@ -1344,7 +1554,7 @@ bool ActionCameraBnF::start(
 	if (delay >= duration)
 		return false;
 
-	c::pos_z += cos_ps(_mm_set_ss(c::accum_beat_2 * float(M_PI / c::beat_period)))[0] * delay;
+	c::pos_z += simd::cos(simd::f32x4(c::accum_beat_2 * float(M_PI / c::beat_period), simd::flag_zero()))[0] * delay;
 
 	lifespan = duration - delay;
 	return true;
@@ -1357,7 +1567,7 @@ bool ActionCameraBnF::frame(
 	if (dt >= lifespan)
 		return false;
 
-	c::pos_z += cos_ps(_mm_set_ss(c::accum_beat_2 * float(M_PI / c::beat_period)))[0] * dt;
+	c::pos_z += simd::cos(simd::f32x4(c::accum_beat_2 * float(M_PI / c::beat_period), simd::flag_zero()))[0] * dt;
 
 	lifespan -= dt;
 	return true;
@@ -1384,7 +1594,7 @@ bool ActionCameraLean::start(
 	if (delay >= duration)
 		return false;
 
-	c::decl += sin_ps(_mm_set_ss(c::accum_beat_2 * float(M_PI / c::beat_period)))[0] * delay;
+	c::decl += simd::sin(simd::f32x4(c::accum_beat_2 * float(M_PI / c::beat_period), simd::flag_zero()))[0] * delay;
 
 	lifespan = duration - delay;
 	return true;
@@ -1397,7 +1607,7 @@ bool ActionCameraLean::frame(
 	if (dt >= lifespan)
 		return false;
 
-	c::decl += sin_ps(_mm_set_ss(c::accum_beat_2 * float(M_PI / c::beat_period)))[0] * dt;
+	c::decl += simd::sin(simd::f32x4(c::accum_beat_2 * float(M_PI / c::beat_period), simd::flag_zero()))[0] * dt;
 
 	lifespan -= dt;
 	return true;
@@ -1448,6 +1658,7 @@ int main(int argc, char** argv) {
 	unsigned (& bitness)[4] = param.bitness;
 	const unsigned frames   = param.frames;
 
+#if VISUALIZE != 0
 	const int result_gl = testbed::initGL(
 		image_w,
 		image_h,
@@ -1469,6 +1680,7 @@ int main(int argc, char** argv) {
 
 	const scoped_linkage_ptr< deinit_resources_t, scoped_functor, testbed::monv::deinit_resources > release_monv;
 
+#endif
 	// opencl control args ////////////////////////////////////////////////////////
 	const bool report_caps                  = bool(param.flags & cli_param::BIT_REPORT_CAPS);
 	const bool report_kernel_time           = bool(param.flags & cli_param::BIT_REPORT_KERNEL_TIME);
@@ -2735,15 +2947,12 @@ int main(int argc, char** argv) {
 	// use first scene's initial world bbox to compute a normalization (pan_n_zoom) matrix
 	const BBox& world_bbox = timeline.getElement(scene_1).get_root_bbox();
 
-	const __m128 bbox_min = world_bbox.get_min();
-	const __m128 bbox_max = world_bbox.get_max();
-	const __m128 centre = _mm_mul_ps(
-		_mm_add_ps(bbox_max, bbox_min),
-		_mm_set1_ps(.5f));
-	const __m128 extent = _mm_mul_ps(
-		_mm_sub_ps(bbox_max, bbox_min),
-		_mm_set1_ps(.5f));
-	const float rcp_extent = 1.f / std::max(extent[0], std::max(extent[1], extent[2]));
+	const simd::f32x4 bbox_min = world_bbox.get_min();
+	const simd::f32x4 bbox_max = world_bbox.get_max();
+	const simd::f32x4 centre = (bbox_max + bbox_min) * simd::f32x4(.5f);
+	const simd::f32x4 extent = (bbox_max - bbox_min) * simd::f32x4(.5f);
+	const float max_extent = std::max(extent[0], std::max(extent[1], extent[2]));
+	const float rcp_extent = 1.f / max_extent;
 
 	// double-buffering async frame loop:
 	//     0. let there be complementary image sets A and B, and operator ~ := 'the other set'; let X := A
@@ -2769,16 +2978,29 @@ int main(int argc, char** argv) {
 	cl_event event_data_set_ready[n_buffering][4] = { { 0 } };
 	cl_event event_kernel_complete[n_buffering] = { 0 };
 
-	GLuint input = 0;
 	size_t frame = 0;
 	const uint64_t t0 = timer_ns();
 	uint64_t tlast = t0;
 
+#if VISUALIZE != 0
+	GLuint input = 0;
+
 	while (testbed::processEvents(input) && frame != size_t(frames)) {
 
+#else
+	while (frame != size_t(frames)) {
+
+#endif
 		// produce source for the new frame
 		const uint64_t tframe = timer_ns();
+
+#if VISUALIZE != 0
 		const float dt = double(tframe - tlast) * 1e-9;
+
+#else
+		const float dt = 1.0 / FRAME_RATE;
+
+#endif
 		tlast = tframe;
 
 		// upate run time (we aren't supposed to run long - fp32 should do) and beat time
@@ -2814,8 +3036,21 @@ int main(int argc, char** argv) {
 		if (!scene[c::scene_selector]->frame(timeline.getMutable(c::scene_selector), dt))
 			stream::cerr << "failure building frame " << frame << '\n';
 
-		// produce camera for the new frame
-		const simd::matx4 pan_n_zoom(
+		// produce camera for the new frame;
+		// collapse S * T and T * S operators as follows:
+		//
+		//	s	0	0	0		1	0	0	0		s	0	0	0
+		//	0	s	0	0	*	0	1	0	0	=	0	s	0	0
+		//	0	0	s	0		0	0	1	0		0	0	s	0
+		//	0	0	0	1		x	y	z	1		x	y	z	1
+		//
+		//	1	0	0	0		s	0	0	0		s	0	0	0
+		//	0	1	0	0	*	0	s	0	0	=	0	s	0	0
+		//	0	0	1	0		0	0	s	0		0	0	s	0
+		//	x	y	z	1		0	0	0	1		sx	sy	sz	1
+
+#if 0
+		const matx4 pan_n_zoom(
 			rcp_extent, 0.f, 0.f, 0.f,
 			0.f, rcp_extent, 0.f, 0.f,
 			0.f, 0.f, rcp_extent, 0.f,
@@ -2823,28 +3058,57 @@ int main(int argc, char** argv) {
 			(scene[c::scene_selector]->get_offset_y() - centre[1]) * rcp_extent,
 			(scene[c::scene_selector]->get_offset_z() - centre[2]) * rcp_extent, 1.f);
 
-		const simd::vect4 eye(
+		const vect4 eye(
 			-(scene[c::scene_selector]->get_cam_x() + c::pos_x),
 			-(scene[c::scene_selector]->get_cam_y() + c::pos_y),
 			-(scene[c::scene_selector]->get_cam_z() + c::pos_z), 1.f);
 
-		simd::matx4 rot = simd::matx4(matx4_rotate(scene[c::scene_selector]->get_roll(), 0.f, 1.f, 0.f));
-		rot.mulr(matx4_rotate(scene[c::scene_selector]->get_azim() + c::azim, 0.f, 0.f, 1.f));
-		rot.mulr(matx4_rotate(scene[c::scene_selector]->get_decl() + c::decl, 1.f, 0.f, 0.f));
+		matx4 rot = matx4(
+			matx4_rotate(scene[c::scene_selector]->get_roll(),           0.f, 1.f, 0.f) *
+			matx4_rotate(scene[c::scene_selector]->get_azim() + c::azim, 0.f, 0.f, 1.f) *
+			matx4_rotate(scene[c::scene_selector]->get_decl() + c::decl, 1.f, 0.f, 0.f));
 		rot.set(3, eye);
 
-		const simd::matx4 post_op = simd::matx4().mul(pan_n_zoom, rot);
-		const simd::matx4 mv_inv = simd::matx4().inverse(post_op);
+		const matx4 post_op = pan_n_zoom * rot;
+		const matx4 mv_inv = inverse(post_op);
 
-		simd::vect3 (& carb)[carb_count] = *reinterpret_cast< simd::vect3 (*)[carb_count] >(carb_map_buffer[frame & 1]);
+#else
+		// forward: pan * zoom * rot * eyep
+		// inverse: (eyep)-1 * rotT * (zoom)-1 * (pan)-1
+
+		const matx4 rot =
+			matx4_rotate(scene[c::scene_selector]->get_roll(),           0.f, 1.f, 0.f) *
+			matx4_rotate(scene[c::scene_selector]->get_azim() + c::azim, 0.f, 0.f, 1.f) *
+			matx4_rotate(scene[c::scene_selector]->get_decl() + c::decl, 1.f, 0.f, 0.f);
+
+		const matx4 eyep(
+			1.f, 0.f, 0.f, 0.f,
+			0.f, 1.f, 0.f, 0.f,
+			0.f, 0.f, 1.f, 0.f,
+			scene[c::scene_selector]->get_cam_x() + c::pos_x,
+			scene[c::scene_selector]->get_cam_y() + c::pos_y,
+			scene[c::scene_selector]->get_cam_z() + c::pos_z, 1.f);
+
+		const matx4 zoom_n_pan(
+			max_extent, 0.f, 0.f, 0.f,
+			0.f, max_extent, 0.f, 0.f,
+			0.f, 0.f, max_extent, 0.f,
+			centre[0] - scene[c::scene_selector]->get_offset_x(),
+			centre[1] - scene[c::scene_selector]->get_offset_y(),
+			centre[2] - scene[c::scene_selector]->get_offset_z(), 1.f);
+
+		const matx4 mv_inv = eyep * transpose(rot) * zoom_n_pan;
+
+#endif
+		vect3 (& carb)[carb_count] = *reinterpret_cast< vect3 (*)[carb_count] >(carb_map_buffer[frame & 1]);
 		// camera
-		carb[0] = simd::vect3(mv_inv[0][0], mv_inv[0][1], mv_inv[0][2]);
-		carb[1] = simd::vect3(mv_inv[1][0], mv_inv[1][1], mv_inv[1][2]).mul(float(image_h) / image_w);
-		carb[2] = simd::vect3(mv_inv[2][0], mv_inv[2][1], mv_inv[2][2]).negate();
-		carb[3] = simd::vect3(mv_inv[3][0], mv_inv[3][1], mv_inv[3][2]);
+		carb[0] = vect3(mv_inv[0][0], mv_inv[0][1], mv_inv[0][2]);
+		carb[1] = vect3(mv_inv[1][0], mv_inv[1][1], mv_inv[1][2]) * vect3(float(image_h) / image_w);
+		carb[2] = vect3(mv_inv[2][0], mv_inv[2][1], mv_inv[2][2]) * vect3(-1);
+		carb[3] = vect3(mv_inv[3][0], mv_inv[3][1], mv_inv[3][2]);
 		// root bbox
-		carb[4].setn(0, timeline.getElement(c::scene_selector).get_root_bbox().get_min());
-		carb[5].setn(0, timeline.getElement(c::scene_selector).get_root_bbox().get_max());
+		carb[4] = timeline.getElement(c::scene_selector).get_root_bbox().get_min();
+		carb[5] = timeline.getElement(c::scene_selector).get_root_bbox().get_max();
 
 		// fill-in new frame data set
 		if (PARAM_TYPE_IMAGE == kern_param_type) {
@@ -2923,9 +3187,11 @@ int main(int argc, char** argv) {
 				break;
 			}
 
+#if VISUALIZE != 0
 			testbed::monv::render(image_map_buffer[ready_frame & 1]);
 			testbed::swapBuffers();
 
+#endif
 			// profile the frame
 			if (report_kernel_time) {
 				cl_ulong t0, t1;
@@ -3006,5 +3272,23 @@ int main(int argc, char** argv) {
 		stream::cout << "elapsed time: " << sec << " s\naverage FPS: " << frame / sec << '\n';
 	}
 
+#if VISUALIZE == 0
+	if (frame) {
+		const char* const name = "last_frame.png";
+		stream::cout << "saving framegrab as '" << name << "'\n";
+		const testbed::scoped_ptr< FILE, testbed::scoped_functor > file(fopen(name, "wb"));
+
+		if (0 == file()) {
+			stream::cerr << "failure opening framegrab file '" << name << "'\n";
+			return -1;
+		}
+
+		if (!write_png(true, image_w, image_h, image_map_buffer[frame & 1], file())) {
+			stream::cerr << "failure writing framegrab file '" << name << "'\n";
+			return -1;
+		}
+	}
+
+#endif
 	return 0;
 }

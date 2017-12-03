@@ -606,18 +606,24 @@ public:
 	}
 
 	out& operator <<(std::basic_ostream< char, std::char_traits< char > >& (* f)(std::basic_ostream< char, std::char_traits< char > >&)) {
+
+#if __GNUC__ >= 4 && __clang__ == 0
+#define cast_to_typeof(EXPR, ARG) static_cast< __typeof__(EXPR) >(ARG)
+#else
+#define cast_to_typeof(EXPR, ARG) (ARG)
+#endif
 		if (0 == file)
 			return *this;
 
-		if (std::endl< char, std::char_traits< char > > == f) {
+		if (cast_to_typeof(f, (std::endl< char, std::char_traits< char > >)) == f) {
 			putc('\n', file);
 		}
 		else
-		if (std::ends< char, std::char_traits< char > > == f) {
+		if (cast_to_typeof(f, (std::ends< char, std::char_traits< char > >)) == f) {
 			putc('\0', file);
 		}
 		else
-		if (std::flush< char, std::char_traits< char > > == f) {
+		if (cast_to_typeof(f, (std::flush< char, std::char_traits< char > >)) == f) {
 			fflush(file);
 		}
 		else {
@@ -625,6 +631,8 @@ public:
 		}
 
 		return *this;
+
+#undef cast_to_typeof
 	}
 };
 

@@ -1,13 +1,10 @@
 #!/bin/bash
 
-# clang version suffix, e.g. -3.4, -3.5, etc
-VERSION=-3.5
+# known issue with clang++-3.6 and the lifespan of temporaries, causing multiple failures at unittest
+CC=clang++-3.5
 BINARY=problem_4
 COMMON=../common
 SOURCE=(
-	$COMMON/platform_glx.cpp
-	$COMMON/util_gl.cpp
-	$COMMON/prim_mono_view.cpp
 	$COMMON/get_file_size.cpp
 	problem_6.cpp
 	cl_util.cpp
@@ -15,33 +12,23 @@ SOURCE=(
 	main_cl.cpp
 )
 CFLAGS=(
+# g++-4.8 through 4.9 suffer from a name-mangling conflict in cephes headers; switching to the following ABI version resolves that
+#	-fabi-version=6
+# g++-6 warns about ignored attributes in template arguments (e.g. __m256 as a typename template arg to simd::native8)
+#	-Wno-ignored-attributes
 	-ansi
-	-Wno-bitwise-op-parentheses
 	-Wno-logical-op-parentheses
+	-Wno-bitwise-op-parentheses
 	-Wno-parentheses
 	-I$COMMON
 	-I..
+	-pipe
 	-fno-exceptions
 	-fno-rtti
-	-fdata-sections
-	-ffunction-sections
-# Enable some optimisations that may or may not be enabled by the global optimisation level of choice in this compiler version
-	-ffast-math
-	-fstrict-aliasing
-	-fstrict-overflow
-	-funroll-loops
-	-fomit-frame-pointer
-	-DNDEBUG
-# Instruct GL headers to properly define their prototypes
-	-DGLX_GLXEXT_PROTOTYPES
-	-DGLCOREARB_PROTOTYPES
-	-DGL_GLEXT_PROTOTYPES
-# Framegrab rate
-#	-DFRAMEGRAB_RATE=30
+# Fixed framerate
+	-DFRAME_RATE=30
 # Case-specific optimisation
 	-DMINIMAL_TREE=1
-# Show on screen what was rendered
-	-DVISUALIZE=1
 # Vector aliasing control
 #	-DVECTBASE_MINIMISE_ALIASING=1
 # High-precision ray reciprocal direction
@@ -60,34 +47,42 @@ CFLAGS=(
 	-DBOUNCE_COMPUTE_VER=1
 # Number of AO rays per pixel
 	-DAO_NUM_RAYS=16
-# Enable tweaks targeting Mesa quirks
-#	-DOUTDATED_MESA=1
 # Draw octree cells instead of octree content
 #	-DDRAW_TREE_CELLS=1
 # Clang static code analysis:
 #	--analyze
 # Compiler quirk 0001: control definition location of routines posing entry points to recursion for more efficient inlining
-#	-DCLANG_QUIRK_0001=1
+	-DCLANG_QUIRK_0001=1
 # Compiler quirk 0002: type size_t is unrelated to same-size type uint*_t
 #	-DCLANG_QUIRK_0002=1
 )
 # For non-native or tweaked architecture targets, comment out 'native' and uncomment the correct target architecture and flags
 TARGET=(
 	native
+	native
 # AMD Bobcat:
 #	btver1
+#	btver1
 # AMD Jaguar:
+#	btver2
 #	btver2
 # note: Jaguars have 4-wide SIMD, so our avx256 code is not beneficial to them
 #	-mno-avx
 # Intel Core2
 #	core2
+#	core2
 # Intel Nehalem
+#	corei7
 #	corei7
 # Intel Sandy Bridge
 #	corei7-avx
+#	corei7-avx
 # Intel Ivy Bridge
 #	core-avx-i
+#	core-avx-i
+# ARM Cortex-A57/A72
+#	armv8-a
+#	cortex-a57
 )
 LFLAGS=(
 # Alias some glibc6 symbols to older ones for better portability
@@ -96,43 +91,33 @@ LFLAGS=(
 	-lstdc++
 	-ldl
 	-lrt
-	`ldconfig -p | grep -m 1 ^[[:space:]]libGL.so | sed "s/^.\+ //"`
 	`ldconfig -p | grep -m 1 ^[[:space:]]libOpenCL.so | sed "s/^.\+ //"`
-	-lX11
 	-lpthread
-#	-lpng12
+	-lpng12
 )
 
-BITCODE=( "${SOURCE[@]##*/}" )
-BITCODE=( "${BITCODE[@]%.cpp}" )
-BITCODE=( "${BITCODE[@]/%/.bc}" )
-
-SOURCE_COUNT=${#SOURCE[@]}
-
-for (( i=0; i < $SOURCE_COUNT; i++ )); do
-	BUILD_CMD="clang++"${VERSION}" -c -flto -emit-llvm -O3 "${CFLAGS[@]}" -march="${TARGET[@]}" "${SOURCE[$i]}" -o "${BITCODE[$i]}
-	echo $BUILD_CMD
-	$BUILD_CMD
-done
-
-LINK_LMD="llvm-link"${VERSION}" -o _"${BINARY}".bc "${BITCODE[@]}
-echo $LINK_LMD
-$LINK_LMD
-
-if [[ ${TARGET[0]} == "native" ]]; then
-	LLC_TARGET=`llc${VERSION} --version | grep "Host CPU:" | sed s/^[[:space:]]*"Host CPU:"[[:space:]]*//`
+if [[ $1 == "debug" ]]; then
+	CFLAGS+=(
+		-Wall
+		-O0
+		-g
+		-fstandalone-debug
+		-DDEBUG
+	)
 else
-	LLC_TARGET=${TARGET[0]}
+	CFLAGS+=(
+# Enable some optimisations that may or may not be enabled by the global optimisation level of choice in this compiler version
+		-ffast-math
+		-fstrict-aliasing
+		-fstrict-overflow
+		-funroll-loops
+		-fomit-frame-pointer
+		-O3
+		-flto
+		-DNDEBUG
+	)
 fi
 
-OPT_LMD="opt"${VERSION}" -filetype=asm -O3 -data-sections -function-sections -enable-unsafe-fp-math -fp-contract=fast -enable-no-infs-fp-math -enable-no-nans-fp-math -enable-misched -mcpu="${LLC_TARGET}" _"${BINARY}".bc -o=__"${BINARY}".bc"
-echo $OPT_LMD
-$OPT_LMD
-
-BUILD_LMD="llc"${VERSION}" -filetype=obj -O=3 -data-sections -function-sections -enable-unsafe-fp-math -fp-contract=fast -enable-no-infs-fp-math -enable-no-nans-fp-math -enable-misched -mcpu="${LLC_TARGET}" __"${BINARY}".bc"
-echo $BUILD_LMD
-$BUILD_LMD
-
-LINK_CMD="clang++"${VERSION}" -o "$BINARY" "${LFLAGS[@]}" __"${BINARY}".o -Wl,--gc-sections"
-echo $LINK_CMD
-$LINK_CMD
+BUILD_CMD=$CC" -o "$BINARY" "${CFLAGS[@]}" -march="${TARGET[0]}" -mtune="${TARGET[@]:1}" "${SOURCE[@]}" "${LFLAGS[@]}
+echo $BUILD_CMD
+CCC_ANALYZER_CPLUSPLUS=1 $BUILD_CMD

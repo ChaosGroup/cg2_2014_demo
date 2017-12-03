@@ -2,18 +2,9 @@
 
 # known issue with clang++-3.6 and the lifespan of temporaries, causing multiple failures at unittest
 CC=clang++-3.5
-BINARY=problem_4
-COMMON=../common
+BINARY=unittest
 SOURCE=(
-	$COMMON/platform_glx.cpp
-	$COMMON/util_gl.cpp
-	$COMMON/prim_mono_view.cpp
-	$COMMON/get_file_size.cpp
-	problem_6.cpp
-	cl_util.cpp
-	cl_wrap.cpp
-#	main_cl.cpp
-	main_cl_interop.cpp
+	unittest.cpp
 )
 CFLAGS=(
 # g++-4.8 through 4.9 suffer from a name-mangling conflict in cephes headers; switching to the following ABI version resolves that
@@ -24,49 +15,13 @@ CFLAGS=(
 	-Wno-logical-op-parentheses
 	-Wno-bitwise-op-parentheses
 	-Wno-parentheses
-	-I$COMMON
-	-I..
 	-pipe
 	-fno-exceptions
 	-fno-rtti
-# Instruct GL headers to properly define their prototypes
-	-DGLX_GLXEXT_PROTOTYPES
-	-DGLCOREARB_PROTOTYPES
-	-DGL_GLEXT_PROTOTYPES
-	-DDEPRECATED_CreateFromGLTexture2D
-# Framegrab rate
-#	-DFRAMEGRAB_RATE=30
-# Case-specific optimisation
-	-DMINIMAL_TREE=1
-# Show on screen what was rendered
-	-DVISUALIZE=1
-# Fixed framebuffer geometry
-#	-DFB_RES_FIXED_W=512
-#	-DFB_RES_FIXED_H=512
-# High-precision ray reciprocal direction
-	-DRAY_HIGH_PRECISION_RCP_DIR=1
-# Use a linear distribution of directions across the hemisphere rather than proper angular such
-#	-DCHEAP_LINEAR_DISTRIBUTION=1
-# Number of workforce threads (normally equating the number of logical cores)
-	-DWORKFORCE_NUM_THREADS=`lscpu | grep ^"CPU(s)" | sed s/^[^[:digit:]]*//`
-# Make workforce threads sticky (NUMA, etc)
-	-DWORKFORCE_THREADS_STICKY=`lscpu | grep ^"Socket(s)" | echo "\`sed s/^[^[:digit:]]*//\` > 1" | bc`
-# Colorize the output of individual threads
-#	-DCOLORIZE_THREADS=1
-# Threading model 'division of labor' alternatives: 0, 1, 2
-	-DDIVISION_OF_LABOR_VER=2
-# Bounce computation alternatives for variable-permute-disabled ISAs (e.g. all SSE revisions): 0, 1, 2
-	-DBOUNCE_COMPUTE_VER=1
-# Number of AO rays per pixel
-	-DAO_NUM_RAYS=16
-# Enable tweaks targeting Mesa quirks
-#	-DOUTDATED_MESA=1
-# Draw octree cells instead of octree content
-#	-DDRAW_TREE_CELLS=1
 # Clang static code analysis:
 #	--analyze
 # Compiler quirk 0001: control definition location of routines posing entry points to recursion for more efficient inlining
-	-DCLANG_QUIRK_0001=1
+#	-DCLANG_QUIRK_0001=1
 # Compiler quirk 0002: type size_t is unrelated to same-size type uint*_t
 #	-DCLANG_QUIRK_0002=1
 )
@@ -102,11 +57,6 @@ LFLAGS=(
 	-lstdc++
 	-ldl
 	-lrt
-	`ldconfig -p | grep -m 1 ^[[:space:]]libGL.so | sed "s/^.\+ //"`
-	`ldconfig -p | grep -m 1 ^[[:space:]]libOpenCL.so | sed "s/^.\+ //"`
-	-lX11
-	-lpthread
-#	-lpng12
 )
 
 if [[ $1 == "debug" ]]; then

@@ -1,7 +1,7 @@
 #include <istream>
 #include <ostream>
 #include <limits>
-#include "vectsimd_sse.hpp"
+#include "vectnative.hpp"
 #include "array.hpp"
 #include "isfinite.hpp"
 #include "stream.hpp"
@@ -12,17 +12,17 @@
 #error rogue iostream acquired
 #endif
 
-template < size_t DIMENSION_T, typename NATIVE_T >
+template < typename SCALAR_T, typename GENERIC_T, typename NATIVE_T >
 inline std::ostream&
 operator <<(
 	std::ostream& str,
-	const simd::vect< DIMENSION_T, NATIVE_T >& v)
+	const simd::native4< SCALAR_T, GENERIC_T, NATIVE_T >& v)
 {
 	str << '(';
 
 	size_t i = 0;
 
-	for (; i < DIMENSION_T - 1 && str.good(); ++i)
+	for (; i < v.dimension - 1 && str.good(); ++i)
 		str << v.get(i) << ", ";
 
 	str << v.get(i) << ')';
@@ -31,15 +31,15 @@ operator <<(
 }
 
 
-template < size_t DIMENSION_T, typename NATIVE_T >
+template < typename SCALAR_T, typename GENERIC_T, typename NATIVE_T >
 inline std::istream&
 operator >>(
 	std::istream& str,
-	simd::vect< DIMENSION_T, NATIVE_T >& v)
+	simd::native4< SCALAR_T, GENERIC_T, NATIVE_T >& v)
 {
-	float temp[DIMENSION_T];
+	float temp[v.dimension];
 
-	for (size_t i = 0; i < DIMENSION_T; ++i)
+	for (size_t i = 0; i < v.dimension; ++i)
 		temp[i] = std::numeric_limits< float >::quiet_NaN();
 
 	char sep;
@@ -50,7 +50,7 @@ operator >>(
 
 	size_t i = 0;
 
-	for (; i < DIMENSION_T - 1 && str.good(); ++i)
+	for (; i < v.dimension - 1 && str.good(); ++i)
 	{
 		str >> temp[i];
 		str >> sep;
@@ -65,7 +65,8 @@ operator >>(
 	if (')' != sep)
 		str.setstate(std::istream::failbit);
 
-	v = simd::vect< DIMENSION_T, NATIVE_T >(temp);
+	for (size_t i = 0; i < v.dimension; ++i)
+		v.set(i, temp[i]);
 
 	return str;
 }
@@ -91,7 +92,7 @@ Voxel::deflatten(
 	if (!str.good())
 		return false;
 
-	simd::vect3 temp[2];
+	simd::f32x4 temp[2];
 	str >> temp[0];
 
 	if (!str.good())
@@ -122,21 +123,21 @@ Timeslice::add_payload(
 	const BBox& bbox,
 	const Voxel& payload) {
 
-	const __m128 bbox_min = bbox.get_min();
-	const __m128 bbox_max = bbox.get_max();
-	const __m128 bbox_mid = _mm_mul_ps(
-		_mm_add_ps(bbox_min, bbox_max),
-		_mm_set1_ps(.5f));
+	using simd::f32x4;
+	using simd::flag_zero;
+	const f32x4 bbox_min = bbox.get_min();
+	const f32x4 bbox_max = bbox.get_max();
+	const f32x4 bbox_mid = (bbox_min + bbox_max) * f32x4(.5f);
 
 	const BBox child_bbox[8] __attribute__ ((aligned(64))) = {
-		BBox(          bbox_min,                                          bbox_mid,                                BBox::flag_direct()),
-		BBox((__m128){ bbox_mid[0], bbox_min[1], bbox_min[2] }, (__m128){ bbox_max[0], bbox_mid[1], bbox_mid[2] }, BBox::flag_direct()),
-		BBox((__m128){ bbox_min[0], bbox_mid[1], bbox_min[2] }, (__m128){ bbox_mid[0], bbox_max[1], bbox_mid[2] }, BBox::flag_direct()),
-		BBox((__m128){ bbox_mid[0], bbox_mid[1], bbox_min[2] }, (__m128){ bbox_max[0], bbox_max[1], bbox_mid[2] }, BBox::flag_direct()),
-		BBox((__m128){ bbox_min[0], bbox_min[1], bbox_mid[2] }, (__m128){ bbox_mid[0], bbox_mid[1], bbox_max[2] }, BBox::flag_direct()),
-		BBox((__m128){ bbox_mid[0], bbox_min[1], bbox_mid[2] }, (__m128){ bbox_max[0], bbox_mid[1], bbox_max[2] }, BBox::flag_direct()),
-		BBox((__m128){ bbox_min[0], bbox_mid[1], bbox_mid[2] }, (__m128){ bbox_mid[0], bbox_max[1], bbox_max[2] }, BBox::flag_direct()),
-		BBox(          bbox_mid,                                          bbox_max,                                BBox::flag_direct())
+		BBox(       bbox_min,                                                    bbox_mid,                                             BBox::flag_direct()),
+		BBox(f32x4( bbox_mid[0], bbox_min[1], bbox_min[2], flag_zero() ), f32x4( bbox_max[0], bbox_mid[1], bbox_mid[2], flag_zero() ), BBox::flag_direct()),
+		BBox(f32x4( bbox_min[0], bbox_mid[1], bbox_min[2], flag_zero() ), f32x4( bbox_mid[0], bbox_max[1], bbox_mid[2], flag_zero() ), BBox::flag_direct()),
+		BBox(f32x4( bbox_mid[0], bbox_mid[1], bbox_min[2], flag_zero() ), f32x4( bbox_max[0], bbox_max[1], bbox_mid[2], flag_zero() ), BBox::flag_direct()),
+		BBox(f32x4( bbox_min[0], bbox_min[1], bbox_mid[2], flag_zero() ), f32x4( bbox_mid[0], bbox_mid[1], bbox_max[2], flag_zero() ), BBox::flag_direct()),
+		BBox(f32x4( bbox_mid[0], bbox_min[1], bbox_mid[2], flag_zero() ), f32x4( bbox_max[0], bbox_mid[1], bbox_max[2], flag_zero() ), BBox::flag_direct()),
+		BBox(f32x4( bbox_min[0], bbox_mid[1], bbox_mid[2], flag_zero() ), f32x4( bbox_mid[0], bbox_max[1], bbox_max[2], flag_zero() ), BBox::flag_direct()),
+		BBox(       bbox_mid,                                                    bbox_max,                                             BBox::flag_direct())
 	};
 
 	for (size_t i = 0; i < 8; ++i) {
@@ -146,7 +147,7 @@ Timeslice::add_payload(
 
 		OctetId child_id = octet.get(i);
 
-		if (OctetId(-1) == child_id) {
+		if (OctetId(octet_empty) == child_id) {
 
 			child_id = OctetId(m_interior.getCount());
 
@@ -171,21 +172,21 @@ Timeslice::add_payload< octree_level_last_but_one >(
 	const BBox& bbox,
 	const Voxel& payload) {
 
-	const __m128 bbox_min = bbox.get_min();
-	const __m128 bbox_max = bbox.get_max();
-	const __m128 bbox_mid = _mm_mul_ps(
-		_mm_add_ps(bbox_min, bbox_max),
-		_mm_set1_ps(.5f));
+	using simd::f32x4;
+	using simd::flag_zero;
+	const f32x4 bbox_min = bbox.get_min();
+	const f32x4 bbox_max = bbox.get_max();
+	const f32x4 bbox_mid = (bbox_min + bbox_max) * f32x4(.5f);
 
 	const BBox child_bbox[8] __attribute__ ((aligned(64))) = {
-		BBox(          bbox_min,                                          bbox_mid,                                BBox::flag_direct()),
-		BBox((__m128){ bbox_mid[0], bbox_min[1], bbox_min[2] }, (__m128){ bbox_max[0], bbox_mid[1], bbox_mid[2] }, BBox::flag_direct()),
-		BBox((__m128){ bbox_min[0], bbox_mid[1], bbox_min[2] }, (__m128){ bbox_mid[0], bbox_max[1], bbox_mid[2] }, BBox::flag_direct()),
-		BBox((__m128){ bbox_mid[0], bbox_mid[1], bbox_min[2] }, (__m128){ bbox_max[0], bbox_max[1], bbox_mid[2] }, BBox::flag_direct()),
-		BBox((__m128){ bbox_min[0], bbox_min[1], bbox_mid[2] }, (__m128){ bbox_mid[0], bbox_mid[1], bbox_max[2] }, BBox::flag_direct()),
-		BBox((__m128){ bbox_mid[0], bbox_min[1], bbox_mid[2] }, (__m128){ bbox_max[0], bbox_mid[1], bbox_max[2] }, BBox::flag_direct()),
-		BBox((__m128){ bbox_min[0], bbox_mid[1], bbox_mid[2] }, (__m128){ bbox_mid[0], bbox_max[1], bbox_max[2] }, BBox::flag_direct()),
-		BBox(          bbox_mid,                                          bbox_max,                                BBox::flag_direct())
+		BBox(       bbox_min,                                                    bbox_mid,                                             BBox::flag_direct()),
+		BBox(f32x4( bbox_mid[0], bbox_min[1], bbox_min[2], flag_zero() ), f32x4( bbox_max[0], bbox_mid[1], bbox_mid[2], flag_zero() ), BBox::flag_direct()),
+		BBox(f32x4( bbox_min[0], bbox_mid[1], bbox_min[2], flag_zero() ), f32x4( bbox_mid[0], bbox_max[1], bbox_mid[2], flag_zero() ), BBox::flag_direct()),
+		BBox(f32x4( bbox_mid[0], bbox_mid[1], bbox_min[2], flag_zero() ), f32x4( bbox_max[0], bbox_max[1], bbox_mid[2], flag_zero() ), BBox::flag_direct()),
+		BBox(f32x4( bbox_min[0], bbox_min[1], bbox_mid[2], flag_zero() ), f32x4( bbox_mid[0], bbox_mid[1], bbox_max[2], flag_zero() ), BBox::flag_direct()),
+		BBox(f32x4( bbox_mid[0], bbox_min[1], bbox_mid[2], flag_zero() ), f32x4( bbox_max[0], bbox_mid[1], bbox_max[2], flag_zero() ), BBox::flag_direct()),
+		BBox(f32x4( bbox_min[0], bbox_mid[1], bbox_mid[2], flag_zero() ), f32x4( bbox_mid[0], bbox_max[1], bbox_max[2], flag_zero() ), BBox::flag_direct()),
+		BBox(       bbox_mid,                                                    bbox_max,                                             BBox::flag_direct())
 	};
 
 	for (size_t i = 0; i < 8; ++i) {
@@ -195,7 +196,7 @@ Timeslice::add_payload< octree_level_last_but_one >(
 
 		OctetId child_id = octet.get(i);
 
-		if (OctetId(-1) == child_id) {
+		if (OctetId(octet_empty) == child_id) {
 
 			child_id = OctetId(m_leaf.getCount());
 
@@ -224,21 +225,21 @@ Timeslice::add_payload(
 	const BBox& bbox,
 	const Voxel& payload) {
 
-	const __m128 bbox_min = bbox.get_min();
-	const __m128 bbox_max = bbox.get_max();
-	const __m128 bbox_mid = _mm_mul_ps(
-		_mm_add_ps(bbox_min, bbox_max),
-		_mm_set1_ps(.5f));
+	using simd::f32x4;
+	using simd::flag_zero;
+	const f32x4 bbox_min = bbox.get_min();
+	const f32x4 bbox_max = bbox.get_max();
+	const f32x4 bbox_mid = (bbox_min + bbox_max) * f32x4(.5f);
 
 	const BBox child_bbox[8] __attribute__ ((aligned(64))) = {
-		BBox(          bbox_min,                                          bbox_mid,                                BBox::flag_direct()),
-		BBox((__m128){ bbox_mid[0], bbox_min[1], bbox_min[2] }, (__m128){ bbox_max[0], bbox_mid[1], bbox_mid[2] }, BBox::flag_direct()),
-		BBox((__m128){ bbox_min[0], bbox_mid[1], bbox_min[2] }, (__m128){ bbox_mid[0], bbox_max[1], bbox_mid[2] }, BBox::flag_direct()),
-		BBox((__m128){ bbox_mid[0], bbox_mid[1], bbox_min[2] }, (__m128){ bbox_max[0], bbox_max[1], bbox_mid[2] }, BBox::flag_direct()),
-		BBox((__m128){ bbox_min[0], bbox_min[1], bbox_mid[2] }, (__m128){ bbox_mid[0], bbox_mid[1], bbox_max[2] }, BBox::flag_direct()),
-		BBox((__m128){ bbox_mid[0], bbox_min[1], bbox_mid[2] }, (__m128){ bbox_max[0], bbox_mid[1], bbox_max[2] }, BBox::flag_direct()),
-		BBox((__m128){ bbox_min[0], bbox_mid[1], bbox_mid[2] }, (__m128){ bbox_mid[0], bbox_max[1], bbox_max[2] }, BBox::flag_direct()),
-		BBox(          bbox_mid,                                          bbox_max,                                BBox::flag_direct())
+		BBox(       bbox_min,                                                    bbox_mid,                                             BBox::flag_direct()),
+		BBox(f32x4( bbox_mid[0], bbox_min[1], bbox_min[2], flag_zero() ), f32x4( bbox_max[0], bbox_mid[1], bbox_mid[2], flag_zero() ), BBox::flag_direct()),
+		BBox(f32x4( bbox_min[0], bbox_mid[1], bbox_min[2], flag_zero() ), f32x4( bbox_mid[0], bbox_max[1], bbox_mid[2], flag_zero() ), BBox::flag_direct()),
+		BBox(f32x4( bbox_mid[0], bbox_mid[1], bbox_min[2], flag_zero() ), f32x4( bbox_max[0], bbox_max[1], bbox_mid[2], flag_zero() ), BBox::flag_direct()),
+		BBox(f32x4( bbox_min[0], bbox_min[1], bbox_mid[2], flag_zero() ), f32x4( bbox_mid[0], bbox_mid[1], bbox_max[2], flag_zero() ), BBox::flag_direct()),
+		BBox(f32x4( bbox_mid[0], bbox_min[1], bbox_mid[2], flag_zero() ), f32x4( bbox_max[0], bbox_mid[1], bbox_max[2], flag_zero() ), BBox::flag_direct()),
+		BBox(f32x4( bbox_min[0], bbox_mid[1], bbox_mid[2], flag_zero() ), f32x4( bbox_mid[0], bbox_max[1], bbox_max[2], flag_zero() ), BBox::flag_direct()),
+		BBox(       bbox_mid,                                                    bbox_max,                                             BBox::flag_direct())
 	};
 
 	for (size_t i = 0; i < 8; ++i) {
@@ -277,7 +278,8 @@ Timeslice::set_extrnal_storage(
 
 bool
 Timeslice::set_payload_array(
-	const Array< Voxel >& payload) {
+	const Array< Voxel >& payload,
+	const BBox& root_bbox) {
 
 	m_root_bbox = BBox();
 	m_interior.resetCount();
@@ -292,16 +294,10 @@ Timeslice::set_payload_array(
 	if (item_count > PayloadId(-1))
 		return false;
 
-	// building the octree requires tree's payload bbox in advance
-	for (size_t i = 0; i < item_count; ++i) {
-		const Voxel& item = payload.getElement(i);
-
-		m_root_bbox.grow(item.get_bbox());
-	}
-
-	if (!m_root_bbox.is_valid())
+	if (!root_bbox.is_valid())
 		return false;
 
+	m_root_bbox = root_bbox;
 	m_interior.addElement(); // root octet
 
 	// feed payload item by item to the tree, building up the tree in the process
