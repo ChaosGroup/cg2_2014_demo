@@ -1437,7 +1437,7 @@ int main(
 #elif defined(prob_7_H__)
 	const testbed::scoped_ptr< TimesliceBalloon, generic_free > unaligned_ts(
 		reinterpret_cast< TimesliceBalloon* >(malloc(sizeof(TimesliceBalloon) + 4095)));
-	Timeslice& ts = *reinterpret_cast< TimesliceBalloon* >(uintptr_t(unaligned_ts()) + uintptr_t(4095) & ~uintptr_t(4095));
+	Timeslice& ts = *new (reinterpret_cast<void*>(uintptr_t(unaligned_ts()) + uintptr_t(4095) & ~uintptr_t(4095))) TimesliceBalloon;
 
 #else
 	#error prob_4_H__ or prob_7_H__ required
