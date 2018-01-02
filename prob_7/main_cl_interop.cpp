@@ -221,7 +221,7 @@ parse_cli(
 	char** const argv,
 	cli_param& param) {
 
-	const unsigned prefix_len = std::strlen(arg_prefix);
+	const size_t prefix_len = std::strlen(arg_prefix);
 	bool success = true;
 
 	for (int i = 1; i < argc && success; ++i) {
@@ -2879,7 +2879,7 @@ int main(int argc, char** argv) {
 	cl_event event_data_set_ready[n_buffering][5] = { { 0 } };
 	cl_event event_kernel_complete[n_buffering] = { 0 };
 
-	GLuint input = 0;
+	unsigned input = 0;
 	size_t frame = 0;
 	const uint64_t t0 = timer_ns();
 	uint64_t tlast = t0;

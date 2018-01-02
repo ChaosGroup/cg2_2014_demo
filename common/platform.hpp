@@ -1,7 +1,8 @@
 #ifndef testbed_H__
 #define testbed_H__
 
-#include <GL/gl.h>
+#include "native_gl.h"
+#include "input.h"
 #include <string>
 #include "pure_macro.hpp"
 #include "scoped.hpp"
@@ -34,29 +35,9 @@ swapBuffers();
 bool
 processEvents();
 
-enum
-{
-	INPUT_MASK_ESC			= 1 <<  0,
-	INPUT_MASK_LEFT			= 1 <<  1,
-	INPUT_MASK_RIGHT		= 1 <<  2,
-	INPUT_MASK_DOWN			= 1 <<  3,
-	INPUT_MASK_UP			= 1 <<  4,
-	INPUT_MASK_ALT_LEFT		= 1 <<  5,
-	INPUT_MASK_ALT_RIGHT	= 1 <<  6,
-	INPUT_MASK_ALT_DOWN		= 1 <<  7,
-	INPUT_MASK_ALT_UP		= 1 <<  8,
-	INPUT_MASK_ACTION		= 1 <<  9,
-	INPUT_MASK_OPTION_1		= 1 << 10,
-	INPUT_MASK_OPTION_2		= 1 << 11,
-	INPUT_MASK_OPTION_3		= 1 << 12,
-	INPUT_MASK_OPTION_4		= 1 << 13,
-
-	INPUT_MASK_FORCE_TYPE	= GLuint(-1)
-};
-
 bool
 processEvents(
-	GLuint& input);
+	unsigned& input);
 
 namespace util
 {

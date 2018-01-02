@@ -55,7 +55,7 @@ _PS_CONST(0p5, 0.5f);
 _PS_CONST_INT(min_norm_pos, 0x00800000);
 _PS_CONST_INT(mant_mask, 0x7f800000);
 _PS_CONST_INT(inv_mant_mask, ~0x7f800000);
-_PS_CONST_INT(sign_mask, 0x80000000);
+_PS_CONST_INT(sign_mask, ~0x7fffffff);
 _PS_CONST_INT(inv_sign_mask, ~0x80000000);
 
 _PI32_CONST(1, 1);

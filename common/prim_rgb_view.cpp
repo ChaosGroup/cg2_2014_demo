@@ -1,4 +1,4 @@
-#include <GL/gl.h>
+#include "native_gl.h"
 #include <unistd.h>
 #include <stdint.h>
 #include <string.h>

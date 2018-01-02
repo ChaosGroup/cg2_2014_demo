@@ -290,7 +290,7 @@ parse_cli(
 	char** const argv,
 	cli_param& param) {
 
-	const unsigned prefix_len = std::strlen(arg_prefix);
+	const size_t prefix_len = std::strlen(arg_prefix);
 	bool success = true;
 
 	for (int i = 1; i < argc && success; ++i) {
@@ -2898,7 +2898,7 @@ int main(int argc, char** argv) {
 	uint64_t tlast = t0;
 
 #if VISUALIZE != 0
-	GLuint input = 0;
+	unsigned input = 0;
 
 	while (testbed::processEvents(input) && frame != size_t(frames)) {
 

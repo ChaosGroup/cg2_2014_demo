@@ -1,7 +1,7 @@
 #ifndef rend_vert_attr_H__
 #define rend_vert_attr_H__
 
-#include <GL/gl.h>
+#include "native_gl.h"
 #include <stdint.h>
 #include <cstddef>
 

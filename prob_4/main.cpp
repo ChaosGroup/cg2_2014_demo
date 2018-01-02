@@ -797,7 +797,7 @@ parse_cli(
 	char** const argv,
 	Param& param)
 {
-	const unsigned prefix_len = strlen(arg_prefix);
+	const size_t prefix_len = strlen(arg_prefix);
 	bool success = true;
 
 	for (int i = 1; i < argc && success; ++i)
@@ -1081,7 +1081,7 @@ game_frame(
 	const Array< Voxel >& static_scene,
 	Array< Voxel >& pileup,
 	Array< Voxel >& payload,
-	const GLuint input,
+	const unsigned input,
 	Timeslice& ts)
 {
 	static const Voxel* fragment;
@@ -1120,7 +1120,7 @@ game_frame(
 	const float old_x = pos_x;
 	const float old_y = pos_y;
 
-	if (input & testbed::INPUT_MASK_ALT_UP)
+	if (input & INPUT_MASK_ALT_UP)
 	{
 		const size_t rotated = (shape_r + 1) % 4;
 
@@ -1143,7 +1143,7 @@ game_frame(
 		}
 	}
 	else
-	if (input & testbed::INPUT_MASK_ALT_DOWN)
+	if (input & INPUT_MASK_ALT_DOWN)
 	{
 		const size_t rotated = (shape_r + 3) % 4;
 
@@ -1166,13 +1166,13 @@ game_frame(
 		}
 	}
 
-	if (input & testbed::INPUT_MASK_ALT_LEFT)
+	if (input & INPUT_MASK_ALT_LEFT)
 		if (pos_x > -float(playfield_cols / 2))
 		{
 			pos_x -= 1.f;
 		}
 
-	if (input & testbed::INPUT_MASK_ALT_RIGHT)
+	if (input & INPUT_MASK_ALT_RIGHT)
 		if (pos_x < (playfield_cols / 2) - float(shape_width))
 		{
 			pos_x += 1.f;
@@ -1443,7 +1443,7 @@ int main(
 	#error prob_4_H__ or prob_7_H__ required
 
 #endif
-	GLuint input = 0;
+	unsigned input = 0;
 	unsigned nframes = 0;
 	const uint64_t t0 = timer_ns();
 
@@ -1458,11 +1458,11 @@ int main(
 		game_frame(static_scene, pileup, payload, input, ts);
 
 		// reset rotation input
-		input &= ~testbed::INPUT_MASK_ALT_UP & ~testbed::INPUT_MASK_ALT_DOWN;
+		input &= ~INPUT_MASK_ALT_UP & ~INPUT_MASK_ALT_DOWN;
 
-		if (input & testbed::INPUT_MASK_ACTION)
+		if (input & INPUT_MASK_ACTION)
 		{
-			input &= ~testbed::INPUT_MASK_ACTION;
+			input &= ~INPUT_MASK_ACTION;
 
 			// take action here
 			FILE* f = fopen("state", "rb");
@@ -1482,16 +1482,16 @@ int main(
 		float azim = 0.f;
 		const float angular_step = M_PI_2 / (1 << 4);
 
-		if (input & testbed::INPUT_MASK_UP)
+		if (input & INPUT_MASK_UP)
 			decl += angular_step;
 
-		if (input & testbed::INPUT_MASK_DOWN)
+		if (input & INPUT_MASK_DOWN)
 			decl -= angular_step;
 
-		if (input & testbed::INPUT_MASK_LEFT)
+		if (input & INPUT_MASK_LEFT)
 			azim += angular_step;
 
-		if (input & testbed::INPUT_MASK_RIGHT)
+		if (input & INPUT_MASK_RIGHT)
 			azim -= angular_step;
 
 		rot.mulr(matx4_rotate(decl, 1.f, 0.f, 0.f));

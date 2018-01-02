@@ -286,7 +286,7 @@ processEvents()
 
 bool
 processEvents(
-	GLuint& input)
+	unsigned& input)
 {
 	assert(0 != display);
 	assert(0 != window);
@@ -317,54 +317,54 @@ processEvents(
 			switch (buffer[0])
 			{
 			case 27:
-				input_mask = testbed::INPUT_MASK_ESC;
+				input_mask = INPUT_MASK_ESC;
 				break;
 			case ' ':
-				input_mask = testbed::INPUT_MASK_ACTION;
+				input_mask = INPUT_MASK_ACTION;
 				break;
 			case '1':
-				input_mask = testbed::INPUT_MASK_OPTION_1;
+				input_mask = INPUT_MASK_OPTION_1;
 				break;
 			case '2':
-				input_mask = testbed::INPUT_MASK_OPTION_2;
+				input_mask = INPUT_MASK_OPTION_2;
 				break;
 			case '3':
-				input_mask = testbed::INPUT_MASK_OPTION_3;
+				input_mask = INPUT_MASK_OPTION_3;
 				break;
 			case '4':
-				input_mask = testbed::INPUT_MASK_OPTION_4;
+				input_mask = INPUT_MASK_OPTION_4;
 				break;
 			case 'a':
 			case 'A':
-				input_mask = testbed::INPUT_MASK_ALT_LEFT;
+				input_mask = INPUT_MASK_ALT_LEFT;
 				break;
 			case 'd':
 			case 'D':
-				input_mask = testbed::INPUT_MASK_ALT_RIGHT;
+				input_mask = INPUT_MASK_ALT_RIGHT;
 				break;
 			case 'i':
 			case 'I':
-				input_mask = testbed::INPUT_MASK_UP;
+				input_mask = INPUT_MASK_UP;
 				break;
 			case 'j':
 			case 'J':
-				input_mask = testbed::INPUT_MASK_LEFT;
+				input_mask = INPUT_MASK_LEFT;
 				break;
 			case 'l':
 			case 'L':
-				input_mask = testbed::INPUT_MASK_RIGHT;
+				input_mask = INPUT_MASK_RIGHT;
 				break;
 			case 'm':
 			case 'M':
-				input_mask = testbed::INPUT_MASK_DOWN;
+				input_mask = INPUT_MASK_DOWN;
 				break;
 			case 'w':
 			case 'W':
-				input_mask = testbed::INPUT_MASK_ALT_UP;
+				input_mask = INPUT_MASK_ALT_UP;
 				break;
 			case 'z':
 			case 'Z':
-				input_mask = testbed::INPUT_MASK_ALT_DOWN;
+				input_mask = INPUT_MASK_ALT_DOWN;
 				break;
 			}
 

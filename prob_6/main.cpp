@@ -27,7 +27,7 @@
 #include "problem_7.hpp"
 
 #if DR_SUPPLEMENT == 0 && VISUALIZE != 0
-#include <GL/gl.h>
+#include "native_gl.h"
 #include "platform.hpp"
 #include "prim_rgb_view.hpp"
 #endif
@@ -851,7 +851,7 @@ parse_cli(
 	char** const argv,
 	Param& param)
 {
-	const unsigned prefix_len = strlen(arg_prefix);
+	const size_t prefix_len = strlen(arg_prefix);
 	bool success = true;
 
 	for (int i = 1; i < argc && success; ++i)
@@ -2483,7 +2483,7 @@ int main(
 	}
 
 #if DR_SUPPLEMENT == 0 && VISUALIZE != 0
-	GLuint input = 0;
+	unsigned input = 0;
 
 #endif
 	unsigned nframes = 0;
@@ -2555,18 +2555,18 @@ int main(
 #if VISUALIZE != 0
 #if DR_CORE == 0 && DR_SUPPLEMENT == 0
 		// obligatory manual controls
-		if (input & testbed::INPUT_MASK_ACTION)
+		if (input & INPUT_MASK_ACTION)
 		{
-			input &= ~testbed::INPUT_MASK_ACTION;
+			input &= ~INPUT_MASK_ACTION;
 
 			c::scene_selector = reset_at_period(c::scene_selector + 1, scene_count);
 		}
 
 #endif
 #if DR_SUPPLEMENT == 0
-		if (input & testbed::INPUT_MASK_OPTION_1)
+		if (input & INPUT_MASK_OPTION_1)
 		{
-			input &= ~testbed::INPUT_MASK_OPTION_1;
+			input &= ~INPUT_MASK_OPTION_1;
 
 			c::blur_split *= -1.f;
 		}
@@ -2575,30 +2575,30 @@ int main(
 #if DR_CORE == 0 && DR_SUPPLEMENT == 0
 		const float angular_step = float(M_PI_4) * dt;
 
-		if (input & testbed::INPUT_MASK_UP)
+		if (input & INPUT_MASK_UP)
 			c::decl += angular_step;
 
-		if (input & testbed::INPUT_MASK_DOWN)
+		if (input & INPUT_MASK_DOWN)
 			c::decl -= angular_step;
 
-		if (input & testbed::INPUT_MASK_LEFT)
+		if (input & INPUT_MASK_LEFT)
 			c::azim += angular_step;
 
-		if (input & testbed::INPUT_MASK_RIGHT)
+		if (input & INPUT_MASK_RIGHT)
 			c::azim -= angular_step;
 
 		const float linear_step = .25f * dt;
 
-		if (input & testbed::INPUT_MASK_ALT_UP)
+		if (input & INPUT_MASK_ALT_UP)
 			c::pos_z += linear_step;
 
-		if (input & testbed::INPUT_MASK_ALT_DOWN)
+		if (input & INPUT_MASK_ALT_DOWN)
 			c::pos_z -= linear_step;
 
-		if (input & testbed::INPUT_MASK_ALT_LEFT)
+		if (input & INPUT_MASK_ALT_LEFT)
 			c::pos_x -= linear_step;
 
-		if (input & testbed::INPUT_MASK_ALT_RIGHT)
+		if (input & INPUT_MASK_ALT_RIGHT)
 			c::pos_x += linear_step;
 
 #endif

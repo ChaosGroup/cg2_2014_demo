@@ -1,4 +1,4 @@
-#include <GL/gl.h>
+#include "native_gl.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
