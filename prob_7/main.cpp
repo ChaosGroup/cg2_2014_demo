@@ -514,6 +514,8 @@ static const compile_assert< sizeof(thread) / sizeof(thread[0]) == sizeof(record
 
 class workforce_t
 {
+	size_t barriers_created;
+	size_t threads_created;
 	bool successfully_init;
 
 public:
@@ -548,9 +550,10 @@ workforce_t::workforce_t(
 	uint8_t (* const framebuffer)[4],
 	const unsigned w,
 	const unsigned h)
-: successfully_init(false)
+: barriers_created(0)
+, threads_created(0)
+, successfully_init(false)
 {
-	// before actually creating them barrier and thread handles must be zero-initialized
 	for (size_t i = 0; i < sizeof(barrier) / sizeof(barrier[0]); ++i)
 	{
 		const int r = pthread_barrier_init(barrier + i, 0, nthreads);
@@ -560,6 +563,8 @@ workforce_t::workforce_t(
 			report_err(__FUNCTION__, __LINE__, i, r);
 			return;
 		}
+
+		++barriers_created;
 	}
 
 	for (size_t i = 0; i < sizeof(record) / sizeof(record[0]); ++i)
@@ -623,6 +628,8 @@ workforce_t::workforce_t(
 			report_err(__FUNCTION__, __LINE__, i, r);
 			return;
 		}
+
+		++threads_created;
 	}
 
 	successfully_init = true;
@@ -634,9 +641,10 @@ workforce_t::~workforce_t()
 	for (size_t i = 0; i < sizeof(record) / sizeof(record[0]); ++i)
 		record[i].id = uint32_t(-1);
 
-	pthread_barrier_wait(barrier + BARRIER_START);
+	if (barriers_created)
+		pthread_barrier_wait(barrier + BARRIER_START);
 
-	for (size_t i = 0; i < sizeof(barrier) / sizeof(barrier[0]); ++i)
+	for (size_t i = 0; i < barriers_created; ++i)
 	{
 		const int r = pthread_barrier_destroy(barrier + i);
 
@@ -644,7 +652,7 @@ workforce_t::~workforce_t()
 			report_err(__FUNCTION__, __LINE__, i, r);
 	}
 
-	for (size_t i = 0; i < sizeof(record) / sizeof(record[0]); ++i)
+	for (size_t i = 0; i < threads_created; ++i)
 	{
 		const int r = pthread_join(thread[i], 0);
 
