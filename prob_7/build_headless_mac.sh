@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # known issue with clang++-3.6 and the lifespan of temporaries, causing multiple failures at unittest
-CC=clang++-3.5
+CC=/usr/bin/clang++
 BINARY=problem_4
 COMMON=../common
 SOURCE=(
@@ -21,6 +21,7 @@ CFLAGS=(
 	-Wno-bitwise-op-parentheses
 	-Wno-parentheses
 	-I$COMMON
+	-I/opt/local/include/libpng16
 	-I..
 	-pipe
 	-fno-exceptions
@@ -36,9 +37,9 @@ CFLAGS=(
 # Compiler quirk 0001: control definition location of routines posing entry points to recursion for more efficient inlining
 	-DCLANG_QUIRK_0001=1
 # Compiler quirk 0002: type size_t is unrelated to same-size type uint*_t
-#	-DCLANG_QUIRK_0002=1
+	-DCLANG_QUIRK_0002=1
 # OpenCL quirk 0001: broken alignment of wide-alignment-type (eg. float4) buffers in __constant space
-#	-DOCL_QUIRK_0001=1
+	-DOCL_QUIRK_0001=1
 # OpenCL kernel build full verbosity; macro mandatory
 	-DOCL_KERNEL_BUILD_VERBOSE=0
 )
@@ -76,9 +77,8 @@ LFLAGS=(
 #	-Wa,-defsym,__sqrtf_finite=__sqrtf_finite@GLIBC_2.2.5
 	-lstdc++
 	-ldl
-	-lrt
-	`ldconfig -p | grep -m 1 ^[[:space:]]libOpenCL.so | sed "s/^.\+ //"`
-	-lpng12
+	-framework OpenCL
+	/opt/local/lib/libpng16.dylib
 )
 
 if [[ $1 == "debug" ]]; then

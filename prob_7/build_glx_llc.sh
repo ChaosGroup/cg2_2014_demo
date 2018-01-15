@@ -42,24 +42,6 @@ CFLAGS=(
 	-DMINIMAL_TREE=1
 # Show on screen what was rendered
 	-DVISUALIZE=1
-# Vector aliasing control
-#	-DVECTBASE_MINIMISE_ALIASING=1
-# High-precision ray reciprocal direction
-	-DRAY_HIGH_PRECISION_RCP_DIR=1
-# Use a linear distribution of directions across the hemisphere rather than proper angular such
-#	-DCHEAP_LINEAR_DISTRIBUTION=1
-# Number of workforce threads (normally equating the number of logical cores)
-	-DWORKFORCE_NUM_THREADS=`lscpu | grep ^"CPU(s)" | sed s/^[^[:digit:]]*//`
-# Make workforce threads sticky (NUMA, etc)
-	-DWORKFORCE_THREADS_STICKY=`lscpu | grep ^"Socket(s)" | echo "\`sed s/^[^[:digit:]]*//\` > 1" | bc`
-# Colorize the output of individual threads
-#	-DCOLORIZE_THREADS=1
-# Threading model 'division of labor' alternatives: 0, 1, 2
-	-DDIVISION_OF_LABOR_VER=2
-# Bounce computation alternatives for variable-permute-disabled ISAs (e.g. all SSE revisions): 0, 1, 2
-	-DBOUNCE_COMPUTE_VER=1
-# Number of AO rays per pixel
-	-DAO_NUM_RAYS=16
 # Enable tweaks targeting Mesa quirks
 #	-DOUTDATED_MESA=1
 # Draw octree cells instead of octree content
@@ -70,6 +52,10 @@ CFLAGS=(
 #	-DCLANG_QUIRK_0001=1
 # Compiler quirk 0002: type size_t is unrelated to same-size type uint*_t
 #	-DCLANG_QUIRK_0002=1
+# OpenCL quirk 0001: broken alignment of wide-alignment-type (eg. float4) buffers in __constant space
+#	-DOCL_QUIRK_0001=1
+# OpenCL kernel build full verbosity; macro mandatory
+	-DOCL_KERNEL_BUILD_VERBOSE=0
 )
 # For non-native or tweaked architecture targets, comment out 'native' and uncomment the correct target architecture and flags
 TARGET=(
@@ -99,7 +85,6 @@ LFLAGS=(
 	`ldconfig -p | grep -m 1 ^[[:space:]]libGL.so | sed "s/^.\+ //"`
 	`ldconfig -p | grep -m 1 ^[[:space:]]libOpenCL.so | sed "s/^.\+ //"`
 	-lX11
-	-lpthread
 #	-lpng12
 )
 

@@ -2188,7 +2188,7 @@ int main(int argc, char** argv) {
 		"	const struct BBox* const bbox,\n"
 		"	const struct Ray* const ray,\n"
 		"	struct ChildIndex* const child_index,\n"
-		"	struct BBox* const child_bbox)\n"
+		"	struct BBox child_bbox[8])\n"
 		"{\n"
 		"	const float3 par_min = bbox->min;\n"
 		"	const float3 par_max = bbox->max;\n"
@@ -2422,7 +2422,7 @@ int main(int argc, char** argv) {
 		"		bbox,\n"
 		"		ray,\n"
 		"		&child_index,\n"
-		"		&child_bbox);\n"
+		"		child_bbox);\n"
 		"\n"
 		"	const uint8 octet_child = convert_uint8(octet.child);\n"
 		"	const uint octetChild[8] = {\n"
@@ -2458,7 +2458,11 @@ int main(int argc, char** argv) {
 		"	__global const ushort4* const src_a,\n"
 		"	__global const ushort4* const src_b,\n"
 		"	__global const float4* const src_c,\n"
+#if OCL_QUIRK_0001
+		"	__constant float* const src_d,\n"
+#else
 		"	__constant float4* const src_d,\n"
+#endif
 		"	__write_only image2d_t dst)\n"
 		"{\n";
 
@@ -2597,7 +2601,7 @@ int main(int argc, char** argv) {
 		"		bbox,\n"
 		"		ray,\n"
 		"		&child_index,\n"
-		"		&child_bbox);\n"
+		"		child_bbox);\n"
 		"\n"
 		"	const uint8 octet_child = convert_uint8(octet.child);\n"
 		"	const uint octetChild[8] = {\n"
@@ -2633,7 +2637,11 @@ int main(int argc, char** argv) {
 		"	__read_only image2d_t src_a,\n"
 		"	__read_only image2d_t src_b,\n"
 		"	__read_only image2d_t src_c,\n"
+#if OCL_QUIRK_0001
+		"	__constant float* const src_d,\n"
+#else
 		"	__constant float4* const src_d,\n"
+#endif
 		"	__write_only image2d_t dst)\n"
 		"{\n";
 
@@ -2646,14 +2654,26 @@ int main(int argc, char** argv) {
 		"	const int idy = (int)get_global_id(1);\n"
 		"	const int dimx = (int)get_global_size(0);\n"
 		"	const int dimy = (int)get_global_size(1);\n"
-		"	const float3 ray_direction =\n"
-		"		src_d[0].xyz * ((idx * 2 - dimx) * (1.0f / dimx)) +\n"
-		"		src_d[1].xyz * ((idy * 2 - dimy) * (1.0f / dimy)) +\n"
-		"		src_d[2].xyz;\n"
+#if OCL_QUIRK_0001
+		"	const float3 cam0 = (float3)(src_d[0], src_d[1], src_d[ 2]);\n"
+		"	const float3 cam1 = (float3)(src_d[4], src_d[5], src_d[ 6]);\n"
+		"	const float3 cam2 = (float3)(src_d[8], src_d[9], src_d[10]);\n"
+		"	const float3 ray_origin = (float3)(src_d[12], src_d[13], src_d[14]);\n"
+		"	const float3 bbox_min   = (float3)(src_d[16], src_d[17], src_d[18]);\n"
+		"	const float3 bbox_max   = (float3)(src_d[20], src_d[21], src_d[22]);\n"
+#else
+		"	const float3 cam0 = src_d[0].xyz;\n"
+		"	const float3 cam1 = src_d[1].xyz;\n"
+		"	const float3 cam2 = src_d[2].xyz;\n"
 		"	const float3 ray_origin = src_d[3].xyz;\n"
+		"	const float3 bbox_min   = src_d[4].xyz;\n"
+		"	const float3 bbox_max   = src_d[5].xyz;\n"
+#endif
+		"	const float3 ray_direction =\n"
+		"		cam0 * ((idx * 2 - dimx) * (1.0f / dimx)) +\n"
+		"		cam1 * ((idy * 2 - dimy) * (1.0f / dimy)) +\n"
+		"		cam2;\n"
 		"	const float3 ray_rcpdir = fmax(fmin(1.0f / ray_direction, MAXFLOAT), -MAXFLOAT);\n"
-		"	const float3 bbox_min = src_d[4].xyz;\n"
-		"	const float3 bbox_max = src_d[5].xyz;\n"
 		"	const struct Ray ray = (struct Ray){ ray_origin, ray_rcpdir };\n"
 		"	const struct BBox root_bbox = (struct BBox){ bbox_min, bbox_max };\n"
 		"	uint result = traverse(get_octet(src_a, 0), src_b, src_c, &root_bbox, &ray);\n"
@@ -2695,7 +2715,7 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
-	if (CL_BUILD_SUCCESS != build_status) {
+	if (CL_BUILD_SUCCESS != build_status || OCL_KERNEL_BUILD_VERBOSE) {
 		size_t log_len = 0;
 		success = clGetProgramBuildInfo(program,
 			device()[device_idx], CL_PROGRAM_BUILD_LOG, 0, 0, &log_len);
@@ -2717,7 +2737,9 @@ int main(int argc, char** argv) {
 		}
 
 		stream::cerr << build_log() << '\n';
-		return -1;
+
+		if (CL_BUILD_SUCCESS != build_status)
+			return -1;
 	}
 
 	cl_kernel kernel = clCreateKernel(program, "monokernel", &success);
@@ -2729,22 +2751,83 @@ int main(int argc, char** argv) {
 
 	const scoped_ptr< cl_kernel, scoped_functor > release_kernel(&kernel);
 
-	size_t preferred_local_ws = 0;
+	size_t local_ws_multiple = 0;
 	success = clGetKernelWorkGroupInfo(kernel,
 		device()[device_idx], CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE,
-		sizeof(preferred_local_ws), &preferred_local_ws, 0);
+		sizeof(local_ws_multiple), &local_ws_multiple, 0);
 
 	if (reportCLError(success)) {
-		stream::cerr << "error getting kernel workgroup info\n";
+		stream::cerr << "error getting kernel preferred workgroup size multiple info\n";
 		return -1;
 	}
 
-	stream::cout << "kernel preferred workgroup size multiple: " << preferred_local_ws << '\n';
+	stream::cout << "kernel preferred workgroup size multiple: " << local_ws_multiple << '\n';
 
-	const size_t alu_latency_hiding_factor = 2;
-	const size_t local_ws[] = { preferred_local_ws, alu_latency_hiding_factor };
+	cl_uint max_dim = 0;
+	success = clGetDeviceInfo(
+		device()[device_idx], CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS,
+		sizeof(max_dim), &max_dim, 0);
+
+	if (reportCLError(success)) {
+		stream::cerr << "error getting device max work-item dimensions info\n";
+		return -1;
+	}
+
+	size_t buffer_devinfo[8];
+
+	if (max_dim > sizeof(buffer_devinfo) / sizeof(buffer_devinfo[0])) {
+		stream::cerr << "device max work-item dimensions exceed expectations; bailing out\n";
+		return -1;
+	}
+
+	success = clGetDeviceInfo(
+		device()[device_idx], CL_DEVICE_MAX_WORK_ITEM_SIZES,
+		sizeof(buffer_devinfo), buffer_devinfo, 0);
+
+	if (reportCLError(success)) {
+		stream::cerr << "error getting device max work-item sizes info\n";
+		return -1;
+	}
+
+	stream::cout << "device max work-item sizes:";
+	for (cl_uint i = 0; i < max_dim; ++i)
+		stream::cout << ' ' << buffer_devinfo[i];
+	stream::cout << '\n';
+
+	const size_t work_item_size_0 = buffer_devinfo[0];
+	const size_t work_item_size_1 = buffer_devinfo[1];
+
+	success = clGetDeviceInfo(
+		device()[device_idx], CL_DEVICE_MAX_WORK_GROUP_SIZE,
+		sizeof(buffer_devinfo), buffer_devinfo, 0);
+
+	if (reportCLError(success)) {
+		stream::cerr << "error getting device max work-group size info\n";
+		return -1;
+	}
+
+	const size_t max_local_ws = buffer_devinfo[0];
+	const size_t latency_hiding_factor = local_ws_multiple * 2 > max_local_ws ? 1 : 2;
+	const size_t combined_item_size_0 = local_ws_multiple * latency_hiding_factor;
 	const size_t global_ws[] = { image_w, image_h };
+	size_t local_ws[2];
+	if (latency_hiding_factor > work_item_size_1) {
+		if (combined_item_size_0 > work_item_size_0) {
+			local_ws[0] = work_item_size_0;
+			local_ws[1] = 1;
+		}
+		else {
+			local_ws[0] = combined_item_size_0;
+			local_ws[1] = 1;
+		}
+	}
+	else {
+		local_ws[0] = local_ws_multiple;
+		local_ws[1] = latency_hiding_factor;
+	}
 	const cl_uint work_dim = 2;
+	const compile_assert< work_dim == sizeof(global_ws) / sizeof(global_ws[0]) > assert_global_ws_dim;
+	const compile_assert< work_dim == sizeof(local_ws) / sizeof(local_ws[0]) > assert_local_ws_dim;
 
 	for (cl_uint i = 0; i < work_dim; ++i)
 		if (0 != global_ws[i] % local_ws[i]) {
