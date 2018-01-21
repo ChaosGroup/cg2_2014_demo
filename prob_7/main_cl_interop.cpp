@@ -2810,7 +2810,8 @@ int main(int argc, char** argv) {
 	const size_t latency_hiding_factor = local_ws_multiple * 2 > max_local_ws ? 1 : 2;
 	const size_t combined_item_size_0 = local_ws_multiple * latency_hiding_factor;
 	const size_t global_ws[] = { image_w, image_h };
-	size_t local_ws[2];
+	const cl_uint work_dim = sizeof(global_ws) / sizeof(global_ws[0]);
+	size_t local_ws[work_dim];
 	if (latency_hiding_factor > work_item_size_1) {
 		if (combined_item_size_0 > work_item_size_0) {
 			local_ws[0] = work_item_size_0;
@@ -2825,9 +2826,6 @@ int main(int argc, char** argv) {
 		local_ws[0] = local_ws_multiple;
 		local_ws[1] = latency_hiding_factor;
 	}
-	const cl_uint work_dim = 2;
-	const compile_assert< work_dim == sizeof(global_ws) / sizeof(global_ws[0]) > assert_global_ws_dim;
-	const compile_assert< work_dim == sizeof(local_ws) / sizeof(local_ws[0]) > assert_local_ws_dim;
 
 	for (cl_uint i = 0; i < work_dim; ++i)
 		if (0 != global_ws[i] % local_ws[i]) {
