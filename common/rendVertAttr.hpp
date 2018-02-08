@@ -15,6 +15,7 @@ struct ActiveAttrSemantics
 
 	int semantics_vertex;
 	int semantics_normal;
+	int semantics_tangent;
 	int semantics_blendw;
 	int semantics_tcoord;
 	int semantics_index;
@@ -23,6 +24,7 @@ struct ActiveAttrSemantics
 	: num_active_attr(0)
 	, semantics_vertex(-1)
 	, semantics_normal(-1)
+	, semantics_tangent(-1)
 	, semantics_blendw(-1)
 	, semantics_tcoord(-1)
 	, semantics_index(-1)
@@ -37,6 +39,9 @@ struct ActiveAttrSemantics
 	bool registerNormalAttr(
 		const GLint attr);
 
+	bool registerTangentAttr(
+		const GLint attr);
+
 	bool registerBlendWAttr(
 		const GLint attr);
 
@@ -48,6 +53,7 @@ struct ActiveAttrSemantics
 
 	GLint getVertexAttr() const;
 	GLint getNormalAttr() const;
+	GLint getTangentAttr() const;
 	GLint getBlendWAttr() const;
 	GLint getTCoordAttr() const;
 	GLint getIndexAttr() const;
@@ -58,13 +64,11 @@ inline int
 ActiveAttrSemantics::registerAttr(
 	const GLint attr)
 {
-	if (attr != -1)
-	{
+	if (attr != -1) {
+		assert(num_active_attr < sizeof(active_attr) / sizeof(active_attr[0]));
+
 		const int n = num_active_attr;
 		active_attr[num_active_attr++] = attr;
-
-		assert(num_active_attr <= sizeof(active_attr) / sizeof(active_attr[0]));
-
 		return n;
 	}
 
@@ -93,6 +97,19 @@ ActiveAttrSemantics::registerNormalAttr(
 
 	if (-1 == semantics_normal)
 		return -1 != (semantics_normal = registerAttr(attr));
+
+	return false;
+}
+
+
+inline bool
+ActiveAttrSemantics::registerTangentAttr(
+	const GLint attr)
+{
+	assert(-1 == semantics_tangent);
+
+	if (-1 == semantics_tangent)
+		return -1 != (semantics_tangent = registerAttr(attr));
 
 	return false;
 }
@@ -156,6 +173,18 @@ ActiveAttrSemantics::getNormalAttr() const
 
 	if (unsigned(semantics_normal) < num_active_attr)
 		return active_attr[semantics_normal];
+
+	return -1;
+}
+
+
+inline GLint
+ActiveAttrSemantics::getTangentAttr() const
+{
+	assert(unsigned(semantics_tangent) < num_active_attr);
+
+	if (unsigned(semantics_tangent) < num_active_attr)
+		return active_attr[semantics_tangent];
 
 	return -1;
 }

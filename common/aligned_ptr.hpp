@@ -9,7 +9,7 @@
 template < typename T, size_t ALIGNMENT_T >
 class aligned_ptr
 {
-	void* unaligned;
+	void* ptr;
 
 	aligned_ptr(
 		const aligned_ptr& src); // undefined
@@ -19,13 +19,13 @@ class aligned_ptr
 
 public:
 	aligned_ptr()
-	: unaligned(0)
+	: ptr(0)
 	{
 	}
 
 	aligned_ptr(
 		const size_t capacity)
-	: unaligned(0)
+	: ptr(0)
 	{
 		malloc(capacity);
 	}
@@ -40,8 +40,8 @@ public:
 	{
 		free();
 
-		unaligned = src.unaligned;
-		src.unaligned = 0;
+		ptr = src.ptr;
+		src.ptr = 0;
 
 		return *this;
 	}
@@ -51,35 +51,28 @@ public:
 	{
 		free();
 
-		if (0 != capacity)
-		{
-			unaligned = ::malloc(sizeof(T) * capacity + ALIGNMENT_T - 1);
-
-			const uintptr_t aligned = uintptr_t(unaligned) + ALIGNMENT_T - 1 & ~uintptr_t(ALIGNMENT_T - 1);
-			const uintptr_t offset = aligned - uintptr_t(unaligned);
-
-			unaligned = reinterpret_cast< void* >(aligned + offset);
+		if (0 != capacity) {
+			void* const unaligned = ::malloc(sizeof(T) * capacity + ALIGNMENT_T - 1);
+			ptr = reinterpret_cast< void* >(uintptr_t(unaligned) + uintptr_t(ALIGNMENT_T - 1));
 		}
 	}
 
 	void free()
 	{
-		if (0 != unaligned)
-		{
-			::free(reinterpret_cast< void* >((uintptr_t(unaligned) & ~uintptr_t(ALIGNMENT_T - 1)) -
-				(uintptr_t(unaligned) & uintptr_t(ALIGNMENT_T - 1))));
-			unaligned = 0;
+		if (0 != ptr) {
+			::free(reinterpret_cast< void* >(uintptr_t(ptr) - uintptr_t(ALIGNMENT_T - 1)));
+			ptr = 0;
 		}
 	}
 
 	bool is_null() const
 	{
-		return 0 == unaligned;
+		return 0 == ptr;
 	}
 
 	operator T* () const
 	{
-		return reinterpret_cast< T* >(uintptr_t(unaligned) & ~uintptr_t(ALIGNMENT_T - 1));
+		return reinterpret_cast< T* >(uintptr_t(ptr) & ~uintptr_t(ALIGNMENT_T - 1));
 	}
 };
 
