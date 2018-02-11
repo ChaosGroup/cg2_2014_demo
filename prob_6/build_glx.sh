@@ -28,7 +28,7 @@ CFLAGS=(
 # Grab every frame to PNG
 #	-DFRAMEGRAB=1
 # Fixed framerate
-#	-DFRAME_RATE=30
+	-DFRAME_RATE=60
 # Case-specific optimisation
 	-DMINIMAL_TREE=1
 # Show on screen what was rendered
@@ -40,8 +40,8 @@ CFLAGS=(
 #	-DVECTBASE_MINIMISE_ALIASING=1
 # High-precision ray reciprocal direction
 	-DRAY_HIGH_PRECISION_RCP_DIR=1
-# Use a linear distribution of directions across the hemisphere rather than proper angular such
-#	-DCHEAP_LINEAR_DISTRIBUTION=1
+# Use Lambertian weights for the occlusion computation; default occlusion computation uses unweighted occlusion
+#	-DLAMBERTIAN_WEIGHTS_OCCLUSION=1
 # Number of workforce threads (normally equating the number of logical cores)
 	-DWORKFORCE_NUM_THREADS=`lscpu | grep ^"CPU(s)" | sed s/^[^[:digit:]]*//`
 # Make workforce threads sticky (NUMA, etc)
@@ -53,7 +53,7 @@ CFLAGS=(
 # Bounce computation alternatives for variable-permute-disabled ISAs (e.g. all SSE revisions): 0, 1, 2
 	-DBOUNCE_COMPUTE_VER=1
 # Number of AO rays per pixel
-	-DAO_NUM_RAYS=16
+	-DAO_NUM_RAYS=64
 # Enable tweaks targeting Mesa quirks
 #	-DOUTDATED_MESA=1
 # Draw octree cells instead of octree content

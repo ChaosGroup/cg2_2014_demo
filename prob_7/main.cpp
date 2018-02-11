@@ -6,7 +6,7 @@
 #include <sstream>
 #include <iomanip>
 #include <pthread.h>
-#if __APPLE__ != 0
+#if __APPLE__
 #include "pthread_barrier.h"
 #endif
 
@@ -165,7 +165,7 @@ shade(
 	// decode plane hit - reconstruct its axis and sign
 	const __m128 axis_sign = _mm_and_ps(_mm_set1_ps(-0.f), hit.min_mask);
 
-#if __AVX__ != 0
+#if __AVX__
 	const int xyz = 0x020100; // x-axis: 0 1 2
 	const int zxy = 0x010002; // y-axis: 2 0 1
 	const int yzx = 0x000201; // z-axis: 1 2 0
@@ -185,8 +185,14 @@ shade(
 	const simd::vect3 orig = simd::vect3().add(
 		ray.get_origin(), simd::vect3().mul(ray.get_direction(), hit.dist));
 
-	float data = 0.f;
+#if LAMBERTIAN_WEIGHTS_OCCLUSION
+	float lambertian_num = 0.f;
+	float lambertian_denom = 0.f;
 
+#else
+	int unoccluded = 0;
+
+#endif
 	// manually unroll the AO shading loop by 2
 	for (size_t i = 0; i < ao_probe_count / 2; ++i)
 	{
@@ -195,8 +201,6 @@ shade(
 #else
 		const int angular_granularity = ao_probe_count * 16; // grid coefficient should avoid moire till at least 1024 probes
 #endif
-
-#if CHEAP_LINEAR_DISTRIBUTION == 0
 		const float decl0 = float(M_PI_2) * (rand_r(&seed) % angular_granularity) / angular_granularity;
 		const float azim0 = float(M_PI) * (rand_r(&seed) % (angular_granularity * 4)) / (angular_granularity * 2);
 		const float decl1 = float(M_PI_2) * (rand_r(&seed) % angular_granularity) / angular_granularity;
@@ -220,20 +224,13 @@ shade(
 		simd::vect3 hemi0 = simd::vect3(cos_decl0, cos_azim0 * sin_decl0, sin_azim0 * sin_decl0, true);
 		simd::vect3 hemi1 = simd::vect3(cos_decl1, cos_azim1 * sin_decl1, sin_azim1 * sin_decl1, true);
 
-#else
-		simd::vect3 hemi0 = simd::vect3(
-			float(rand_r(&seed) % angular_granularity),
-			float(rand_r(&seed) % angular_granularity - angular_granularity / 2),
-			float(rand_r(&seed) % angular_granularity - angular_granularity / 2)).normalise();
-		simd::vect3 hemi1 = simd::vect3(
-			float(rand_r(&seed) % angular_granularity),
-			float(rand_r(&seed) % angular_granularity - angular_granularity / 2),
-			float(rand_r(&seed) % angular_granularity - angular_granularity / 2)).normalise();
+#if LAMBERTIAN_WEIGHTS_OCCLUSION
+		lambertian_denom += cos_decl0 + cos_decl1;
 
 #endif
 		// now, direct the bounce vector in accordance with the actual normal
 
-#if __AVX__ != 0
+#if __AVX__
 		// permute bounce direction depending on which axial plane was hit
 		const __m128 pdir0 = _mm_permutevar_ps(hemi0.getn(), perm);
 		const __m128 pdir1 = _mm_permutevar_ps(hemi1.getn(), perm);
@@ -311,31 +308,31 @@ shade(
 		const Ray probe0(orig, probe_dir0);
 		const Ray probe1(orig, probe_dir1);
 
-#if 0
+#if LAMBERTIAN_WEIGHTS_OCCLUSION
 		if (!ts.traverse_litest(probe0, hit))
-			data += cos_decl0;
+			lambertian_num += cos_decl0;
 
 		if (!ts.traverse_litest(probe1, hit))
-			data += cos_decl1;
+			lambertian_num += cos_decl1;
 	}
 
-	pixel[0] = data * (255.f / ao_probe_count);
-	pixel[1] = data * (255.f / ao_probe_count);
-	pixel[2] = data * (255.f / ao_probe_count);
+	const float intensity = fmin(1.f, lambertian_num / lambertian_denom);
 
 #else
 		if (!ts.traverse_litest(probe0, hit))
-			data += 1.f;
+			++unoccluded;
 
 		if (!ts.traverse_litest(probe1, hit))
-			data += 1.f;
+			++unoccluded;
 	}
 
-	pixel[0] = data * (255.f / ao_probe_count);
-	pixel[1] = data * (255.f / ao_probe_count);
-	pixel[2] = data * (255.f / ao_probe_count);
+	const float intensity = unoccluded * (1.f / ao_probe_count);
 
 #endif
+	pixel[0] = uint8_t(255.f * intensity);
+	pixel[1] = uint8_t(255.f * intensity);
+	pixel[2] = uint8_t(255.f * intensity);
+
 	// truncate payload id to 6 LSBs when storing it in the pixel
 	pixel[3] = size_t(hit.target) << 2 | (axis & 3) + 1;
 }
@@ -2134,7 +2131,7 @@ int main(
 		0,         // param.fsaa
 		-1U,       // param.frames
 	};
- 
+
 	const int result_cli = parse_cli(argc, argv, param);
 
 	if (0 != result_cli)
@@ -2290,7 +2287,7 @@ int main(
 	const float rcp_extent = 1.f / std::max(extent[0], std::max(extent[1], extent[2]));
 
 	const size_t frame_size = w * h * sizeof(uint8_t[4]); // our rendering produces RGBA8 pixels
-	
+
 	const size_t cacheline_size = 64;
 	const size_t cacheline_pad = cacheline_size - 1;
 
@@ -2335,7 +2332,7 @@ int main(
 
 #endif
 
-		// upate run time (we aren't supposed to run long - fp32 should do) and beat time
+		// update run time (we aren't supposed to run long - fp32 should do) and beat time
 		c::accum_time += dt;
 		c::accum_beat   = wrap_at_period(c::accum_beat   + dt, c::beat_period);
 		c::accum_beat_2 = wrap_at_period(c::accum_beat_2 + dt, c::beat_period * 2.0);
