@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # known issue with clang++-3.6 and the lifespan of temporaries, causing multiple failures at unittest
-CC=clang++-3.5
+CC=clang++
 BINARY=problem_4
 COMMON=../common
 SOURCE=(
@@ -77,8 +77,8 @@ LFLAGS=(
 	-lstdc++
 	-ldl
 	-lrt
-	`ldconfig -p | grep -m 1 ^[[:space:]]libOpenCL.so | sed "s/^.\+ //"`
-	-lpng12
+	-lOpenCL
+	-lpng16
 )
 
 if [[ $1 == "debug" ]]; then

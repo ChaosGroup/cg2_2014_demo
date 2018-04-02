@@ -103,7 +103,7 @@ LFLAGS=(
 	`ldconfig -p | grep -m 1 ^[[:space:]]libGL.so | sed "s/^.\+ //"`
 	-lX11
 	-lpthread
-	-lpng12
+	-lpng16
 )
 
 if [[ $1 == "debug" ]]; then

@@ -90,7 +90,7 @@ LFLAGS=(
 	`ldconfig -p | grep -m 1 ^[[:space:]]libGL.so | sed "s/^.\+ //"`
 	`ldconfig -p | grep -m 1 ^[[:space:]]libOpenCL.so | sed "s/^.\+ //"`
 	-lX11
-#	-lpng12
+#	-lpng16
 )
 
 if [[ $1 == "debug" ]]; then
