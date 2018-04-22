@@ -62,8 +62,6 @@ CFLAGS=(
 #	--analyze
 # Compiler quirk 0001: control definition location of routines posing entry points to recursion for more efficient inlining
 	-DCLANG_QUIRK_0001=1
-# Compiler quirk 0002: type size_t is unrelated to same-size type uint*_t
-#	-DCLANG_QUIRK_0002=1
 # Two-node distributed rendering by nodes on the same LAN; a node can be either a core or a supplement -- uncomment one; number gives the ratio of core / supplement workload, and is the same for both
 #	-DDR_CORE=2
 #	-DDR_SUPPLEMENT=2

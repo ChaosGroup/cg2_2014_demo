@@ -129,7 +129,7 @@ public:
 		return *this;
 	}
 
-#if CLANG_QUIRK_0002 != 0
+#if __clang__ != 0 // type size_t is unrelated to same-size type uint*_t
 #if _LP64 == 1
 	const in& operator >>(size_t& a) const {
 		return *this >> reinterpret_cast< uint64_t& >(a);
@@ -473,7 +473,7 @@ public:
 		return *this;
 	}
 
-#if CLANG_QUIRK_0002 != 0
+#if __clang__ != 0 // type size_t is unrelated to same-size type uint*_t
 #if _LP64 == 1
 	out& operator <<(const size_t a) {
 		return *this << reinterpret_cast< const uint64_t& >(a);
@@ -607,14 +607,41 @@ public:
 
 	out& operator <<(std::basic_ostream< char, std::char_traits< char > >& (* f)(std::basic_ostream< char, std::char_traits< char > >&)) {
 
-#if __GNUC__ >= 4 && __clang__ == 0
-#define cast_to_typeof(EXPR, ARG) static_cast< __typeof__(EXPR) >(ARG)
-#else
-#define cast_to_typeof(EXPR, ARG) (ARG)
-#endif
 		if (0 == file)
 			return *this;
 
+#if _MSC_VER
+		// truly special treatment for msvc -- specializing the template functions of interest
+		// does not provide matching function pointers; the following pre-defined symbols do
+		if (std::endl == f) {
+			putc('\n', file);
+		}
+		else
+		if (std::ends == f) {
+			putc('\0', file);
+		}
+		else
+		if (std::flush == f) {
+			fflush(file);
+		}
+		else {
+			assert(0);
+		}
+
+#else
+#if __GNUC__ >= 4 && __clang__ == 0
+		// gcc needs an explicit cast of the specialized template-function type
+		// to the formal parameter type
+
+#if __cplusplus >= 201103L
+#define cast_to_typeof(EXPR, ARG) static_cast< decltype(EXPR) >(ARG)
+#else
+#define cast_to_typeof(EXPR, ARG) static_cast< __typeof__(EXPR) >(ARG)
+#endif
+
+#else	// forgo the typecast for the rest of the compilers
+#define cast_to_typeof(EXPR, ARG) (ARG)
+#endif
 		if (cast_to_typeof(f, (std::endl< char, std::char_traits< char > >)) == f) {
 			putc('\n', file);
 		}
@@ -630,9 +657,9 @@ public:
 			assert(0);
 		}
 
-		return *this;
-
 #undef cast_to_typeof
+#endif
+		return *this;
 	}
 };
 

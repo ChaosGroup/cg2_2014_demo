@@ -22,8 +22,6 @@ CFLAGS=(
 #	--analyze
 # Compiler quirk 0001: control definition location of routines posing entry points to recursion for more efficient inlining
 #	-DCLANG_QUIRK_0001=1
-# Compiler quirk 0002: type size_t is unrelated to same-size type uint*_t
-#	-DCLANG_QUIRK_0002=1
 )
 # For non-native or tweaked architecture targets, comment out 'native' and uncomment the correct target architecture and flags
 TARGET=(

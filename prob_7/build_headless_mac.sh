@@ -36,8 +36,6 @@ CFLAGS=(
 #	--analyze
 # Compiler quirk 0001: control definition location of routines posing entry points to recursion for more efficient inlining
 	-DCLANG_QUIRK_0001=1
-# Compiler quirk 0002: type size_t is unrelated to same-size type uint*_t
-	-DCLANG_QUIRK_0002=1
 # OpenCL quirk 0001: broken alignment of wide-alignment-type (eg. float4) buffers in __constant space
 	-DOCL_QUIRK_0001=1
 # OpenCL kernel build full verbosity; macro mandatory
