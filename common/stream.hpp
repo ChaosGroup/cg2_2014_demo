@@ -129,7 +129,7 @@ public:
 		return *this;
 	}
 
-#if __clang__ != 0 // type size_t is unrelated to same-size type uint*_t
+#if __clang__ && __APPLE__ // type size_t is unrelated to same-size type uint*_t
 #if _LP64 == 1
 	const in& operator >>(size_t& a) const {
 		return *this >> reinterpret_cast< uint64_t& >(a);
@@ -473,7 +473,7 @@ public:
 		return *this;
 	}
 
-#if __clang__ != 0 // type size_t is unrelated to same-size type uint*_t
+#if __clang__ && __APPLE__ // type size_t is unrelated to same-size type uint*_t
 #if _LP64 == 1
 	out& operator <<(const size_t a) {
 		return *this << reinterpret_cast< const uint64_t& >(a);
