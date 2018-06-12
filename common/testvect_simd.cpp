@@ -1,9 +1,7 @@
-#include <iostream>
-#include <fstream>
-#include <iomanip>
 #include <cassert>
 #include <stdint.h>
 #include <pthread.h>
+#include "stream.hpp"
 #include "timer.h"
 #if __APPLE__ != 0
 	#include "pthread_barrier.h"
@@ -62,6 +60,18 @@
 #elif SIMD_INTRINSICS == SIMD_MIC
 	#include <immintrin.h>
 #endif
+
+// verify iostream-free status
+#if _GLIBCXX_IOSTREAM
+#error rogue iostream acquired
+#endif
+
+namespace stream {
+// deferred initialization by main()
+in cin;
+out cout;
+out cerr;
+} // namespace stream
 
 #if SIMD_ETALON || SIMD_AUTOVECT
 namespace etal {
@@ -526,22 +536,22 @@ public:
 		register const float32x4_t mat1_3 asm ("q7") = mat1.n[3];
 
 		asm volatile(
-			"vmul.f32 %[res0], %[matB_0], %e[matA_0][0]\n\t"
-			"vmul.f32 %[res1], %[matB_0], %e[matA_1][0]\n\t"
-			"vmul.f32 %[res2], %[matB_0], %e[matA_2][0]\n\t"
-			"vmul.f32 %[res3], %[matB_0], %e[matA_3][0]\n\t"
-			"vmla.f32 %[res0], %[matB_1], %e[matA_0][1]\n\t"
-			"vmla.f32 %[res1], %[matB_1], %e[matA_1][1]\n\t"
-			"vmla.f32 %[res2], %[matB_1], %e[matA_2][1]\n\t"
-			"vmla.f32 %[res3], %[matB_1], %e[matA_3][1]\n\t"
-			"vmla.f32 %[res0], %[matB_2], %f[matA_0][0]\n\t"
-			"vmla.f32 %[res1], %[matB_2], %f[matA_1][0]\n\t"
-			"vmla.f32 %[res2], %[matB_2], %f[matA_2][0]\n\t"
-			"vmla.f32 %[res3], %[matB_2], %f[matA_3][0]\n\t"
-			"vmla.f32 %[res0], %[matB_3], %f[matA_0][1]\n\t"
-			"vmla.f32 %[res1], %[matB_3], %f[matA_1][1]\n\t"
-			"vmla.f32 %[res2], %[matB_3], %f[matA_2][1]\n\t"
-			"vmla.f32 %[res3], %[matB_3], %f[matA_3][1]"
+			"vmul.f32 %q[res0], %q[matB_0], %e[matA_0][0]\n\t"
+			"vmul.f32 %q[res1], %q[matB_0], %e[matA_1][0]\n\t"
+			"vmul.f32 %q[res2], %q[matB_0], %e[matA_2][0]\n\t"
+			"vmul.f32 %q[res3], %q[matB_0], %e[matA_3][0]\n\t"
+			"vmla.f32 %q[res0], %q[matB_1], %e[matA_0][1]\n\t"
+			"vmla.f32 %q[res1], %q[matB_1], %e[matA_1][1]\n\t"
+			"vmla.f32 %q[res2], %q[matB_1], %e[matA_2][1]\n\t"
+			"vmla.f32 %q[res3], %q[matB_1], %e[matA_3][1]\n\t"
+			"vmla.f32 %q[res0], %q[matB_2], %f[matA_0][0]\n\t"
+			"vmla.f32 %q[res1], %q[matB_2], %f[matA_1][0]\n\t"
+			"vmla.f32 %q[res2], %q[matB_2], %f[matA_2][0]\n\t"
+			"vmla.f32 %q[res3], %q[matB_2], %f[matA_3][0]\n\t"
+			"vmla.f32 %q[res0], %q[matB_3], %f[matA_0][1]\n\t"
+			"vmla.f32 %q[res1], %q[matB_3], %f[matA_1][1]\n\t"
+			"vmla.f32 %q[res2], %q[matB_3], %f[matA_2][1]\n\t"
+			"vmla.f32 %q[res3], %q[matB_3], %f[matA_3][1]"
 			: [res0] "=w" (n[0]),
 			  [res1] "=w" (n[1]),
 			  [res2] "=w" (n[2]),
@@ -886,8 +896,8 @@ namespace space = simd;
 
 #endif
 
-std::istream& operator >> (
-	std::istream& str,
+stream::in& operator >> (
+	stream::in& str,
 	space::matx4& a) {
 
 	float t[4][4];
@@ -933,16 +943,16 @@ public:
 };
 
 
-std::ostream& operator << (
-	std::ostream& str,
+stream::out& operator << (
+	stream::out& str,
 	const formatter& a) {
 
-	return str << std::setw(12) << std::setfill('_') << a.get();
+	return str << stream::setw(12) << stream::setfill(' ') << a.get();
 }
 
 
-std::ostream& operator << (
-	std::ostream& str,
+stream::out& operator << (
+	stream::out& str,
 	const space::matx4& a) {
 
 	return str <<
@@ -950,7 +960,7 @@ std::ostream& operator << (
 		formatter(a.get(1, 0)) << " " << formatter(a.get(1, 1)) << " " << formatter(a.get(1, 2)) << " " << formatter(a.get(1, 3)) << '\n' <<
 		formatter(a.get(2, 0)) << " " << formatter(a.get(2, 1)) << " " << formatter(a.get(2, 2)) << " " << formatter(a.get(2, 3)) << '\n' <<
 		formatter(a.get(3, 0)) << " " << formatter(a.get(3, 1)) << " " << formatter(a.get(3, 2)) << " " << formatter(a.get(3, 3)) << '\n' <<
-		std::endl;
+		'\n';
 }
 
 static const size_t reps = size_t(1e+7) * 6;
@@ -1105,8 +1115,8 @@ report_err(
 	const size_t counter,
 	const int err) {
 
-	std::cerr << func << ':' << line << ", i: "
-		<< counter << ", err: " << err << std::endl;
+	stream::cerr << func << ':' << line << ", i: "
+		<< counter << ", err: " << err << '\n';
 }
 
 
@@ -1219,14 +1229,14 @@ public:
 	}
 };
 
-static std::ostream& operator << (
-	std::ostream& str,
+static stream::out& operator << (
+	stream::out& str,
 	const formatter_float a) {
 
 	str << 
 		(a.get() >> 31) << ":" <<
-		std::setw(2) << std::setfill('0') << (a.get() >> 23 & 0xff) << ":" <<
-		std::setw(6) << std::setfill('0') << (a.get() >>  0 & 0x7fffff);
+		stream::setw(2) << stream::setfill('0') << (a.get() >> 23 & 0xff) << ":" <<
+		stream::setw(6) << stream::setfill('0') << (a.get() >>  0 & 0x7fffff);
 	return str;
 }
 
@@ -1239,24 +1249,24 @@ namespace conf = simd;
 #endif
 
 #if SIMD_ETALON == 0
-static std::ostream& operator << (
-	std::ostream& str,
+static stream::out& operator << (
+	stream::out& str,
 	const conf::vect2& a) {
 
 	return str <<
 		formatter_float(a.get(0)) << " " << formatter_float(a.get(1));
 }
 
-static std::ostream& operator << (
-	std::ostream& str,
+static stream::out& operator << (
+	stream::out& str,
 	const conf::vect3& a) {
 
 	return str <<
 		formatter_float(a.get(0)) << " " << formatter_float(a.get(1)) << " " << formatter_float(a.get(2));
 }
 
-static std::ostream& operator << (
-	std::ostream& str,
+static stream::out& operator << (
+	stream::out& str,
 	const conf::vect4& a) {
 
 	return str <<
@@ -1288,7 +1298,7 @@ conformance() {
 		v3 != vect3(1.f, 2.f, 3.f) ||
 		v4 != vect4(1.f, 2.f, 3.f, 4.f)) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1298,7 +1308,7 @@ conformance() {
 		v4 != vect4(1.f, 2.f, 3.f, -4.f)) {
 	}
 	else {
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1307,7 +1317,7 @@ conformance() {
 		v3 == vect3(1.f, 2.f, -3.f) ||
 		v4 == vect4(1.f, 2.f, 3.f, -4.f)) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1317,7 +1327,7 @@ conformance() {
 		v4 == vect4(1.f, 2.f, 3.f, 4.f)) {
 	}
 	else {
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1326,7 +1336,7 @@ conformance() {
 		iv3 != ivect3(1, 2, 3) ||
 		iv4 != ivect4(1, 2, 3, 4)) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1336,7 +1346,7 @@ conformance() {
 		iv4 != ivect4(1, 2, 3, -4)) {
 	}
 	else {
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1345,7 +1355,7 @@ conformance() {
 		iv3 == ivect3(1, 2, -3) ||
 		iv4 == ivect4(1, 2, 3, -4)) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1355,7 +1365,7 @@ conformance() {
 		iv4 == ivect4(1, 2, 3, 4)) {
 	}
 	else {
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1382,7 +1392,7 @@ conformance() {
 		precision4[2] !=  2.f + 2.f / (1 << 23) ||
 		precision4[3] != -2.f - 2.f / (1 << 23)) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1393,7 +1403,7 @@ conformance() {
 		vect3(*reinterpret_cast< const float(*)[3] >(f)).negate() != vect3(-f[0], -f[1], -f[2]) ||
 		vect4(*reinterpret_cast< const float(*)[4] >(f)).negate() != vect4(-f[0], -f[1], -f[2], -f[3])) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1401,7 +1411,7 @@ conformance() {
 		ivect3(*reinterpret_cast< const int(*)[3] >(i)).negate() != ivect3(-i[0], -i[1], -i[2]) ||
 		ivect4(*reinterpret_cast< const int(*)[4] >(i)).negate() != ivect4(-i[0], -i[1], -i[2], -i[3])) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1409,7 +1419,7 @@ conformance() {
 		vect3().add(v3, vect3(*reinterpret_cast< const float(*)[3] >(f))) != vect3(v3[0] + f[0], v3[1] + f[1], v3[2] + f[2]) ||
 		vect4().add(v4, vect4(*reinterpret_cast< const float(*)[4] >(f))) != vect4(v4[0] + f[0], v4[1] + f[1], v4[2] + f[2], v4[3] + f[3])) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1417,7 +1427,7 @@ conformance() {
 		vect3().sub(v3, vect3(*reinterpret_cast< const float(*)[3] >(f))) != vect3(v3[0] - f[0], v3[1] - f[1], v3[2] - f[2]) ||
 		vect4().sub(v4, vect4(*reinterpret_cast< const float(*)[4] >(f))) != vect4(v4[0] - f[0], v4[1] - f[1], v4[2] - f[2], v4[3] - f[3])) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1425,7 +1435,7 @@ conformance() {
 		ivect3().add(iv3, ivect3(*reinterpret_cast< const int(*)[3] >(i))) != ivect3(iv3[0] + i[0], iv3[1] + i[1], iv3[2] + i[2]) ||
 		ivect4().add(iv4, ivect4(*reinterpret_cast< const int(*)[4] >(i))) != ivect4(iv4[0] + i[0], iv4[1] + i[1], iv4[2] + i[2], iv4[3] + i[3])) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1433,7 +1443,7 @@ conformance() {
 		ivect3().sub(iv3, ivect3(*reinterpret_cast< const int(*)[3] >(i))) != ivect3(iv3[0] - i[0], iv3[1] - i[1], iv3[2] - i[2]) ||
 		ivect4().sub(iv4, ivect4(*reinterpret_cast< const int(*)[4] >(i))) != ivect4(iv4[0] - i[0], iv4[1] - i[1], iv4[2] - i[2], iv4[3] - i[3])) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1441,7 +1451,7 @@ conformance() {
 		vect3().mul(v3, vect3(*reinterpret_cast< const float(*)[3] >(f))) != vect3(v3[0] * f[0], v3[1] * f[1], v3[2] * f[2]) ||
 		vect4().mul(v4, vect4(*reinterpret_cast< const float(*)[4] >(f))) != vect4(v4[0] * f[0], v4[1] * f[1], v4[2] * f[2], v4[3] * f[3])) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1449,47 +1459,47 @@ conformance() {
 		vect3().div(v3, vect3(*reinterpret_cast< const float(*)[3] >(f))) != vect3(v3[0] / f[0], v3[1] / f[1], v3[2] / f[2]) ||
 		vect4().div(v4, vect4(*reinterpret_cast< const float(*)[4] >(f))) != vect4(v4[0] / f[0], v4[1] / f[1], v4[2] / f[2], v4[3] / f[3])) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 
-		std::cout <<
-			vect2().div(v2, vect2(*reinterpret_cast< const float(*)[2] >(f))) << std::endl <<
-			vect2(v2[0] / f[0], v2[1] / f[1]) << std::endl;
+		stream::cout <<
+			vect2().div(v2, vect2(*reinterpret_cast< const float(*)[2] >(f))) << '\n' <<
+			vect2(v2[0] / f[0], v2[1] / f[1]) << '\n';
 
-		std::cout <<
-			vect3().div(v3, vect3(*reinterpret_cast< const float(*)[3] >(f))) << std::endl <<
-			vect3(v3[0] / f[0], v3[1] / f[1], v3[2] / f[2]) << std::endl;
+		stream::cout <<
+			vect3().div(v3, vect3(*reinterpret_cast< const float(*)[3] >(f))) << '\n' <<
+			vect3(v3[0] / f[0], v3[1] / f[1], v3[2] / f[2]) << '\n';
 
-		std::cout <<
-			vect4().div(v4, vect4(*reinterpret_cast< const float(*)[4] >(f))) << std::endl <<
-			vect4(v4[0] / f[0], v4[1] / f[1], v4[2] / f[2], v4[3] / f[3]) << std::endl;
+		stream::cout <<
+			vect4().div(v4, vect4(*reinterpret_cast< const float(*)[4] >(f))) << '\n' <<
+			vect4(v4[0] / f[0], v4[1] / f[1], v4[2] / f[2], v4[3] / f[3]) << '\n';
 	}
 
 	if (vect2().div(v2, precision2) != vect2(v2[0] / precision2[0], v2[1] / precision2[1]) ||
 		vect3().div(v3, precision3) != vect3(v3[0] / precision3[0], v3[1] / precision3[1], v3[2] / precision3[2]) ||
 		vect4().div(v4, precision4) != vect4(v4[0] / precision4[0], v4[1] / precision4[1], v4[2] / precision4[2], v4[3] / precision4[3])) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 
-		std::cout <<
-			vect2().div(v2, precision2) << std::endl <<
-			vect2(v2[0] / precision2[0], v2[1] / precision2[1]) << std::endl;
+		stream::cout <<
+			vect2().div(v2, precision2) << '\n' <<
+			vect2(v2[0] / precision2[0], v2[1] / precision2[1]) << '\n';
 
-		std::cout <<
-			vect3().div(v3, precision3) << std::endl <<
-			vect3(v3[0] / precision3[0], v3[1] / precision3[1], v3[2] / precision3[2]) << std::endl;
+		stream::cout <<
+			vect3().div(v3, precision3) << '\n' <<
+			vect3(v3[0] / precision3[0], v3[1] / precision3[1], v3[2] / precision3[2]) << '\n';
 
-		std::cout <<
-			vect4().div(v4, precision4) << std::endl <<
-			vect4(v4[0] / precision4[0], v4[1] / precision4[1], v4[2] / precision4[2], v4[3] / precision4[3]) << std::endl;
+		stream::cout <<
+			vect4().div(v4, precision4) << '\n' <<
+			vect4(v4[0] / precision4[0], v4[1] / precision4[1], v4[2] / precision4[2], v4[3] / precision4[3]) << '\n';
 	}
 
 	if (ivect2().mul(iv2, ivect2(*reinterpret_cast< const int(*)[2] >(i))) != ivect2(iv2[0] * i[0], iv2[1] * i[1]) ||
 		ivect3().mul(iv3, ivect3(*reinterpret_cast< const int(*)[3] >(i))) != ivect3(iv3[0] * i[0], iv3[1] * i[1], iv3[2] * i[2]) ||
 		ivect4().mul(iv4, ivect4(*reinterpret_cast< const int(*)[4] >(i))) != ivect4(iv4[0] * i[0], iv4[1] * i[1], iv4[2] * i[2], iv4[3] * i[3])) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1497,7 +1507,7 @@ conformance() {
 		ivect3().div(ivect3(*reinterpret_cast< const int(*)[3] >(i)), iv3) != ivect3(i[0] / iv3[0], i[1] / iv3[1], i[2] / iv3[2]) ||
 		ivect4().div(ivect4(*reinterpret_cast< const int(*)[4] >(i)), iv4) != ivect4(i[0] / iv4[0], i[1] / iv4[1], i[2] / iv4[2], i[3] / iv4[3])) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1505,7 +1515,7 @@ conformance() {
 		vect3().mad(v3, v3, vect3(*reinterpret_cast< const float(*)[3] >(f))) != vect3(v3[0] * v3[0] + f[0], v3[1] * v3[1] + f[1], v3[2] * v3[2] + f[2]) ||
 		vect4().mad(v4, v4, vect4(*reinterpret_cast< const float(*)[4] >(f))) != vect4(v4[0] * v4[0] + f[0], v4[1] * v4[1] + f[1], v4[2] * v4[2] + f[2], v4[3] * v4[3] + f[3])) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1513,7 +1523,7 @@ conformance() {
 		ivect3().mad(iv3, iv3, ivect3(*reinterpret_cast< const int(*)[3] >(i))) != ivect3(iv3[0] * iv3[0] + i[0], iv3[1] * iv3[1] + i[1], iv3[2] * iv3[2] + i[2]) ||
 		ivect4().mad(iv4, iv4, ivect4(*reinterpret_cast< const int(*)[4] >(i))) != ivect4(iv4[0] * iv4[0] + i[0], iv4[1] * iv4[1] + i[1], iv4[2] * iv4[2] + i[2], iv4[3] * iv4[3] + i[3])) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1521,7 +1531,7 @@ conformance() {
 		vect3().wsum(v3, v3, .25f, -.25f) != vect3(0.f, 0.f, 0.f) ||
 		vect4().wsum(v4, v4, .25f, -.25f) != vect4(0.f, 0.f, 0.f, 0.f)) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1529,7 +1539,7 @@ conformance() {
 		ivect3().wsum(iv3, iv3, 25, -25) != ivect3(0, 0, 0) ||
 		ivect4().wsum(iv4, iv4, 25, -25) != ivect4(0, 0, 0, 0)) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1537,7 +1547,7 @@ conformance() {
 		vect3().cross(vect3(1.f, 0.f, 0.f), vect3(0.f, 1.f, 0.f)) != vect3(0.f, 0.f, 1.f) ||
 		vect4().cross(vect4(1.f, 0.f, 0.f, 0.f), vect4(0.f, 1.f, 0.f, 0.f)) != vect4(0.f, 0.f, 1.f, 0.f)) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1552,7 +1562,7 @@ conformance() {
 		 3.f,  7.f, 11.f, 15.f,
 		 4.f,  8.f, 12.f, 16.f)) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1560,7 +1570,7 @@ conformance() {
 	if (vect3(1.f, 0.f, 0.f).mul(matx3(quat(0.f, 0.f, 1.f, 0.f))) != vect3(-1.f, 0.f, 0.f) ||
 		vect4(1.f, 0.f, 0.f, 1.f).mul(matx4(quat(0.f, 0.f, 1.f, 0.f))) != vect4(-1.f, 0.f, 0.f, 1.f)) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1576,7 +1586,7 @@ conformance() {
 		0.f,  0.f, 1.f, 0.f,
 		0.f,  0.f, 0.f, 1.f)) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 	}
 
@@ -1586,16 +1596,16 @@ conformance() {
 	if (vect3().normalise(nv3) != vect3(nv3[0] / nv3.norm(), nv3[1] / nv3.norm(), nv3[2] / nv3.norm()) ||
 		vect4().normalise(nv4) != vect4(nv4[0] / nv4.norm(), nv4[1] / nv4.norm(), nv4[2] / nv4.norm(), nv4[3] / nv4.norm())) {
 
-		std::cerr << "failed test at line " << __LINE__ << std::endl;
+		stream::cerr << "failed test at line " << __LINE__ << '\n';
 		success = false;
 
-		std::cout <<
-			vect3(nv3[0] / nv3.norm(), nv3[1] / nv3.norm(), nv3[2] / nv3.norm()).normalise() << std::endl <<
-			vect3().normalise(nv3) << std::endl;
+		stream::cout <<
+			vect3(nv3[0] / nv3.norm(), nv3[1] / nv3.norm(), nv3[2] / nv3.norm()).normalise() << '\n' <<
+			vect3().normalise(nv3) << '\n';
 
-		std::cout <<
-			vect4(nv4[0] / nv4.norm(), nv4[1] / nv4.norm(), nv4[2] / nv4.norm(), nv4[3] / nv4.norm()).normalise() << std::endl <<
-			vect4().normalise(nv4) << std::endl;
+		stream::cout <<
+			vect4(nv4[0] / nv4.norm(), nv4[1] / nv4.norm(), nv4[2] / nv4.norm(), nv4[3] / nv4.norm()).normalise() << '\n' <<
+			vect4().normalise(nv4) << '\n';
 	}
 
 	return success;
@@ -1607,16 +1617,21 @@ int main(
 	int argc,
 	char** argv) {
 
+	stream::cin.open(stdin);
+	stream::cout.open(stdout);
+	stream::cerr.open(stderr);
+
 #if SIMD_ETALON == 0 && SIMD_TEST_CONFORMANCE != 0
-	std::cout << "conformance test.." << std::endl;
-	std::cout << (conformance() ? "passed" : "failed") << std::endl;
+	stream::cout << "conformance test..\n";
+	stream::cout << (conformance() ? "passed\n" : "failed\n");
 
 #endif
-	std::cout << "performance test.." << std::endl;
+	stream::cout << "performance test..\n";
 
-	std::ifstream in("vect.input");
+	stream::in in;
+	in.open("vect.input");
 
-	if (in.is_open()) {
+	if (in.is_good()) {
 		in >> ma[0];
 		in >> ma[1];
 		in.close();
@@ -1625,7 +1640,7 @@ int main(
 	const workforce_t workforce;
 
 	if (!workforce.is_successfully_init()) {
-		std::cerr << "failed to raise workforce; bailing out" << std::endl;
+		stream::cerr << "failed to raise workforce; bailing out\n";
 		return -1;
 	}
 
@@ -1635,18 +1650,18 @@ int main(
 
 	double sec = carg.dt * 1e-9;
 
-	std::cout << "elapsed time: " << sec << " s";
+	stream::cout << "elapsed time: " << sec << " s";
 
 	for (size_t i = 0; i < one_less; ++i) {
 		const double isec = workforce.get_dt(i) * 1e-9;
-		std::cout << ", " << isec << " s";
+		stream::cout << ", " << isec << " s";
 		sec += isec;
 	}
 
-	std::cout << " (" << sec / nthreads << " s)" << std::endl;
+	stream::cout << " (" << sec / nthreads << " s)\n";
 
 	for (size_t i = 0; i < sizeof(ra) / sizeof(ra[0]); ++i)
-		std::cout << ra[i];
+		stream::cout << ra[i];
 
 	return 0;
 }

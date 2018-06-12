@@ -6,7 +6,6 @@ SOURCE=(
 	testvect_simd.cpp
 )
 LFLAGS=(
-	-lstdc++
 	-lpthread
 )
 
@@ -34,7 +33,7 @@ CFLAGS=(
 # Use reciprocal sqrt instead if sqrt and division
 #	-DVECT_SIMD_SQRT_DIV_AS_RSQRT
 # Perform arithmetic conformace tests as well
-#	-DSIMD_TEST_CONFORMANCE
+	-DSIMD_TEST_CONFORMANCE
 # Use as many worker threads, including the main thread
 	-DSIMD_NUM_THREADS=$NUM_LOGICAL_CORES
 # Enforce worker thread affinity; value represents affinity stride (for control over physical/logical CPU distribution)
@@ -87,7 +86,7 @@ elif [[ ${CC_FILENAME:0:4} == "icpc" ]]; then
 	)
 fi
 
-if [[ $HOSTTYPE == "arm" ]]; then
+if [[ ${HOSTTYPE:0:3} == "arm" ]]; then
 
 	# clang can fail auto-detecting the host armv7/armv8 cpu on some setups; collect all part numbers
 	UARCH=`cat /proc/cpuinfo | grep "^CPU part" | sed s/^[^[:digit:]]*//`

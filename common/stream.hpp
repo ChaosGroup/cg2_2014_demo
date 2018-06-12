@@ -11,8 +11,6 @@
 #endif
 #include <assert.h>
 #include <string>
-#include <iomanip>
-#include <ostream>
 #include <cstring>
 
 namespace stream {
@@ -56,7 +54,7 @@ public:
 
 	bool is_eof() const {
 		if (0 != file)
-			return feof(file) ? true : false;
+			return static_cast< bool >(feof(file));
 
 		return false;
 	}
@@ -78,54 +76,66 @@ public:
 	}
 
 	const in& operator >>(int16_t& a) const {
-		if (0 != file)
-			fscanf(file, "%hd", &a);
+		if (0 != file) {
+			const int nread = fscanf(file, "%hd", &a);
+			assert(1 == nread); (void) nread;
+		}
 
 		return *this;
 	}
 
 	const in& operator >>(uint16_t& a) const {
-		if (0 != file)
-			fscanf(file, "%hu", &a);
+		if (0 != file) {
+			const int nread = fscanf(file, "%hu", &a);
+			assert(1 == nread); (void) nread;
+		}
 
 		return *this;
 	}
 
 	const in& operator >>(int32_t& a) const {
-		if (0 != file)
-			fscanf(file, "%d", &a);
+		if (0 != file) {
+			const int nread = fscanf(file, "%d", &a);
+			assert(1 == nread); (void) nread;
+		}
 
 		return *this;
 	}
 
 	const in& operator >>(uint32_t& a) const {
-		if (0 != file)
-			fscanf(file, "%u", &a);
+		if (0 != file) {
+			const int nread = fscanf(file, "%u", &a);
+			assert(1 == nread); (void) nread;
+		}
 
 		return *this;
 	}
 
 	const in& operator >>(int64_t& a) const {
-		if (0 != file)
-#if _MSC_VER || __APPLE__
-			fscanf(file, "%lld", &a);
+		if (0 != file) {
+#if _MSC_VER || __APPLE__ || __SIZEOF_LONG__ == 4
+			const int nread = fscanf(file, "%lld", &a);
 
 #else
-			fscanf(file, "%ld", &a);
+			const int nread = fscanf(file, "%ld", &a);
 
 #endif
+			assert(1 == nread); (void) nread;
+		}
 		return *this;
 	}
 
 	const in& operator >>(uint64_t& a) const {
-		if (0 != file)
-#if _MSC_VER || __APPLE__
-			fscanf(file, "%llu", &a);
+		if (0 != file) {
+#if _MSC_VER || __APPLE__ || __SIZEOF_LONG__ == 4
+			const int nread = fscanf(file, "%llu", &a);
 
 #else
-			fscanf(file, "%lu", &a);
+			const int nread = fscanf(file, "%lu", &a);
 
 #endif
+			assert(1 == nread); (void) nread;
+		}
 		return *this;
 	}
 
@@ -143,22 +153,28 @@ public:
 #endif
 #endif
 	const in& operator >>(float& a) const {
-		if (0 != file)
-			fscanf(file, "%f", &a);
+		if (0 != file) {
+			const int nread = fscanf(file, "%f", &a);
+			assert(1 == nread); (void) nread;
+		}
 
 		return *this;
 	}
 
 	const in& operator >>(double& a) const {
-		if (0 != file)
-			fscanf(file, "%lf", &a);
+		if (0 != file) {
+			const int nread = fscanf(file, "%lf", &a);
+			assert(1 == nread); (void) nread;
+		}
 
 		return *this;
 	}
 
 	const in& operator >>(void*& a) const {
-		if (0 != file)
-			fscanf(file, "%p", &a);
+		if (0 != file) {
+			const int nread = fscanf(file, "%p", &a);
+			assert(1 == nread); (void) nread;
+		}
 
 		return *this;
 	}
@@ -192,6 +208,36 @@ public:
 
 		return *this;
 	}
+};
+
+// different STL implementations do differently the types that control stream width and charater-filler formatting; we go straight:
+struct setw {
+	int width;
+	setw(const int width) : width(width) {}
+};
+
+struct setfill {
+	char fillchar;
+	setfill(const char fillchar) : fillchar(fillchar) {}
+};
+
+// std::dec/oct/hex are functions which are passed by pointner to a stream; we don't care about the funtional aspect of those,
+// just the form of their passing to a stream by identifier; for that we user an enum of function ids:
+
+enum NumericBaseFuncId {
+	dec, // std::ios_base& dec(std::ios_base&)
+	hex, // std::ios_base& hex(std::ios_base&)
+	oct  // std::ios_base& oct(std::ios_base&)
+};
+
+
+// std::endl/ends/flush are functions which are passed by pointer to a stream; we don't care about the functional aspect of those,
+// just the form of their passing to a stream by identifier; for that we use an enum of function ids:
+
+enum TerminatorFuncId {
+	endl, // std::basic_ostream< char, std::char_traits< char > >& endl(std::basic_ostream< char, std::char_traits< char > >&)
+	ends, // std::basic_ostream< char, std::char_traits< char > >& ends(std::basic_ostream< char, std::char_traits< char > >&)
+	flush // std::basic_ostream< char, std::char_traits< char > >& flush(std::basic_ostream< char, std::char_traits< char > >&)
 };
 
 class out {
@@ -420,7 +466,7 @@ public:
 		char format[64];
 		size_t fmtlen = 0;
 
-#if _MSC_VER != 0
+#if _MSC_VER || __APPLE__ || __SIZEOF_LONG__ == 4
 		const char base_dec[] = "lld";
 		const char base_hex[] = "llx";
 		const char base_oct[] = "llo";
@@ -450,7 +496,7 @@ public:
 		char format[64];
 		size_t fmtlen = 0;
 
-#if _MSC_VER != 0
+#if _MSC_VER || __APPLE__ || __SIZEOF_LONG__ == 4
 		const char base_dec[] = "llu";
 		const char base_hex[] = "llx";
 		const char base_oct[] = "llo";
@@ -545,57 +591,27 @@ public:
 		return *this;
 	}
 
-#if _MSC_VER != 0
-	out& operator <<(const std::_Smanip<std::streamsize>& arg) {
-		const std::_Smanip<std::streamsize> etalon = std::setw(42);
-
-		if (etalon._Pfun == arg._Pfun)
-			width = arg._Manarg;
-		else
-			assert(0);
-
+	out& operator <<(const setw& arg) {
+		width = arg.width;
 		return *this;
 	}
 
-	out& operator <<(const std::_Fillobj<char>& arg) {
-		fillchar = arg._Fill;
+	out& operator <<(const setfill& arg) {
+		fillchar = arg.fillchar;
 		return *this;
 	}
 
-#elif __clang__ != 0 && __APPLE__ != 0
-	out& operator<<(const std::__iom_t6& a) {
-		width = reinterpret_cast< const int& >(a); // std::__iom_t6::__n_
-		return *this;
-	}
+	out& operator <<(const NumericBaseFuncId id) {
 
-	out& operator<<(const std::__iom_t4<char>& a) {
-		fillchar = reinterpret_cast< const char& >(a); // std::__iom_t4<char>::__fill_
-		return *this;
-	}
-
-#else
-	out& operator <<(const std::_Setw& a) {
-		width = a._M_n;
-		return *this;
-	}
-
-	out& operator <<(const std::_Setfill<char>& a) {
-		fillchar = a._M_c;
-		return *this;
-	}
-
-#endif
-	out& operator <<(std::ios_base& (* f)(std::ios_base&)) {
-
-		if (std::dec == f) {
+		if (stream::dec == id) {
 			base = BASE_DEC;
 		}
 		else
-		if (std::hex == f) {
+		if (stream::hex == id) {
 			base = BASE_HEX;
 		}
 		else
-		if (std::oct == f) {
+		if (stream::oct == id) {
 			base = BASE_OCT;
 		}
 		else {
@@ -605,60 +621,26 @@ public:
 		return *this;
 	}
 
-	out& operator <<(std::basic_ostream< char, std::char_traits< char > >& (* f)(std::basic_ostream< char, std::char_traits< char > >&)) {
+	out& operator <<(const TerminatorFuncId id) {
 
 		if (0 == file)
 			return *this;
 
-#if _MSC_VER
-		// truly special treatment for msvc -- specializing the template functions of interest
-		// does not provide matching function pointers; the following pre-defined symbols do
-		if (std::endl == f) {
+		if (stream::endl == id) {
 			putc('\n', file);
 		}
 		else
-		if (std::ends == f) {
+		if (stream::ends == id) {
 			putc('\0', file);
 		}
 		else
-		if (std::flush == f) {
+		if (stream::flush == id) {
 			fflush(file);
 		}
 		else {
 			assert(0);
 		}
 
-#else
-#if __GNUC__ >= 4 && __clang__ == 0
-		// gcc needs an explicit cast of the specialized template-function type
-		// to the formal parameter type
-
-#if __cplusplus >= 201103L
-#define cast_to_typeof(EXPR, ARG) static_cast< decltype(EXPR) >(ARG)
-#else
-#define cast_to_typeof(EXPR, ARG) static_cast< __typeof__(EXPR) >(ARG)
-#endif
-
-#else	// forgo the typecast for the rest of the compilers
-#define cast_to_typeof(EXPR, ARG) (ARG)
-#endif
-		if (cast_to_typeof(f, (std::endl< char, std::char_traits< char > >)) == f) {
-			putc('\n', file);
-		}
-		else
-		if (cast_to_typeof(f, (std::ends< char, std::char_traits< char > >)) == f) {
-			putc('\0', file);
-		}
-		else
-		if (cast_to_typeof(f, (std::flush< char, std::char_traits< char > >)) == f) {
-			fflush(file);
-		}
-		else {
-			assert(0);
-		}
-
-#undef cast_to_typeof
-#endif
 		return *this;
 	}
 };
