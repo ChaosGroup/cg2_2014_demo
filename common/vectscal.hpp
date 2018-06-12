@@ -1654,7 +1654,7 @@ matx< 4, NATIVE_T >::inverse(
 	// calculate the reciprocal determinant and obtain the inverse
 	const float det = trs[0] * dst[0] + trs[1] * dst[1] + trs[2] * dst[2] + trs[3] * dst[3];
 	const float eps = (float) 1e-15;
-	assert(fabs(det) > eps);
+	assert(fabs(det) > eps); (void) eps;
 
 	const float rcp_det = 1.f / det;
 
