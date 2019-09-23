@@ -6,7 +6,8 @@ out vec4 xx_FragColor;
 
 uniform usampler2DRect albedo_map;
 
-void main() {
+void main()
+{
 	uvec4 tex = texture(albedo_map, gl_FragCoord.xy);
 
 	xx_FragColor = tex * vec4(1.0 / 255.0);

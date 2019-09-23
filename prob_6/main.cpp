@@ -199,7 +199,6 @@ shade(
 	const size_t axis = (axis_x & hit.a_mask | axis_y & ~hit.a_mask) & hit.b_mask | axis_z & ~hit.b_mask;
 
 #endif
-
 	const simd::vect3 orig = simd::vect3().add(
 		ray.get_origin(), simd::vect3().mul(ray.get_direction(), hit.dist));
 
