@@ -2766,6 +2766,7 @@ int main(int argc, char** argv) {
 #else
 		"	result = -1U != result ? (axis & 0x3) * 64 + 64 : 0;\n";
 #endif
+
 	const char* source[] = {
 		source_prologue,
 		source_buffer,
