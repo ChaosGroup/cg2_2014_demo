@@ -40,8 +40,8 @@
 	if (-1U != result) {
 		const float dist = ray.ray.rcpdir.w;
 		const float3 ray_rcpdir = clamp(1.f / sun, -MAXFLOAT, MAXFLOAT);
-		struct RayHit occl = (struct RayHit){ (struct Ray){ (float4)(ray_origin + ray_direction * dist, as_float(result)), (float4)(ray_rcpdir, MAXFLOAT) } };
-		result = select(convert_uint(1.f / 16.f * 255.f), luma, -1U == traverse(get_octet(src_a, 0), src_b, src_c, &root_bbox, &occl.ray, &occl.hit));
+		const struct Ray ray = (struct Ray){ (float4)(ray_origin + ray_direction * dist, as_float(result)), (float4)(ray_rcpdir, MAXFLOAT) };
+		result = select(luma, convert_uint(1.f / 16.f * 255.f), occlude(get_octet(src_a, 0), src_b, src_c, &root_bbox, &ray));
 	}
 	else
 		result = 0;

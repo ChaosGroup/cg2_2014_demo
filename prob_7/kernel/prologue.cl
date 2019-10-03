@@ -70,7 +70,7 @@ inline float intersect(
 #endif
 }
 
-inline bool occlude(
+inline bool occluded(
 	const struct BBox* const bbox,
 	const struct Ray* const ray)
 {
