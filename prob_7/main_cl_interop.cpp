@@ -2006,7 +2006,7 @@ int main(int argc, char** argv) {
 	size_t source_prologue_len = 0;
 	size_t source_buffer_len = 0;
 	size_t source_image_len = 0;
-	size_t source_implicit_mad_len = 0;
+	size_t source_main_len = 0;
 	size_t source_epilogue_len = 0;
 
 	const scoped_ptr< char, generic_free > source_prologue(get_buffer_from_file("kernel/prologue.cl", source_prologue_len));
@@ -2024,9 +2024,9 @@ int main(int argc, char** argv) {
 		stream::cerr << "error: cannot read image.cl\n";
 		return -1;
 	}
-	const scoped_ptr< char, generic_free > source_implicit_mad(get_buffer_from_file("kernel/implicit_mad.cl", source_implicit_mad_len));
-	if (!source_implicit_mad_len) {
-		stream::cerr << "error: cannot read implicit_mad.cl\n";
+	const scoped_ptr< char, generic_free > source_main(get_buffer_from_file("kernel/main.cl", source_main_len));
+	if (!source_main_len) {
+		stream::cerr << "error: cannot read main.cl\n";
 		return -1;
 	}
 	const scoped_ptr< char, generic_free > source_epilogue(get_buffer_from_file("kernel/epilogue.cl", source_epilogue_len));
@@ -2038,13 +2038,13 @@ int main(int argc, char** argv) {
 	const char* source[] = {
 		source_prologue(),
 		source_buffer(),
-		source_implicit_mad(),
+		source_main(),
 		source_epilogue()
 	};
 	size_t length[] = {
 		source_prologue_len,
 		source_buffer_len,
-		source_implicit_mad_len,
+		source_main_len,
 		source_epilogue_len
 	};
 
