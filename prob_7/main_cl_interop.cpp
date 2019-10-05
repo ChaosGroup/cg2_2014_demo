@@ -2230,6 +2230,7 @@ int main(int argc, char** argv) {
 		leaf_count, leaf_map_buffer[0],
 		voxel_count, voxel_map_buffer[0]);
 
+	srand(1);
 	Scene1 scene1;
 
 	if (!scene1.init(timeline.getMutable(scene_1)))
