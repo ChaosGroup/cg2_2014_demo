@@ -730,7 +730,7 @@ typedef uint16_t OctetId; // integral type capable of holding the amount of leav
 typedef uint16_t PayloadId; // integral type capable of holding the amount of leaf payload
 
 enum { octet_empty = -1 };
-enum { cell_capacity = 32 }; // octree cell capacity during building
+enum { cell_capacity = 64 }; // octree cell capacity during building
 enum { octree_payload_count = octree_cell_count * cell_capacity };
 
 static const compile_assert< (size_t(1) << sizeof(OctetId) * 8 > octree_leaf_count) > assert_octet_id;
