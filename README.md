@@ -55,5 +55,5 @@ Results from headless build run to the 1000th frame, resolution 3840x2160; on ha
 | Marvell ARMADA 8040 (cortex-a72) |   4x cortex-a72             | 19.2              | 0.796    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2000 MHz                               |
 | AWS Graviton (cortex-a72)        |  16x cortex-a72             | 19.2              | 3.518    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2290 MHz                               |
 | Intel Xeon E5-2687W (snb), 2S    |  16x sandy bridge (32x SMT) | 51.2 (25.6 1S)    | 2.278    | Intel(R) Corporation, Intel(R) Xeon(R) CPU, OpenCL 1.2 (Build 67279), 3100 MHz                  |
-| Intel Xeon E5-2687W (gf108gl)    |   1x gf108gl                | 25.6              | 3.325    | NVIDIA Corporation Quadro 600 OpenCL 1.1 CUDA 346.47, 1280 MHz                                  |
+| Intel Xeon E5-2687W (gf108gl)    |   1x gf108gl                | 25.6              | 3.325    | NVIDIA Corporation Quadro 600 OpenCL 1.1 CUDA 375.66, 1280 MHz                                  |
 | Intel Xeon E3-1270v2 (gk208b)    |   1x gk208b                 | 40                | 3.627    | NVIDIA Corporation GeForce GT 720 OpenCL 1.1 CUDA 340.102, 797 MHz                              |
