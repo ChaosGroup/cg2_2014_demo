@@ -26,17 +26,10 @@
 	const float3 ray_rcpdir = clamp(1.f / ray_direction, -MAXFLOAT, MAXFLOAT);
 	struct RayHit ray = (struct RayHit){ (struct Ray){ (float4)(ray_origin, as_float(-1U)), (float4)(ray_rcpdir, MAXFLOAT) } };
 	uint result = traverse(get_octet(src_a, 0), src_b, src_c, &root_bbox, &ray.ray, &ray.hit);
-	// decode the potentially-hit plane
-	const uint axis_x = 0x020100;
-	const uint axis_y = 0x010002;
-	const uint axis_z = 0x000201;
-	const int a_mask = -ray.hit.a_mask;
-	const int b_mask = -ray.hit.b_mask;
-	const uint axis = (axis_x & a_mask | axis_y & ~a_mask) & b_mask | axis_z & ~b_mask;
-#if 1
-	// compute the lambertian term of the potentially-hit plane
+	const uint a_mask = -ray.hit.a_mask;
+	const uint b_mask = -ray.hit.b_mask;
 	const int3 axis_sign = (int3)(0x80000000) & ray.hit.min_mask;
-	const float3 normal = shuffle((float4)(1.f, 0.f, 0.f, 0.f), convert_uint4((uchar4)(axis >> 0, axis >> 8, axis >> 16, axis >> 24))).xyz;
+	const float3 normal = select((float3)(0.f, 0.f, 1.f), select((float3)(0.f, 1.f, 0.f), (float3)(1.f, 0.f, 0.f), (uint3)(a_mask)), (uint3)(b_mask));
 	const uint luma = convert_int(max(1.f / 16.f, dot(as_float3(as_int3(normal) ^ axis_sign), sun)) * 255.f);
 
 	if (-1U != result) {
@@ -47,7 +40,4 @@
 	}
 	else
 		result = 0;
-#else
-	result = -1U != result ? (axis & 0x3) * 64 + 64 : 0;
-#endif
 
