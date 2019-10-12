@@ -50,6 +50,8 @@ CFLAGS=(
 	-DCLANG_QUIRK_0001=1
 # OpenCL quirk 0001: broken alignment of wide-alignment-type (eg. float4) buffers in __constant space
 #	-DOCL_QUIRK_0001=1
+# OpenCL quirk 0002: slow select(); even though vector select() and vector (?:) should perform identically, on some hw and stacks select is slower
+#	-DOCL_QUIRK_0002=1
 # OpenCL kernel build full verbosity; macro mandatory
 	-DOCL_KERNEL_BUILD_VERBOSE=0
 )

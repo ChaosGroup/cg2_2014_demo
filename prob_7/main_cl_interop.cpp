@@ -2063,12 +2063,14 @@ int main(int argc, char** argv) {
 
 	const scoped_ptr< cl_program, scoped_functor > release_program(&program);
 	const char build_opt[] =
+		"-cl-mad-enable -D OCL_OGL_INTEROP -D INFINITE_RAY"
 #if OCL_QUIRK_0001
-		"-cl-mad-enable -D OCL_OGL_INTEROP -D INFINITE_RAY -D OCL_QUIRK_0001";
-#else
-		"-cl-mad-enable -D OCL_OGL_INTEROP -D INFINITE_RAY";
+		" -D OCL_QUIRK_0001"
 #endif
-
+#if OCL_QUIRK_0002
+		" -D OCL_QUIRK_0002"
+#endif
+;
 	success = clBuildProgram(program, 1, device() + device_idx, build_opt, 0, 0);
 
 	if (reportCLError(success) && CL_BUILD_PROGRAM_FAILURE != success) {
