@@ -61,8 +61,8 @@ uint traverself(
 		const uint payload_count = shuffle(leaf_count, (uint8)(index.s0)).s0;
 		float nearest_dist = distance.s0;
 
-		distance = shuffle(distance, (uint8)(1, 2, 3, 4, 5, 6, 7, 7));
-		index    = shuffle(index,    (uint8)(1, 2, 3, 4, 5, 6, 7, 7));
+		distance = distance.s12345677;
+		index = index.s12345677;
 
 		uint voxel_id = -1U;
 		struct Hit maybe_hit;
@@ -110,7 +110,7 @@ bool occludelf(
 		const uint payload_start = shuffle(leaf_start, (uint8)(index.s0)).s0;
 		const uint payload_count = shuffle(leaf_count, (uint8)(index.s0)).s0;
 
-		index = shuffle(index, (uint8)(1, 2, 3, 4, 5, 6, 7, 7));
+		index = index.s12345677;
 
 		for (uint j = payload_start; j < payload_start + payload_count; ++j) {
 			const struct Voxel payload = get_voxel(voxel, j);
@@ -149,7 +149,7 @@ uint traverse(
 		const uint child = shuffle(octet_child, (uint8)(index.s0)).s0;
 		const uint hitId = traverself(get_leaf(leaf, child), voxel, child_bbox + index.s0, ray, hit);
 
-		index = shuffle(index, (uint8)(1, 2, 3, 4, 5, 6, 7, 7));
+		index = index.s12345677;
 
 		if (-1U != hitId)
 			return hitId;
@@ -181,7 +181,7 @@ bool occlude(
 		const uint child = shuffle(octet_child, (uint8)(index.s0)).s0;
 		const struct BBox* const bbox = child_bbox + index.s0;
 
-		index = shuffle(index, (uint8)(1, 2, 3, 4, 5, 6, 7, 7));
+		index = index.s12345677;
 
 		if (occludelf(get_leaf(leaf, child), voxel, bbox, ray))
 			return true;

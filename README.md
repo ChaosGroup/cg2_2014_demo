@@ -48,12 +48,13 @@ Results from headless build run to the 1000th frame, resolution 3840x2160; on ha
 
 | hardware (device)                | device multiplicity         | device mem, GB/s  | FPS      | remarks                                                                                         |
 | -------------------------------- | --------------------------- | ----------------- | -------- | ----------------------------------------------------------------------------------------------- |
-| Rockchip RK3399 (mali-t860mp4)   |   1x mali-t860              | 12.8              | 0.836    | ARM Mali-T860 OpenCL 1.2 v1.r14p0-01rel0-git(966ed26).f44c85cb3d2ceb87e8be88e7592755c3, 800 MHz |
-| Rockchip RK3399 (cortex-a72)     |   2x cortex-a72             | 12.8              | 0.357    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 1800 MHz                               |
-| Amlogic S922X (mali-g52mp6)      |   1x mali-g52               | 10.56             | 0.952    | ARM Mali-G52 OpenCL 2.0 git.c8adbf9.122c9daed32dbba4b3056f41a2f23c58, 750 MHz                   |
-| Amlogic S922X (cortex-a73)       |   4x cortex-a73             | 10.56             | 0.987    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a73, 1800 MHz                               |
-| Marvell ARMADA 8040 (cortex-a72) |   4x cortex-a72             | 19.2              | 0.796    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2000 MHz                               |
-| AWS Graviton (cortex-a72)        |  16x cortex-a72             | 19.2              | 3.518    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2290 MHz                               |
+| Rockchip RK3399 (mali-t860mp4)   |   1x mali-t860              | 12.8              | 0.849    | ARM Mali-T860 OpenCL 1.2 v1.r14p0-01rel0-git(966ed26).f44c85cb3d2ceb87e8be88e7592755c3, 800 MHz |
+| Rockchip RK3399 (cortex-a72)     |   2x cortex-a72             | 12.8              | 0.379    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 1800 MHz                               |
+| Amlogic S922X (mali-g52mp6)      |   1x mali-g52               | 10.56             | 0.982    | ARM Mali-G52 OpenCL 2.0 git.c8adbf9.122c9daed32dbba4b3056f41a2f23c58, 750 MHz                   |
+| Amlogic S922X (cortex-a73)       |   4x cortex-a73             | 10.56             | 1.013    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a73, 1800 MHz                               |
+| Marvell ARMADA 8040 (cortex-a72) |   4x cortex-a72             | 19.2              | 0.824    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2000 MHz                               |
+| AWS Graviton (cortex-a72)        |  16x cortex-a72             | 19.2              | 3.639    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2290 MHz                               |
 | Intel Xeon E5-2687W (snb), 2S    |  16x sandy bridge (32x SMT) | 51.2 (25.6 1S)    | 2.330    | Intel(R) Corporation, Intel(R) Xeon(R) CPU, OpenCL 1.2 (Build 67279), 3100 MHz                  |
 | Intel Xeon E5-2687W (gf108gl)    |   1x gf108gl                | 25.6              | 3.325    | NVIDIA Corporation Quadro 600 OpenCL 1.1 CUDA 375.66, 1280 MHz                                  |
-| Intel Xeon E3-1270v2 (gk208b)    |   1x gk208b                 | 40                | 3.627    | NVIDIA Corporation GeForce GT 720 OpenCL 1.1 CUDA 340.102, 797 MHz                              |
+| Intel Xeon E3-1270v2 (gk208b)    |   1x gk208b                 | 40                | 3.670    | NVIDIA Corporation GeForce GT 720 OpenCL 1.1 CUDA 340.102, 797 MHz                              |
+| Intel P8600 (mcp89)              |   1x mcp89                  | 8.53              | 1.427    | NVIDIA GeForce 320M OpenCL 1.0 10.2.37 310.90.10.05b54, CLI: -use_images, 950 MHz               |
