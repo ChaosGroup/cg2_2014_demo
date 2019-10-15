@@ -187,16 +187,11 @@ shade(
 	// manually unroll the AO shading loop by 2
 	for (size_t i = 0; i < ao_probe_count / 2; ++i)
 	{
-#if 1
-		const int angular_granularity = 8192;
-#else
-		const int angular_granularity = ao_probe_count * 16; // grid coefficient should avoid moire till at least 1024 probes
-#endif
-
-		const float decl0 = float(M_PI_2) * (rand_r(&seed) % angular_granularity) / angular_granularity;
-		const float azim0 = float(M_PI) * (rand_r(&seed) % (angular_granularity * 4)) / (angular_granularity * 2);
-		const float decl1 = float(M_PI_2) * (rand_r(&seed) % angular_granularity) / angular_granularity;
-		const float azim1 = float(M_PI) * (rand_r(&seed) % (angular_granularity * 4)) / (angular_granularity * 2);
+		const compile_assert< 0 == (RAND_MAX & RAND_MAX + 1L) > assert_rand_pot;
+		const float decl0 = float(M_PI_2 / (RAND_MAX + 1L)) * rand_r(&seed);
+		const float azim0 = float(M_PI * 2 / (RAND_MAX + 1L)) * rand_r(&seed);
+		const float decl1 = float(M_PI_2 / (RAND_MAX + 1L)) * rand_r(&seed);
+		const float azim1 = float(M_PI * 2 / (RAND_MAX + 1L)) * rand_r(&seed);
 
 		__m128 sin_dazim;
 		__m128 cos_dazim;
