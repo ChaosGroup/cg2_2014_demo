@@ -178,7 +178,6 @@ shade(
 
 #if LAMBERTIAN_WEIGHTS_OCCLUSION
 	float lambertian_num = 0.f;
-	float lambertian_denom = 0.f;
 
 #else
 	int unoccluded = 0;
@@ -210,12 +209,6 @@ shade(
 		// compute a bounce vector in some TBN space, in this case of an assumed normal along x-axis
 		simd::vect3 hemi0 = simd::vect3(cos_decl0, cos_azim0 * sin_decl0, sin_azim0 * sin_decl0, true);
 		simd::vect3 hemi1 = simd::vect3(cos_decl1, cos_azim1 * sin_decl1, sin_azim1 * sin_decl1, true);
-
-#if LAMBERTIAN_WEIGHTS_OCCLUSION
-		lambertian_denom += cos_decl0 + cos_decl1;
-
-#endif
-		// now, direct the bounce vector in accordance with the actual normal
 
 #if __AVX__
 		// permute bounce direction depending on which axial plane was hit
@@ -303,7 +296,7 @@ shade(
 			lambertian_num += cos_decl1;
 	}
 
-	const float intensity = fmin(1.f, lambertian_num / lambertian_denom);
+	const float intensity = fmin(1.f, lambertian_num * (1.41421356f / ao_probe_count));
 
 #else
 		if (!ts.traverse_litest(probe0, hit))
