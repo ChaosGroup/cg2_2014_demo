@@ -213,15 +213,21 @@ shade(
 	for (size_t i = 0; i < ao_probe_count / 2; ++i)
 	{
 		const compile_assert< 0 == (RAND_MAX & RAND_MAX + 1L) > assert_rand_pot;
-		const float decl0 = float(M_PI_2 / (RAND_MAX + 1L)) * rand_r(&seed);
-		const float azim0 = float(M_PI * 2 / (RAND_MAX + 1L)) * rand_r(&seed);
-		const float decl1 = float(M_PI_2 / (RAND_MAX + 1L)) * rand_r(&seed);
-		const float azim1 = float(M_PI * 2 / (RAND_MAX + 1L)) * rand_r(&seed);
+		const int r0 = rand_r(&seed);
+		const int r1 = rand_r(&seed);
+		const int r2 = rand_r(&seed);
+		const int r3 = rand_r(&seed);
+		const __m128i ri = _mm_setr_epi32(r0, r1, r2, r3);
 
+#if LAMBERTIAN_WEIGHTS_OCCLUSION == 0 || LAMBERTIAN_WEIGHTS_OCCLUSION == 1
+		const __m128 r = _mm_mul_ps(_mm_cvtepi32_ps(ri), _mm_setr_ps(
+			M_PI_2   / (RAND_MAX + 1L),   // decl0
+			M_PI * 2 / (RAND_MAX + 1L),   // azim0
+			M_PI_2   / (RAND_MAX + 1L),   // decl1
+			M_PI * 2 / (RAND_MAX + 1L))); // azim1
 		__m128 sin_dazim;
 		__m128 cos_dazim;
-		const __m128 ang_dazim = _mm_setr_ps(decl0, azim0, decl1, azim1);
-		sincos_ps(ang_dazim, &sin_dazim, &cos_dazim);
+		sincos_ps(r, &sin_dazim, &cos_dazim);
 
 		const float sin_decl0 = sin_dazim[0];
 		const float cos_decl0 = cos_dazim[0];
@@ -232,6 +238,32 @@ shade(
 		const float sin_azim1 = sin_dazim[3];
 		const float cos_azim1 = cos_dazim[3];
 
+#elif LAMBERTIAN_WEIGHTS_OCCLUSION == 2
+		const __m128 r = _mm_mul_ps(_mm_cvtepi32_ps(ri), _mm_setr_ps(
+			1.0      / (RAND_MAX + 1L),   // decl0
+			M_PI * 2 / (RAND_MAX + 1L),   // azim0
+			1.0      / (RAND_MAX + 1L),   // decl1
+			M_PI * 2 / (RAND_MAX + 1L))); // azim1
+		// sin = sqrt(1 - cos * cos)
+		const __m128 sin_decl = _mm_sqrt_ps(_mm_sub_ps(_mm_set1_ps(1.f), _mm_mul_ps(r, r)));
+		const __m128 cos_decl = r;
+		__m128 sin_azim;
+		__m128 cos_azim;
+		sincos_ps(r, &sin_azim, &cos_azim);
+
+		const float sin_decl0 = sin_decl[0];
+		const float cos_decl0 = cos_decl[0];
+		const float sin_azim0 = sin_azim[1];
+		const float cos_azim0 = cos_azim[1];
+		const float sin_decl1 = sin_decl[2];
+		const float cos_decl1 = cos_decl[2];
+		const float sin_azim1 = sin_azim[3];
+		const float cos_azim1 = cos_azim[3];
+
+#else
+	#error LAMBERTIAN_WEIGHTS_OCCLUSION out of range
+
+#endif
 		// compute a bounce vector in some TBN space, in this case of an assumed normal along x-axis
 		simd::vect3 hemi0 = simd::vect3(cos_decl0, cos_azim0 * sin_decl0, sin_azim0 * sin_decl0, true);
 		simd::vect3 hemi1 = simd::vect3(cos_decl1, cos_azim1 * sin_decl1, sin_azim1 * sin_decl1, true);
@@ -322,8 +354,15 @@ shade(
 			lambertian_num += cos_decl1;
 	}
 
+#if LAMBERTIAN_WEIGHTS_OCCLUSION == 1
+	// angular uniform distribution of declination -- sample mean of cos(pi/4)
 	const float intensity = fmin(1.f, lambertian_num * (1.41421356f / ao_probe_count));
 
+#elif LAMBERTIAN_WEIGHTS_OCCLUSION == 2
+	// cosine uniform distribution of declination -- sample mean of 0.5
+	const float intensity = fmin(1.f, lambertian_num * (2.f / ao_probe_count));
+
+#endif
 #else
 		if (!ts.traverse_litest(probe0, hit))
 			++unoccluded;
