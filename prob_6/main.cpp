@@ -202,13 +202,8 @@ shade(
 	const simd::vect3 orig = simd::vect3().add(
 		ray.get_origin(), simd::vect3().mul(ray.get_direction(), hit.dist));
 
-#if LAMBERTIAN_WEIGHTS_OCCLUSION
-	float lambertian_num = 0.f;
-
-#else
 	int unoccluded = 0;
 
-#endif
 	// manually unroll the AO shading loop by 2
 	for (size_t i = 0; i < ao_probe_count / 2; ++i)
 	{
@@ -219,7 +214,7 @@ shade(
 		const int r3 = rand_r(&seed);
 		const __m128i ri = _mm_setr_epi32(r0, r1, r2, r3);
 
-#if LAMBERTIAN_WEIGHTS_OCCLUSION == 0 || LAMBERTIAN_WEIGHTS_OCCLUSION == 1
+#if 0 // uniform polar distribution -- disregards lambertian factor
 		const __m128 r = _mm_mul_ps(_mm_cvtepi32_ps(ri), _mm_setr_ps(
 			M_PI_2   / (RAND_MAX + 1L),   // decl0
 			M_PI * 2 / (RAND_MAX + 1L),   // azim0
@@ -238,13 +233,12 @@ shade(
 		const float sin_azim1 = sin_dazim[3];
 		const float cos_azim1 = cos_dazim[3];
 
-#elif LAMBERTIAN_WEIGHTS_OCCLUSION == 2
+#elif 0 // solid-angle proportional distribution -- weighing the samples by 2 * cosine (omitted here) yields a noisier version of cosine-weighted distribution below
 		const __m128 r = _mm_mul_ps(_mm_cvtepi32_ps(ri), _mm_setr_ps(
 			1.0      / (RAND_MAX + 1L),   // decl0
 			M_PI * 2 / (RAND_MAX + 1L),   // azim0
 			1.0      / (RAND_MAX + 1L),   // decl1
 			M_PI * 2 / (RAND_MAX + 1L))); // azim1
-		// sin = sqrt(1 - cos * cos)
 		const __m128 sin_decl = _mm_sqrt_ps(_mm_sub_ps(_mm_set1_ps(1.f), _mm_mul_ps(r, r)));
 		const __m128 cos_decl = r;
 		__m128 sin_azim;
@@ -260,8 +254,26 @@ shade(
 		const float sin_azim1 = sin_azim[3];
 		const float cos_azim1 = cos_azim[3];
 
-#else
-	#error LAMBERTIAN_WEIGHTS_OCCLUSION out of range
+#else // cosine-weighted distribution
+		const __m128 r = _mm_mul_ps(_mm_cvtepi32_ps(ri), _mm_setr_ps(
+			1.0      / (RAND_MAX + 1L),   // decl0
+			M_PI * 2 / (RAND_MAX + 1L),   // azim0
+			1.0      / (RAND_MAX + 1L),   // decl1
+			M_PI * 2 / (RAND_MAX + 1L))); // azim1
+		const __m128 sub = _mm_sub_ps(_mm_set1_ps(1.f), r);
+		const __m128 sincos_decl = _mm_sqrt_ps(_mm_shuffle_ps(sub, r, 0x88));
+		__m128 sin_azim;
+		__m128 cos_azim;
+		sincos_ps(r, &sin_azim, &cos_azim);
+
+		const float sin_decl0 = sincos_decl[0];
+		const float cos_decl0 = sincos_decl[2];
+		const float sin_azim0 = sin_azim[1];
+		const float cos_azim0 = cos_azim[1];
+		const float sin_decl1 = sincos_decl[1];
+		const float cos_decl1 = sincos_decl[3];
+		const float sin_azim1 = sin_azim[3];
+		const float cos_azim1 = cos_azim[3];
 
 #endif
 		// compute a bounce vector in some TBN space, in this case of an assumed normal along x-axis
@@ -346,24 +358,6 @@ shade(
 		const Ray probe0(orig, probe_dir0);
 		const Ray probe1(orig, probe_dir1);
 
-#if LAMBERTIAN_WEIGHTS_OCCLUSION
-		if (!ts.traverse_litest(probe0, hit))
-			lambertian_num += cos_decl0;
-
-		if (!ts.traverse_litest(probe1, hit))
-			lambertian_num += cos_decl1;
-	}
-
-#if LAMBERTIAN_WEIGHTS_OCCLUSION == 1
-	// angular uniform distribution of declination -- sample mean of cos(pi/4)
-	const float intensity = fmin(1.f, lambertian_num * (1.41421356f / ao_probe_count));
-
-#elif LAMBERTIAN_WEIGHTS_OCCLUSION == 2
-	// cosine uniform distribution of declination -- sample mean of 0.5
-	const float intensity = fmin(1.f, lambertian_num * (2.f / ao_probe_count));
-
-#endif
-#else
 		if (!ts.traverse_litest(probe0, hit))
 			++unoccluded;
 
@@ -373,7 +367,6 @@ shade(
 
 	const float intensity = unoccluded * (1.f / ao_probe_count);
 
-#endif
 	pixel[0] = uint8_t(255.f * intensity);
 	pixel[1] = uint8_t(255.f * intensity);
 	pixel[2] = uint8_t(255.f * intensity);

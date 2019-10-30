@@ -40,11 +40,6 @@ CFLAGS=(
 #	-DVECTBASE_MINIMISE_ALIASING=1
 # High-precision ray reciprocal direction
 	-DRAY_HIGH_PRECISION_RCP_DIR=1
-# Use Lambertian weights for the occlusion computation: 0, 1, 2
-#   0 -- occlusion computation uses unweighed occlusion
-#   1 -- cosine-weighed unoccluded rays, uniform angle distribution of declination
-#   2 -- cosine-weighed unoccluded rays, uniform cosine distribution of declination
-#	-DLAMBERTIAN_WEIGHTS_OCCLUSION=1
 # Number of workforce threads (normally equating the number of logical cores)
 	-DWORKFORCE_NUM_THREADS=`lscpu | grep ^"CPU(s)" | sed s/^[^[:digit:]]*//`
 # Make workforce threads sticky (NUMA, etc)

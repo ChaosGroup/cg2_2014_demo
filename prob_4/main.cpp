@@ -176,26 +176,27 @@ shade(
 	const simd::vect3 orig = simd::vect3().add(
 		ray.get_origin(), simd::vect3().mul(ray.get_direction(), hit.dist));
 
-#if LAMBERTIAN_WEIGHTS_OCCLUSION
-	float lambertian_num = 0.f;
-
-#else
 	int unoccluded = 0;
 
-#endif
 	// manually unroll the AO shading loop by 2
 	for (size_t i = 0; i < ao_probe_count / 2; ++i)
 	{
 		const compile_assert< 0 == (RAND_MAX & RAND_MAX + 1L) > assert_rand_pot;
-		const float decl0 = float(M_PI_2 / (RAND_MAX + 1L)) * rand_r(&seed);
-		const float azim0 = float(M_PI * 2 / (RAND_MAX + 1L)) * rand_r(&seed);
-		const float decl1 = float(M_PI_2 / (RAND_MAX + 1L)) * rand_r(&seed);
-		const float azim1 = float(M_PI * 2 / (RAND_MAX + 1L)) * rand_r(&seed);
+		const int r0 = rand_r(&seed);
+		const int r1 = rand_r(&seed);
+		const int r2 = rand_r(&seed);
+		const int r3 = rand_r(&seed);
+		const __m128i ri = _mm_setr_epi32(r0, r1, r2, r3);
 
+#if 0 // uniform polar distribution -- disregards lambertian factor
+		const __m128 r = _mm_mul_ps(_mm_cvtepi32_ps(ri), _mm_setr_ps(
+			M_PI_2   / (RAND_MAX + 1L),   // decl0
+			M_PI * 2 / (RAND_MAX + 1L),   // azim0
+			M_PI_2   / (RAND_MAX + 1L),   // decl1
+			M_PI * 2 / (RAND_MAX + 1L))); // azim1
 		__m128 sin_dazim;
 		__m128 cos_dazim;
-		const __m128 ang_dazim = _mm_setr_ps(decl0, azim0, decl1, azim1);
-		sincos_ps(ang_dazim, &sin_dazim, &cos_dazim);
+		sincos_ps(r, &sin_dazim, &cos_dazim);
 
 		const float sin_decl0 = sin_dazim[0];
 		const float cos_decl0 = cos_dazim[0];
@@ -206,6 +207,49 @@ shade(
 		const float sin_azim1 = sin_dazim[3];
 		const float cos_azim1 = cos_dazim[3];
 
+#elif 0 // solid-angle proportional distribution -- weighing the samples by 2 * cosine (omitted here) yields a noisier version of cosine-weighted distribution below
+		const __m128 r = _mm_mul_ps(_mm_cvtepi32_ps(ri), _mm_setr_ps(
+			1.0      / (RAND_MAX + 1L),   // decl0
+			M_PI * 2 / (RAND_MAX + 1L),   // azim0
+			1.0      / (RAND_MAX + 1L),   // decl1
+			M_PI * 2 / (RAND_MAX + 1L))); // azim1
+		const __m128 sin_decl = _mm_sqrt_ps(_mm_sub_ps(_mm_set1_ps(1.f), _mm_mul_ps(r, r)));
+		const __m128 cos_decl = r;
+		__m128 sin_azim;
+		__m128 cos_azim;
+		sincos_ps(r, &sin_azim, &cos_azim);
+
+		const float sin_decl0 = sin_decl[0];
+		const float cos_decl0 = cos_decl[0];
+		const float sin_azim0 = sin_azim[1];
+		const float cos_azim0 = cos_azim[1];
+		const float sin_decl1 = sin_decl[2];
+		const float cos_decl1 = cos_decl[2];
+		const float sin_azim1 = sin_azim[3];
+		const float cos_azim1 = cos_azim[3];
+
+#else // cosine-weighted distribution
+		const __m128 r = _mm_mul_ps(_mm_cvtepi32_ps(ri), _mm_setr_ps(
+			1.0      / (RAND_MAX + 1L),   // decl0
+			M_PI * 2 / (RAND_MAX + 1L),   // azim0
+			1.0      / (RAND_MAX + 1L),   // decl1
+			M_PI * 2 / (RAND_MAX + 1L))); // azim1
+		const __m128 sub = _mm_sub_ps(_mm_set1_ps(1.f), r);
+		const __m128 sincos_decl = _mm_sqrt_ps(_mm_shuffle_ps(sub, r, 0x88));
+		__m128 sin_azim;
+		__m128 cos_azim;
+		sincos_ps(r, &sin_azim, &cos_azim);
+
+		const float sin_decl0 = sincos_decl[0];
+		const float cos_decl0 = sincos_decl[2];
+		const float sin_azim0 = sin_azim[1];
+		const float cos_azim0 = cos_azim[1];
+		const float sin_decl1 = sincos_decl[1];
+		const float cos_decl1 = sincos_decl[3];
+		const float sin_azim1 = sin_azim[3];
+		const float cos_azim1 = cos_azim[3];
+
+#endif
 		// compute a bounce vector in some TBN space, in this case of an assumed normal along x-axis
 		simd::vect3 hemi0 = simd::vect3(cos_decl0, cos_azim0 * sin_decl0, sin_azim0 * sin_decl0, true);
 		simd::vect3 hemi1 = simd::vect3(cos_decl1, cos_azim1 * sin_decl1, sin_azim1 * sin_decl1, true);
@@ -288,17 +332,6 @@ shade(
 		const Ray probe0(orig, probe_dir0);
 		const Ray probe1(orig, probe_dir1);
 
-#if LAMBERTIAN_WEIGHTS_OCCLUSION
-		if (!ts.traverse_litest(probe0, hit))
-			lambertian_num += cos_decl0;
-
-		if (!ts.traverse_litest(probe1, hit))
-			lambertian_num += cos_decl1;
-	}
-
-	const float intensity = fmin(1.f, lambertian_num * (1.41421356f / ao_probe_count));
-
-#else
 		if (!ts.traverse_litest(probe0, hit))
 			++unoccluded;
 
@@ -308,7 +341,6 @@ shade(
 
 	const float intensity = unoccluded * (1.f / ao_probe_count);
 
-#endif
 	pixel[0] = uint8_t(255.f * intensity);
 	pixel[1] = uint8_t(255.f * intensity);
 	pixel[2] = uint8_t(255.f * intensity);
