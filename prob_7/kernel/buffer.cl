@@ -76,13 +76,14 @@ uint traverself(
 			if (id != prior_id & dist < nearest_dist) {
 				nearest_dist = dist;
 				voxel_id = id;
-				ray->rcpdir.w = dist;
 				*hit = maybe_hit;
 			}
 		}
 
-		if (-1U != voxel_id)
+		if (-1U != voxel_id) {
+			ray->rcpdir.w = nearest_dist;
 			return voxel_id;
+		}
 	}
 	return -1U;
 }

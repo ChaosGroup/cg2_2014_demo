@@ -2084,6 +2084,9 @@ int main(int argc, char** argv) {
 #if OCL_QUIRK_0002
 		" -D OCL_QUIRK_0002"
 #endif
+#if OCL_QUIRK_0003
+		" -D OCL_QUIRK_0003"
+#endif
 ;
 	success = clBuildProgram(program, 1, device() + device_idx, build_opt, 0, 0);
 
