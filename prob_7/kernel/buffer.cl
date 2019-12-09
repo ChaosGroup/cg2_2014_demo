@@ -71,9 +71,13 @@ uint traverself(
 			const struct Voxel payload = get_voxel(voxel, j);
 			const struct BBox payload_bbox = (struct BBox){ payload.min.xyz, payload.max.xyz };
 			const uint id = as_uint(payload.min.w);
+
+			if (id == prior_id)
+				continue;
+
 			const float dist = intersect(&payload_bbox, ray, &maybe_hit);
 
-			if (id != prior_id & dist < nearest_dist) {
+			if (dist < nearest_dist) {
 				nearest_dist = dist;
 				voxel_id = id;
 				*hit = maybe_hit;
@@ -118,7 +122,7 @@ bool occludelf(
 			const struct BBox payload_bbox = (struct BBox){ payload.min.xyz, payload.max.xyz };
 			const uint id = as_uint(payload.min.w);
 
-			if (id != prior_id & occluded(&payload_bbox, ray))
+			if (id != prior_id && occluded(&payload_bbox, ray))
 				return true;
 		}
 	}
