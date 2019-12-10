@@ -159,11 +159,24 @@ uint octlf_intersect_wide(
 #endif
 	r &= occupancy;
 
+#if OCL_QUIRK_0004
 	const int8 cnt0 = -r;
 	const int4 cnt1 = cnt0.s0123 + cnt0.s4567;
 	const int2 cnt2 = cnt1.s01   + cnt1.s23;
 	const int count = cnt2.s0    + cnt2.s1;
 
+#else
+	int count = 0;
+	count -= r.s0;
+	count -= r.s1;
+	count -= r.s2;
+	count -= r.s3;
+	count -= r.s4;
+	count -= r.s5;
+	count -= r.s6;
+	count -= r.s7;
+
+#endif
 	t = select((float8)(INFINITY), t, r);
 
 	const float4 r0_A = (float4)(t.s0, t.s3, t.s4, t.s7);
@@ -268,11 +281,24 @@ uint octet_intersect_wide(
 #endif
 	r &= occupancy;
 
+#if OCL_QUIRK_0004
 	const int8 cnt0 = -r;
 	const int4 cnt1 = cnt0.s0123 + cnt0.s4567;
 	const int2 cnt2 = cnt1.s01   + cnt1.s23;
 	const int count = cnt2.s0    + cnt2.s1;
 
+#else
+	int count = 0;
+	count -= r.s0;
+	count -= r.s1;
+	count -= r.s2;
+	count -= r.s3;
+	count -= r.s4;
+	count -= r.s5;
+	count -= r.s6;
+	count -= r.s7;
+
+#endif
 	t = select((float8)(INFINITY), t, r);
 
 	const float4 r0_A = (float4)(t.s0, t.s3, t.s4, t.s7);
