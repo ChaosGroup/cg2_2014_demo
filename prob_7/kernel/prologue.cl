@@ -152,11 +152,7 @@ uint octlf_intersect_wide(
 	float8 t;
 	int8 r;
 	intersect8(bbox_min_x, bbox_min_y, bbox_min_z, bbox_max_x, bbox_max_y, bbox_max_z, ray, &t, &r);
-#if OCL_QUIRK_0003
-	const int8 occupancy = as_int8(((ushort8)(0) != octet.count).s0011223344556677);
-#else
 	const int8 occupancy = convert_int8((ushort8)(0) != octet.count);
-#endif
 	r &= occupancy;
 
 #if OCL_QUIRK_0004
@@ -274,11 +270,7 @@ uint octet_intersect_wide(
 	float8 t;
 	int8 r;
 	intersect8(bbox_min_x, bbox_min_y, bbox_min_z, bbox_max_x, bbox_max_y, bbox_max_z, ray, &t, &r);
-#if OCL_QUIRK_0003
-	const int8 occupancy = as_int8(((ushort8)(-1) != octet.child).s0011223344556677);
-#else
 	const int8 occupancy = convert_int8((ushort8)(-1) != octet.child);
-#endif
 	r &= occupancy;
 
 #if OCL_QUIRK_0004

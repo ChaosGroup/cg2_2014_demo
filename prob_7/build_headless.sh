@@ -39,8 +39,6 @@ CFLAGS=(
 #	-DOCL_QUIRK_0001=1
 # OpenCL quirk 0002: slow select(); even though vector select() and vector (?:) should perform identically, on some hw and stacks select is slower
 #	-DOCL_QUIRK_0002=1
-# OpenCL quirk 0003: inefficient codegen for convert_int8(short8)
-#	-DOCL_QUIRK_0003=1
 # OpenCL quirk 0004: forced O(logN) add-reduction over native add-reduction
 #	-DOCL_QUIRK_0004=1
 # OpenCL kernel build full verbosity; macro mandatory
