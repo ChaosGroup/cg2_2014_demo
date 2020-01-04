@@ -48,7 +48,7 @@ Results from headless build run to the 1000th frame, resolution 3840x2160; on ha
 
 | hardware (device)                | device multiplicity         | device mem, GB/s  | FPS      | remarks                                                                                         |
 | -------------------------------- | --------------------------- | ----------------- | -------- | ----------------------------------------------------------------------------------------------- |
-| Rockchip RK3399 (mali-t860mp4)   |   1x mali-t860              | 12.8              | 0.849    | ARM Mali-T860 OpenCL 1.2 v1.r14p0-01rel0-git(966ed26).f44c85cb3d2ceb87e8be88e7592755c3, 800 MHz |
+| Rockchip RK3399 (mali-t860mp4)   |   1x mali-t860              | 12.8              | 0.900    | ARM Mali-T860 OpenCL 1.2 v1.r14p0-01rel0-git(a79caef).8ddfd7584149d9238dced4e406610de7, 800 MHz |
 | Rockchip RK3399 (cortex-a72)     |   2x cortex-a72             | 12.8              | 0.379    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 1800 MHz                               |
 | Amlogic S922X (mali-g52mp6)      |   1x mali-g52               | 10.56             | 0.982    | ARM Mali-G52 OpenCL 2.0 git.c8adbf9.122c9daed32dbba4b3056f41a2f23c58, 750 MHz                   |
 | Amlogic S922X (cortex-a73)       |   4x cortex-a73             | 10.56             | 0.763    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a73, 1800 MHz                               |
