@@ -57,7 +57,7 @@ Results from headless build run to the 1000th frame, resolution 3840x2160; on ha
 | NXP LX2160A (cortex-a72)         |  16x cortex-a72             | 19.2              | 3.200    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2000 MHz                               |
 | Intel Xeon E5-2687W (snb), 2S    |  16x sandy bridge (32x SMT) | 51.2 (25.6 1S)    | 2.330    | Intel(R) Corporation, Intel(R) Xeon(R) CPU, OpenCL 1.2 (Build 67279), 3100 MHz                  |
 | Intel Xeon E5-2687W (gf108gl)    |   1x gf108gl                | 25.6              | 3.325    | NVIDIA Corporation Quadro 600 OpenCL 1.1 CUDA 375.66, 1280 MHz                                  |
-| Intel Xeon E3-1270v2 (gk208b)    |   1x gk208b                 | 40                | 3.670    | NVIDIA Corporation GeForce GT 720 OpenCL 1.1 CUDA 340.102, 797 MHz                              |
+| Intel Xeon E3-1270v2 (gk208b)    |   1x gk208b                 | 40                | 3.677    | NVIDIA Corporation GeForce GT 720 OpenCL 1.1 CUDA 340.102, 797 MHz                              |
 | Intel Xeon E3-1270v2 (gt218)     |   1x gt218                  | 9.6               | 0.612    | NVIDIA Corporation GeForce 210 OpenCL 1.1 CUDA 340.102, 1230 MHz                                |
 | Intel P8600 (mcp89)              |   1x mcp89                  | 8.53              | 1.427    | NVIDIA GeForce 320M OpenCL 1.0 10.2.37 310.90.10.05b54, CLI: -use_images, 950 MHz               |
 
