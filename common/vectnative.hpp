@@ -2619,7 +2619,7 @@ public:
 	template < uint32_t COUNT >
 	inline s64x2 shr(const s64x2 a) {
 
-#if __SSE4_1__ != 0
+#if __SSE4_2__ != 0
 		if (32 >= COUNT) {
 			const __m128i s = _mm_srai_epi32(a.getn(), int(COUNT));
 			const __m128i r = _mm_srli_epi64(a.getn(), int(COUNT));
@@ -4367,6 +4367,7 @@ public:
 	}
 
 #else
+#if __SSE4_2__ != 0
 	/// \copydoc operator <(const f64x4, const f64x4)
 	inline u64x4 operator <(const s64x4 a, const s64x4 b) {
 		const __m128i a0 = _mm256_castsi256_si128(a.getn());
@@ -4379,6 +4380,7 @@ public:
 		return u64x4(r, flag_native());
 	}
 
+#endif
 	/// \copydoc operator <(const f64x4, const f64x4)
 	inline u32x8 operator <(const s32x8 a, const s32x8 b) {
 		const __m128i a0 = _mm256_castsi256_si128(a.getn());
@@ -4464,6 +4466,7 @@ public:
 	}
 
 #else
+#if __SSE4_2__ != 0
 	/// \copydoc operator <=(const f64x4, const f64x4)
 	inline u64x4 operator <=(const s64x4 a, const s64x4 b) {
 		const __m128i a0 = _mm256_castsi256_si128(a.getn());
@@ -4476,6 +4479,7 @@ public:
 		return u64x4(r, flag_native());
 	}
 
+#endif
 	/// \copydoc operator <=(const f64x4, const f64x4)
 	inline u32x8 operator <=(const s32x8 a, const s32x8 b) {
 		const __m128i a0 = _mm256_castsi256_si128(a.getn());
