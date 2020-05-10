@@ -53,7 +53,7 @@ Results from headless build run to the 1000th frame, resolution 3840x2160; on ha
 | Amlogic S922X (mali-g52mp6)      |   1x mali-g52               | 10.56             | 0.982    | ARM Mali-G52 OpenCL 2.0 git.c8adbf9.122c9daed32dbba4b3056f41a2f23c58, 750 MHz                   |
 | Amlogic S922X (cortex-a73)       |   4x cortex-a73             | 10.56             | 0.763    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a73, 1800 MHz                               |
 | Marvell ARMADA 8040 (cortex-a72) |   4x cortex-a72             | 19.2              | 0.824    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2000 MHz                               |
-| AWS Graviton (cortex-a72)        |  16x cortex-a72             | 19.2              | 3.639    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2290 MHz                               |
+| AWS Graviton (cortex-a72)        |  16x cortex-a72             | 38.4              | 3.639    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2290 MHz                               |
 | NXP LX2160A (cortex-a72)         |  16x cortex-a72             | 19.2              | 3.200    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2000 MHz                               |
 | Intel Xeon E5-2687W (snb), 2S    |  16x sandy bridge (32x SMT) | 51.2 (25.6 1S)    | 2.330    | Intel(R) Corporation, Intel(R) Xeon(R) CPU, OpenCL 1.2 (Build 67279), 3100 MHz                  |
 | Intel Xeon E5-2687W (gf108gl)    |   1x gf108gl                | 25.6              | 3.325    | NVIDIA Corporation Quadro 600 OpenCL 1.1 CUDA 375.66, 1280 MHz                                  |
@@ -68,5 +68,5 @@ Same as above but from branch `better_cpu` and `pocl` patched for good-codegen `
 | Rockchip RK3399 (cortex-a72)     |   2x cortex-a72             | 12.8              | 0.410    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 1800 MHz                               |
 | Amlogic S922X (cortex-a73)       |   4x cortex-a73             | 10.56             | 0.819    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a73, 1800 MHz                               |
 | Marvell ARMADA 8040 (cortex-a72) |   4x cortex-a72             | 19.2              | 0.912    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2000 MHz                               |
-| AWS Graviton (cortex-a72)        |  16x cortex-a72             | 19.2              | 4.049    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2290 MHz                               |
-| NXP LX2160A (cortex-a72)         |  16x cortex-a72             | 19.2              | 3.546    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2000 MHz                               |
+| AWS Graviton (cortex-a72)        |  16x cortex-a72             | 38.4              | 4.049    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2290 MHz                               |
+| NXP LX2160A (cortex-a72)         |  16x cortex-a72             | 38.4              | 3.551    | pocl 1.4, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2000 MHz                               |
