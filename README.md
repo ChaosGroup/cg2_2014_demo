@@ -71,3 +71,21 @@ Same as above but from branch `better_cpu` and `pocl` patched for good-codegen `
 | AWS Graviton (cortex-a72)        |  16x cortex-a72             | 38.4              | 4.049    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2290 MHz                               |
 | NXP LX2160A (cortex-a72)         |  16x cortex-a72             | 38.4              | 3.551    | pocl 1.4, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2000 MHz                               |
 | AWS Graviton2 (cortex-a76)       |  64x cortex-a76             | 40 (tinymembench) | 26.491   | pocl 1.4, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a75, 2500 MHz                               |
+
+benchmark build directions
+--------------------------
+Assuming an apt-based package system:
+```
+$ sudo apt-get install build-essential llvm-8-dev llvm-8 clang-8 libclang-8-dev libpng-dev cmake pkg-config
+$ git clone -b release_1_5 --single-branch https://github.com/pocl/pocl.git # R1.5 has an important performance fix, also applied to all entries in this test
+$ mkdir pocl_build
+$ cd pocl_build
+$ cmake ../pocl -DLLC_HOST_CPU=cortex-a73 -DDEFAULT_ENABLE_ICD=0 # CPU choice is crucial as it controls kernel build optimisations -- pick something close to your uarch
+$ make
+$ sudo make install
+$ cd ..
+$ git clone -b better_cpu --single-branch https://github.com/ChaosGroup/cg2_2014_demo.git # branch has certain CPU-centric optimisations (see OCL_QUIRK below)
+$ cd cg2_2014_demo/prob_7
+$ ./build_headless.sh # on Arm clang needs adjusting target-arch options first -- comment out 'native' arch/cpu, uncomment relevant arch/cpu; you can also experiment with OCL_QUIRK_0004
+$ LD_LIBRARY_PATH=/usr/local/lib/ ./problem_4 -screen "3840 2160 60" -frames 1000 -device 0 # have patience; subsequent runs use cached kernels, which can improve times
+```
