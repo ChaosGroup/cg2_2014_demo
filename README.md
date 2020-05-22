@@ -78,11 +78,12 @@ benchmark build directions
 --------------------------
 Assuming an apt-based package system:
 ```
+$ sudo apt-get install --no-install-recommends libhwloc-dev # this is optional as pocl 1.5 has alternative means to collect hw info than via libhwloc
 $ sudo apt-get install build-essential llvm-8-dev llvm-8 clang-8 libclang-8-dev libpng-dev cmake pkg-config
 $ git clone -b release_1_5 --single-branch https://github.com/pocl/pocl.git # R1.5 has an important performance fix, also applied to all entries in this test
 $ mkdir pocl_build
 $ cd pocl_build
-$ cmake ../pocl -DLLC_HOST_CPU=cortex-a73 -DDEFAULT_ENABLE_ICD=0 # CPU choice is crucial as it controls kernel build optimisations -- pick something close to your uarch
+$ cmake ../pocl -DLLC_HOST_CPU=cortex-a73 -DDEFAULT_ENABLE_ICD=0 -DWITH_LLVM_CONFIG=/usr/bin/llvm-config-8 # CPU choice is crucial as it controls kernel codegen -- pick something close to your uarch
 $ make
 $ sudo make install
 $ cd ..
