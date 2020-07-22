@@ -69,6 +69,7 @@ Same as above but from branch `better_cpu` and `pocl` patched for good-codegen `
 | Amlogic S922X (cortex-a73)        |   4x cortex-a73             | 10.56             | 0.819    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a73, 1800 MHz                               |
 | Marvell ARMADA 8040 (cortex-a72)  |   4x cortex-a72             | 19.2              | 0.912    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2000 MHz                               |
 | Snapdragon 835 (cortex-a73)       |   4x cortex-a73             | 14.93             | 0.958    | pocl 1.5, llvm 9.0.0, OCL_KERNEL_TARGET_CPU: cortex-a73, 2200 MHz                               |
+| Snapdragon SQ1 (cortex-a76)       |   4x cortex-a76 + 4x ca55   | 68.26             | 2.652    | pocl 1.5, llvm 9.0.1, OCL_KERNEL_TARGET_CPU: cortex-a76, 3000 MHz + 1800 MHz                    |
 | NXP LX2160A (cortex-a72)          |  16x cortex-a72             | 38.4              | 3.551    | pocl 1.4, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2000 MHz                               |
 | AWS Graviton (cortex-a72)         |  16x cortex-a72             | 38.4              | 4.049    | pocl 1.3, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2290 MHz                               |
 | AWS Graviton2 (cortex-a76)        |  64x cortex-a76             | 40 (tinymembench) | 26.491   | pocl 1.4, llvm 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a75, 2500 MHz                               |
