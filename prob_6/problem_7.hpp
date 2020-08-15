@@ -952,7 +952,7 @@ typedef uint16_t OctetId; // integral type capable of holding the amount of leav
 typedef uint16_t PayloadId; // integral type capable of holding the amount of leaf payload
 
 enum {
-	cell_capacity = 32 // octree cell capacity during building
+	cell_capacity = 64 // octree cell capacity during building
 };
 
 enum {
