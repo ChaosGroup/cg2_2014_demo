@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # known issue with clang++-3.6 and the lifespan of temporaries, causing multiple failures at unittest
-CC=clang++
+CC=${CXX:-clang++}
 BINARY=problem_4
 COMMON=../common
 SOURCE=(

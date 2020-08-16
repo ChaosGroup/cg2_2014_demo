@@ -488,7 +488,7 @@ class Scene1 : public virtual Scene {
 	float accum_y;
 
 	enum {
-		grid_rows = 20,
+		grid_rows = 40,
 		grid_cols = 20,
 		dist_unit = 1
 	};
@@ -2309,7 +2309,7 @@ int main(int argc, char** argv) {
 	const BBox& world_bbox = timeline.getElement(scene_1).get_root_bbox();
 
 	const simd::f32x4 bbox_min = world_bbox.get_min();
-	const simd::f32x4 bbox_max = world_bbox.get_max();
+	const simd::f32x4 bbox_max = world_bbox.get_max() * simd::f32x4(1.f, .5f, 1.f, 1.f);
 	const simd::f32x4 centre = (bbox_max + bbox_min) * simd::f32x4(.5f);
 	const simd::f32x4 extent = (bbox_max - bbox_min) * simd::f32x4(.5f);
 	const float max_extent = std::max(extent[0], std::max(extent[1], extent[2]));

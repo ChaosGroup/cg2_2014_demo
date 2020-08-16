@@ -1187,7 +1187,7 @@ class Scene1 : public virtual Scene
 	float accum_y;
 
 	enum {
-		grid_rows = 20,
+		grid_rows = 40,
 		grid_cols = 20,
 		dist_unit = 1
 	};
@@ -2336,7 +2336,7 @@ int main(
 	const BBox& world_bbox = timeline.getElement(scene_1).get_root_bbox();
 
 	const __m128 bbox_min = world_bbox.get_min();
-	const __m128 bbox_max = world_bbox.get_max();
+	const __m128 bbox_max = _mm_mul_ps(world_bbox.get_max(), _mm_setr_ps(1.f, .5f, 1.f, 1.f));
 	const __m128 centre = _mm_mul_ps(
 		_mm_add_ps(bbox_max, bbox_min),
 		_mm_set1_ps(.5f));
