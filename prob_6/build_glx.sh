@@ -48,8 +48,6 @@ CFLAGS=(
 #	-DCOLORIZE_THREADS=1
 # Threading model 'division of labor' alternatives: 0, 1, 2
 	-DDIVISION_OF_LABOR_VER=2
-# Bounce computation alternatives for variable-permute-disabled ISAs (e.g. all SSE revisions): 0, 1, 2
-	-DBOUNCE_COMPUTE_VER=1
 # Number of AO rays per pixel
 	-DAO_NUM_RAYS=64
 # Enable tweaks targeting Mesa quirks
