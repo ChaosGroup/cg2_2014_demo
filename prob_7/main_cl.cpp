@@ -2638,12 +2638,12 @@ int main(int argc, char** argv) {
 		++frame;
 	}
 
-	const uint64_t dt = timer_ns() - t0;
+	const uint64_t sequence_dt = timer_ns() - t0;
 
 	stream::cout << "total frames rendered: " << frame << '\n';
 
-	if (dt) {
-		const double sec = double(dt) * 1e-9;
+	if (sequence_dt) {
+		const double sec = double(sequence_dt) * 1e-9;
 		stream::cout << "elapsed time: " << sec << " s\naverage FPS: " << frame / sec << '\n';
 	}
 

@@ -62,7 +62,7 @@ static const size_t nthreads = WORKFORCE_NUM_THREADS;
 static const size_t one_less = nthreads - 1;
 static const size_t ao_probe_count = AO_NUM_RAYS;
 
-static const compile_assert< ao_probe_count % 2 == 0 > assert_ao_probe_count_even;
+static const compile_assert< ao_probe_count % 4 == 0 > assert_ao_probe_count_even;
 
 enum
 {

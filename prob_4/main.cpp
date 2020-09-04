@@ -42,7 +42,7 @@ static const size_t nthreads = WORKFORCE_NUM_THREADS;
 static const size_t one_less = nthreads - 1;
 static const size_t ao_probe_count = AO_NUM_RAYS;
 
-static const compile_assert< ao_probe_count % 2 == 0 > assert_ao_probe_count_even;
+static const compile_assert< ao_probe_count % 4 == 0 > assert_ao_probe_count_even;
 static unsigned shape_seed = 42;
 static float offset = .0625f;
 
@@ -1477,15 +1477,15 @@ int main(
 		++nframes;
 	}
 
-	const uint64_t dt = timer_ns() - t0;
+	const uint64_t sequence_dt = timer_ns() - t0;
 
 	stream::cout << "compute_arg size: " << sizeof(compute_arg) <<
 		"\nworker threads: " << nthreads << "\nambient occlusion rays per pixel: " << ao_probe_count <<
 		"\ntotal frames rendered: " << nframes << '\n';
 
-	if (dt)
+	if (sequence_dt)
 	{
-		const double sec = double(dt) * 1e-9;
+		const double sec = double(sequence_dt) * 1e-9;
 
 		stream::cout << "elapsed time: " << sec << " s"
 			"\naverage FPS: " << nframes / sec << '\n';

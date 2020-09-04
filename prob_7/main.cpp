@@ -52,7 +52,7 @@ static const size_t nthreads = WORKFORCE_NUM_THREADS;
 static const size_t one_less = nthreads - 1;
 static const size_t ao_probe_count = AO_NUM_RAYS;
 
-static const compile_assert< ao_probe_count % 2 == 0 > assert_ao_probe_count_even;
+static const compile_assert< ao_probe_count % 4 == 0 > assert_ao_probe_count_even;
 
 enum
 {
@@ -186,164 +186,80 @@ shade(
 
 	int unoccluded = 0;
 
-	// manually unroll the AO shading loop by 2
-	for (size_t i = 0; i < ao_probe_count / 2; ++i)
+	// manually unroll the AO shading loop by 4
+	for (size_t i = 0; i < ao_probe_count / 4; ++i)
 	{
 		const compile_assert< 0 == (RAND_MAX & RAND_MAX + 1L) > assert_rand_pot;
-		const int r0 = rand_r(&seed);
-		const int r1 = rand_r(&seed);
-		const int r2 = rand_r(&seed);
-		const int r3 = rand_r(&seed);
-		const __m128i ri = _mm_setr_epi32(r0, r1, r2, r3);
+		const int rnd0 = rand_r(&seed);
+		const int rnd1 = rand_r(&seed);
+		const int rnd2 = rand_r(&seed);
+		const int rnd3 = rand_r(&seed);
+		const int rnd4 = rand_r(&seed);
+		const int rnd5 = rand_r(&seed);
+		const int rnd6 = rand_r(&seed);
+		const int rnd7 = rand_r(&seed);
+		const __m128i ri0 = _mm_setr_epi32(rnd0, rnd1, rnd2, rnd3);
+		const __m128i ri1 = _mm_setr_epi32(rnd4, rnd5, rnd6, rnd7);
 
-#if 0 // uniform polar distribution -- disregards lambertian factor
-		const __m128 r = _mm_mul_ps(_mm_cvtepi32_ps(ri), _mm_setr_ps(
-			M_PI_2   / (RAND_MAX + 1L),   // decl0
+		// cosine-weighted distribution
+		const __m128 r0 = _mm_mul_ps(_mm_cvtepi32_ps(ri0), _mm_setr_ps(
+			1.0 / RAND_MAX,   // decl0 (cos^2)
+			1.0 / RAND_MAX,   // decl1 (cos^2)
+			1.0 / RAND_MAX,   // decl2 (cos^2)
+			1.0 / RAND_MAX)); // decl3 (cos^2)
+		const __m128 r1 = _mm_mul_ps(_mm_cvtepi32_ps(ri1), _mm_setr_ps(
 			M_PI * 2 / (RAND_MAX + 1L),   // azim0
-			M_PI_2   / (RAND_MAX + 1L),   // decl1
-			M_PI * 2 / (RAND_MAX + 1L))); // azim1
-		__m128 sin_dazim;
-		__m128 cos_dazim;
-		sincos_ps(r, &sin_dazim, &cos_dazim);
-
-		const float sin_decl0 = sin_dazim[0];
-		const float cos_decl0 = cos_dazim[0];
-		const float sin_azim0 = sin_dazim[1];
-		const float cos_azim0 = cos_dazim[1];
-		const float sin_decl1 = sin_dazim[2];
-		const float cos_decl1 = cos_dazim[2];
-		const float sin_azim1 = sin_dazim[3];
-		const float cos_azim1 = cos_dazim[3];
-
-#elif 0 // solid-angle proportional distribution -- weighing the samples by 2 * cosine (omitted here) yields a noisier version of cosine-weighted distribution below
-		const __m128 r = _mm_mul_ps(_mm_cvtepi32_ps(ri), _mm_setr_ps(
-			1.0      / (RAND_MAX + 1L),   // decl0
-			M_PI * 2 / (RAND_MAX + 1L),   // azim0
-			1.0      / (RAND_MAX + 1L),   // decl1
-			M_PI * 2 / (RAND_MAX + 1L))); // azim1
-		const __m128 sin_decl = _mm_sqrt_ps(_mm_sub_ps(_mm_set1_ps(1.f), _mm_mul_ps(r, r)));
-		const __m128 cos_decl = r;
+			M_PI * 2 / (RAND_MAX + 1L),   // azim1
+			M_PI * 2 / (RAND_MAX + 1L),   // azim2
+			M_PI * 2 / (RAND_MAX + 1L))); // azim3
+		const __m128 sin_decl = _mm_sqrt_ps(_mm_sub_ps(_mm_set1_ps(1.f), r0));
+		const __m128 cos_decl = _mm_sqrt_ps(r0);
 		__m128 sin_azim;
 		__m128 cos_azim;
-		sincos_ps(r, &sin_azim, &cos_azim);
+		sincos_ps(r1, &sin_azim, &cos_azim);
 
-		const float sin_decl0 = sin_decl[0];
-		const float cos_decl0 = cos_decl[0];
-		const float sin_azim0 = sin_azim[1];
-		const float cos_azim0 = cos_azim[1];
-		const float sin_decl1 = sin_decl[2];
-		const float cos_decl1 = cos_decl[2];
-		const float sin_azim1 = sin_azim[3];
-		const float cos_azim1 = cos_azim[3];
-
-#else // cosine-weighted distribution
-		const __m128 r = _mm_mul_ps(_mm_cvtepi32_ps(ri), _mm_setr_ps(
-			1.0      / (RAND_MAX + 1L),   // decl0
-			M_PI * 2 / (RAND_MAX + 1L),   // azim0
-			1.0      / (RAND_MAX + 1L),   // decl1
-			M_PI * 2 / (RAND_MAX + 1L))); // azim1
-		const __m128 sub = _mm_sub_ps(_mm_set1_ps(1.f), r);
-		const __m128 sincos_decl = _mm_sqrt_ps(_mm_shuffle_ps(sub, r, 0x88));
-		__m128 sin_azim;
-		__m128 cos_azim;
-		sincos_ps(r, &sin_azim, &cos_azim);
-
-		const float sin_decl0 = sincos_decl[0];
-		const float cos_decl0 = sincos_decl[2];
-		const float sin_azim0 = sin_azim[1];
-		const float cos_azim0 = cos_azim[1];
-		const float sin_decl1 = sincos_decl[1];
-		const float cos_decl1 = sincos_decl[3];
-		const float sin_azim1 = sin_azim[3];
-		const float cos_azim1 = cos_azim[3];
-
-#endif
 		// compute a bounce vector in some TBN space, in this case of an assumed normal along x-axis
-		simd::vect3 hemi0 = simd::vect3(cos_decl0, cos_azim0 * sin_decl0, sin_azim0 * sin_decl0, true);
-		simd::vect3 hemi1 = simd::vect3(cos_decl1, cos_azim1 * sin_decl1, sin_azim1 * sin_decl1, true);
+		simd::vect3 hemi0 = simd::vect3(cos_decl[0], cos_azim[0] * sin_decl[0], sin_azim[0] * sin_decl[0], true);
+		simd::vect3 hemi1 = simd::vect3(cos_decl[1], cos_azim[1] * sin_decl[1], sin_azim[1] * sin_decl[1], true);
+		simd::vect3 hemi2 = simd::vect3(cos_decl[2], cos_azim[2] * sin_decl[2], sin_azim[2] * sin_decl[2], true);
+		simd::vect3 hemi3 = simd::vect3(cos_decl[3], cos_azim[3] * sin_decl[3], sin_azim[3] * sin_decl[3], true);
 
 #if __AVX__
 		// permute bounce direction depending on which axial plane was hit
 		const __m128 pdir0 = _mm_permutevar_ps(hemi0.getn(), perm);
 		const __m128 pdir1 = _mm_permutevar_ps(hemi1.getn(), perm);
+		const __m128 pdir2 = _mm_permutevar_ps(hemi2.getn(), perm);
+		const __m128 pdir3 = _mm_permutevar_ps(hemi3.getn(), perm);
 
 		simd::vect3 probe_dir0;
-		probe_dir0.setn(0, pdir0);
-
 		simd::vect3 probe_dir1;
-		probe_dir1.setn(0, pdir1);
-
-#elif BOUNCE_COMPUTE_VER == 2
-		// this bounce computation does 0, 1 or 2 rotations of the vector, depending
-		// on which axial plane was hit: x-axis: 012 -> y-axis: 201 -> z-axis: 120
-
-		__m128 pdir0 = hemi0.getn();
-		__m128 pdir1 = hemi1.getn();
-
-		for (size_t i = 0; i < axis; ++i)
-		{
-			pdir0 = _mm_shuffle_ps(pdir0, pdir0, 0xd2);
-			pdir1 = _mm_shuffle_ps(pdir1, pdir1, 0xd2);
-		}
-
-		simd::vect3 probe_dir0;
-		probe_dir0.setn(0, pdir0);
-
-		simd::vect3 probe_dir1;
-		probe_dir1.setn(0, pdir1);
-
-#elif BOUNCE_COMPUTE_VER == 1
-		// this bounce computation does at most one rotation, but
-		// can cause the compiler to split the control path to
-		// this loop into three branches, triggering significant
-		// changes in the inlining cost estimates -- use with care!
-
-		__m128 pdir0 = hemi0.getn();
-		__m128 pdir1 = hemi1.getn();
-
-		switch (axis)
-		{
-		case 1:
-			pdir0 = _mm_shuffle_ps(pdir0, pdir0, 0xd2);
-			pdir1 = _mm_shuffle_ps(pdir1, pdir1, 0xd2);
-			break;
-		case 2:
-			pdir0 = _mm_shuffle_ps(pdir0, pdir0, 0xc9);
-			pdir1 = _mm_shuffle_ps(pdir1, pdir1, 0xc9);
-			break;
-		}
-
-		simd::vect3 probe_dir0;
-		probe_dir0.setn(0, pdir0);
-
-		simd::vect3 probe_dir1;
-		probe_dir1.setn(0, pdir1);
+		simd::vect3 probe_dir2;
+		simd::vect3 probe_dir3;
 
 #else
-		// this bounce computation forces spills of the vectors,
-		// creating a hotspot at the immediately following load
-
-		simd::vect3 probe_dir0;
-		probe_dir0.set((axis + 0),     hemi0.get(0));
-		probe_dir0.set((axis + 1) % 3, hemi0.get(1));
-		probe_dir0.set((axis + 2) % 3, hemi0.get(2));
-
-		simd::vect3 probe_dir1;
-		probe_dir1.set((axis + 0),     hemi1.get(0));
-		probe_dir1.set((axis + 1) % 3, hemi1.get(1));
-		probe_dir1.set((axis + 2) % 3, hemi1.get(2));
+#error unsupported ISA for this block
 
 #endif
-		probe_dir0.setn(0, _mm_xor_ps(probe_dir0.getn(), axis_sign));
-		probe_dir1.setn(0, _mm_xor_ps(probe_dir1.getn(), axis_sign));
+		probe_dir0.setn(0, _mm_xor_ps(pdir0, axis_sign));
+		probe_dir1.setn(0, _mm_xor_ps(pdir1, axis_sign));
+		probe_dir2.setn(0, _mm_xor_ps(pdir2, axis_sign));
+		probe_dir3.setn(0, _mm_xor_ps(pdir3, axis_sign));
 
 		const Ray probe0(orig, probe_dir0);
 		const Ray probe1(orig, probe_dir1);
+		const Ray probe2(orig, probe_dir2);
+		const Ray probe3(orig, probe_dir3);
 
 		if (!ts.traverse_litest(probe0, hit))
 			++unoccluded;
 
 		if (!ts.traverse_litest(probe1, hit))
+			++unoccluded;
+
+		if (!ts.traverse_litest(probe2, hit))
+			++unoccluded;
+
+		if (!ts.traverse_litest(probe3, hit))
 			++unoccluded;
 	}
 
@@ -1167,7 +1083,7 @@ class Scene1 : public virtual Scene
 	float accum_y;
 
 	enum {
-		grid_rows = 20,
+		grid_rows = 40,
 		grid_cols = 20,
 		dist_unit = 1
 	};
@@ -2297,7 +2213,7 @@ int main(
 	const BBox& world_bbox = timeline.getElement(scene_1).get_root_bbox();
 
 	const __m128 bbox_min = world_bbox.get_min();
-	const __m128 bbox_max = world_bbox.get_max();
+	const __m128 bbox_max = _mm_mul_ps(world_bbox.get_max(), _mm_setr_ps(1.f, .5f, 1.f, 1.f));
 	const __m128 centre = _mm_mul_ps(
 		_mm_add_ps(bbox_max, bbox_min),
 		_mm_set1_ps(.5f));
@@ -2480,15 +2396,15 @@ int main(
 		++nframes;
 	}
 
-	const uint64_t dt = timer_ns() - t0;
+	const uint64_t sequence_dt = timer_ns() - t0;
 
 	stream::cout << "compute_arg size: " << sizeof(compute_arg) <<
 		"\nworker threads: " << nthreads << "\nambient occlusion rays per pixel: " << ao_probe_count <<
 		"\ntotal frames rendered: " << nframes << '\n';
 
-	if (dt)
+	if (sequence_dt)
 	{
-		const double sec = double(dt) * 1e-9;
+		const double sec = double(sequence_dt) * 1e-9;
 
 		stream::cout << "elapsed time: " << sec << " s"
 			"\naverage FPS: " << nframes / sec << '\n';
