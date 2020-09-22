@@ -81,6 +81,9 @@ TARGET=(
 # Intel Ivy Bridge
 #	core-avx-i
 #	core-avx-i
+# ARM Cortex-A57/A72
+#	armv8-a
+#	cortex-a57
 )
 LFLAGS=(
 # Alias some glibc6 symbols to older ones for better portability

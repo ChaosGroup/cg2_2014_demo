@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CC=/usr/bin/clang++
+CC=${CXX:-clang++}
 BINARY=problem_4
 COMMON=../common
 SOURCE=(
