@@ -78,8 +78,7 @@ Same as above but from branch `better_cpu` and `pocl` patched for good-codegen `
 
 benchmark build directions
 --------------------------
-To get results relevant to the 1st table use commit 474efe0 from branch `master`.
-Detailed direction for getting results relevant to the 2nd table:
+To get results relevant to the 1st table use commit 474efe0 from branch `master`. Detailed directions for getting results relevant to the 2nd table:
 ```
 $ sudo apt-get install --no-install-recommends libhwloc-dev # this is optional as pocl 1.5 has alternative means to collect hw info than via libhwloc
 $ sudo apt-get install build-essential llvm-8-dev llvm-8 clang-8 libclang-8-dev libpng-dev cmake pkg-config
