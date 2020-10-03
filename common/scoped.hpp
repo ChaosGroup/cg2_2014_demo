@@ -1,8 +1,7 @@
 #ifndef scoped_H__
 #define scoped_H__
 
-namespace testbed
-{
+namespace testbed {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // scoped_ptr and scoped_linkage_ptr provide end-of-scope actions on arbitrary and external linkage
@@ -27,8 +26,6 @@ template <
 class scoped_linkage_ptr : non_copyable, FTOR_T< T >
 {
 public:
-	scoped_linkage_ptr() {}
-
 	~scoped_linkage_ptr()
 	{
 		FTOR_T< T >::operator()(PTR_T);
@@ -65,9 +62,7 @@ public:
 
 	void swap(scoped_ptr& oth)
 	{
-		T* const t = m;
-		m = oth.m;
-		oth.m = t;
+		m = __atomic_exchange_n(&oth.m, m, __ATOMIC_RELAXED);
 	}
 
 	T* operator ()() const
@@ -102,7 +97,6 @@ template < typename T >
 class generic_delete
 {
 public:
-
 	void operator()(T* arg)
 	{
 		delete arg;
@@ -114,7 +108,6 @@ template < typename T >
 class generic_delete_arr
 {
 public:
-
 	void operator()(T* arg)
 	{
 		delete [] arg;
