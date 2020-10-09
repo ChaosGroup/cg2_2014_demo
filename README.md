@@ -61,6 +61,7 @@ Results from headless build run to the 1000th frame, resolution 3840x2160; on ha
 | Intel Xeon E3-1270v2 (GT218)      |   1x GT218                  | 9.6               | 0.612    | NVIDIA Corporation GeForce 210 OpenCL 1.1 CUDA 340.102, 1230 MHz                                |
 | Intel P8600 (MCP89)               |   1x MCP89                  | 8.53              | 1.427    | NVIDIA GeForce 320M OpenCL 1.0 10.2.37 310.90.10.05b54, CLI: -use_images, 950 MHz               |
 | NVIDIA Jetson Nano (GM20B)        |   1x GM20B (128 cores)      | 25.6              | 4.754    | pocl 1.6-pre, LLVM 8.0.0, CUDA-sm_53, NVIDIA Tegra X1, 922 MHz                                  |
+| NVIDIA Jetson Xavier NX (GV10B)   |   1x GV10B (348 cores)      | 51.2              | 14.436   | pocl 1.6-pre, LLVM 8.0.0, CUDA-sm_72, NVIDIA Xavier, 1100 MHz                                   |
 
 Same as above but from branch `better_cpu` and `pocl` patched for good-codegen `convert_T` function:
 
