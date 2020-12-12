@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # known issue with clang++-3.6 and the lifespan of temporaries, causing multiple failures at unittest
-CC=clang++-3.5
+CC=${CXX:-clang++-10}
 BINARY=unittest
 SOURCE=(
 	unittest.cpp
@@ -47,6 +47,9 @@ TARGET=(
 # Intel Ivy Bridge
 #	core-avx-i
 #	core-avx-i
+# Arm Cortex-A76
+#	armv8.2-a
+#	cortex-a76
 )
 LFLAGS=(
 # Alias some glibc6 symbols to older ones for better portability

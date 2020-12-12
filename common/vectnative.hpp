@@ -27,6 +27,8 @@
 		// The following header <intrin.h> aggregates all ISA extension headers up to AVX2, unconditionally of target architecture!
 		// That header is also the sole provider of some SSE2-related intrisics missing from the standard SSE2 header <emmintrin.h>.
 		#include <intrin.h>
+	#elif defined(_M_ARM64)
+		#define __ARM_NEON 1
 	#endif
 #endif
 
@@ -153,18 +155,27 @@ inline void setLane(VECTOR_T& n, const size_t idx, const SCALAR_T c) {
 }
 
 #endif
-/// Build a generic 2-lane vector from up to 2 scalars -- missing lanes are set to zero; an internal helper.
+/// Build a 2-lane vector from up to 2 scalars -- missing lanes are set to zero; an internal helper.
 template < typename VECTOR_T, typename SCALAR_T >
 inline VECTOR_T vec2(
 	const SCALAR_T c0,
-	const SCALAR_T c1 = 0) {
+	const SCALAR_T c1 = 0);
+
+/// Build a 2-lane vector replicating a scalar across all lanes; an internal helper.
+template < typename VECTOR_T, typename SCALAR_T >
+inline VECTOR_T splat2(
+	const SCALAR_T c);
+
+#if COMPILER_QUIRK_0000_ARITHMETIC_TYPE == 0
+template < typename VECTOR_T, typename SCALAR_T >
+inline VECTOR_T vec2(
+	const SCALAR_T c0,
+	const SCALAR_T c1) {
 	const compile_assert< sizeof(SCALAR_T[2]) == sizeof(VECTOR_T) > assert_size;
 
 	return (VECTOR_T){ c0, c1 };
 }
 
-/// Build a generic 2-lane vector replicating a scalar across all lanes; an internal helper.
-/// This is an optimisation helper, as some compilers don't optimise adequately vecN(c, c, .. c).
 template < typename VECTOR_T, typename SCALAR_T >
 inline VECTOR_T splat2(
 	const SCALAR_T c) {
@@ -173,7 +184,7 @@ inline VECTOR_T splat2(
 	return (VECTOR_T){ c, c };
 }
 
-#if COMPILER_QUIRK_0000_ARITHMETIC_TYPE != 0
+#else
 // note: no generic vectors with this compiler - specialize vec2 for 'native' vector types
 #if __SSE2__ != 0
 template <>
@@ -221,22 +232,124 @@ inline __m128i splat2< __m128i, u64 >(
 	return _mm_set1_epi64x(c);
 }
 
+#elif __ARM_NEON != 0
+template <>
+inline float32x2_t vec2< float32x2_t, f32 >(
+	const f32 c0,
+	const f32 c1) {
+
+	return float32x2_t{ .n64_f32 = { c0, c1 } };
+}
+
+template <>
+inline int32x2_t vec2< int32x2_t, s32 >(
+	const s32 c0,
+	const s32 c1) {
+
+	return int32x2_t{ .n64_i32 = { c0, c1 } };
+}
+
+template <>
+inline uint32x2_t vec2< uint32x2_t, u32 >(
+	const u32 c0,
+	const u32 c1) {
+
+	return uint32x2_t{ .n64_u32 = { c0, c1 } };
+}
+
+template <>
+inline float32x2_t splat2< float32x2_t, f32 >(
+	const f32 c) {
+
+	return vdup_n_f32(c);
+}
+
+template <>
+inline int32x2_t splat2< int32x2_t, s32 >(
+	const s32 c) {
+
+	return vdup_n_s32(c);
+}
+
+template <>
+inline uint32x2_t splat2< uint32x2_t, u32 >(
+	const u32 c) {
+
+	return vdup_n_u32(c);
+}
+
+template <>
+inline float64x2_t vec2< float64x2_t, f64 >(
+	const f64 c0,
+	const f64 c1) {
+
+	return float64x2_t{ .n128_f64 = { c0, c1 } };
+}
+
+template <>
+inline int64x2_t vec2< int64x2_t, s64 >(
+	const s64 c0,
+	const s64 c1) {
+
+	return int64x2_t{ .n128_i64 = { c0, c1 } };
+}
+
+template <>
+inline uint64x2_t vec2< uint64x2_t, u64 >(
+	const u64 c0,
+	const u64 c1) {
+
+	return uint64x2_t{ .n128_u64 = { c0, c1 } };
+}
+
+template <>
+inline float64x2_t splat2< float64x2_t, f64 >(
+	const f64 c) {
+
+	return vdupq_n_f64(c);
+}
+
+template <>
+inline int64x2_t splat2< int64x2_t, s64 >(
+	const s64 c) {
+
+	return vdupq_n_s64(c);
+}
+
+template <>
+inline uint64x2_t splat2< uint64x2_t, u64 >(
+	const u64 c) {
+
+	return vdupq_n_u64(c);
+}
+
 #endif
 #endif
-/// Build a generic 4-lane vector from up to 4 scalars -- missing lanes are set to zero; an internal helper.
+/// Build a 4-lane vector from up to 4 scalars -- missing lanes are set to zero; an internal helper.
 template < typename VECTOR_T, typename SCALAR_T >
 inline VECTOR_T vec4(
 	const SCALAR_T c0,
 	const SCALAR_T c1 = 0,
 	const SCALAR_T c2 = 0,
-	const SCALAR_T c3 = 0) {
+	const SCALAR_T c3 = 0);
+
+/// Build a 4-lane vector replicating a scalar across all lanes; an internal helper.
+template < typename VECTOR_T, typename SCALAR_T >
+inline VECTOR_T splat4(
+	const SCALAR_T c);
+
+#if COMPILER_QUIRK_0000_ARITHMETIC_TYPE == 0
+template < typename VECTOR_T, typename SCALAR_T >
+inline VECTOR_T vec4(
+	const SCALAR_T c0,
+	const SCALAR_T c1,
+	const SCALAR_T c2,
+	const SCALAR_T c3) {
 	const compile_assert< sizeof(SCALAR_T[4]) == sizeof(VECTOR_T) > assert_size;
 
 	return (VECTOR_T){ c0, c1, c2, c3 };
 }
 
-/// Build a generic 4-lane vector replicating a scalar across all lanes; an internal helper.
-/// This is an optimisation helper, as some compilers don't optimise adequately vecN(c, c, .. c).
 template < typename VECTOR_T, typename SCALAR_T >
 inline VECTOR_T splat4(
 	const SCALAR_T c) {
@@ -245,7 +358,7 @@ inline VECTOR_T splat4(
 	return (VECTOR_T){ c, c, c, c };
 }
 
-#if COMPILER_QUIRK_0000_ARITHMETIC_TYPE != 0
+#else
 // note: no generic vectors with this compiler - specialize vec4 for 'native' vector types
 #if __AVX__ != 0
 template <>
@@ -352,9 +465,95 @@ inline __m128i splat4< __m128i, u32 >(
 	return _mm_set1_epi32(c);
 }
 
+#elif __ARM_NEON != 0
+template <>
+inline float32x4_t vec4< float32x4_t, f32 >(
+	const f32 c0,
+	const f32 c1,
+	const f32 c2,
+	const f32 c3) {
+
+	return float32x4_t{ .n128_f32 = { c0, c1, c2, c3 } };
+}
+
+template <>
+inline int32x4_t vec4< int32x4_t, s32 >(
+	const s32 c0,
+	const s32 c1,
+	const s32 c2,
+	const s32 c3) {
+
+	return int32x4_t{ .n128_i32 = { c0, c1, c2, c3 } };
+}
+
+template <>
+inline uint32x4_t vec4< uint32x4_t, u32 >(
+	const u32 c0,
+	const u32 c1,
+	const u32 c2,
+	const u32 c3) {
+
+	return uint32x4_t{ .n128_u32 = { c0, c1, c2, c3 } };
+}
+
+template <>
+inline int16x4_t vec4< int16x4_t, s16 >(
+	const s16 c0,
+	const s16 c1,
+	const s16 c2,
+	const s16 c3) {
+
+	return int16x4_t{ .n64_i16 = { c0, c1, c2, c3 } };
+}
+
+template <>
+inline uint16x4_t vec4< uint16x4_t, u16 >(
+	const u16 c0,
+	const u16 c1,
+	const u16 c2,
+	const u16 c3) {
+
+	return uint16x4_t{ .n64_u16 = { c0, c1, c2, c3 } };
+}
+
+template <>
+inline float32x4_t splat4< float32x4_t, f32 >(
+	const f32 c) {
+
+	return vdupq_n_f32(c);
+}
+
+template <>
+inline int32x4_t splat4< int32x4_t, s32 >(
+	const s32 c) {
+
+	return vdupq_n_s32(c);
+}
+
+template <>
+inline uint32x4_t splat4< uint32x4_t, u32 >(
+	const u32 c) {
+
+	return vdupq_n_u32(c);
+}
+
+template <>
+inline int16x4_t splat4< int16x4_t, s16 >(
+	const s16 c) {
+
+	return vdup_n_s16(c);
+}
+
+template <>
+inline uint16x4_t splat4< uint16x4_t, u16 >(
+	const u16 c) {
+
+	return vdup_n_u16(c);
+}
+
 #endif
 #endif
-/// Build a generic 8-lane vector from up to 8 scalars -- missing lanes are set to zero; an internal helper.
+/// Build a 8-lane vector from up to 8 scalars -- missing lanes are set to zero; an internal helper.
 template < typename VECTOR_T, typename SCALAR_T >
 inline VECTOR_T vec8(
 	const SCALAR_T c0,
@@ -364,14 +563,29 @@ inline VECTOR_T vec8(
 	const SCALAR_T c4 = 0,
 	const SCALAR_T c5 = 0,
 	const SCALAR_T c6 = 0,
-	const SCALAR_T c7 = 0) {
+	const SCALAR_T c7 = 0);
+
+/// Build a 8-lane vector replicating a scalar across all lanes; an internal helper.
+template < typename VECTOR_T, typename SCALAR_T >
+inline VECTOR_T splat8(
+	const SCALAR_T c);
+
+#if COMPILER_QUIRK_0000_ARITHMETIC_TYPE == 0
+template < typename VECTOR_T, typename SCALAR_T >
+inline VECTOR_T vec8(
+	const SCALAR_T c0,
+	const SCALAR_T c1,
+	const SCALAR_T c2,
+	const SCALAR_T c3,
+	const SCALAR_T c4,
+	const SCALAR_T c5,
+	const SCALAR_T c6,
+	const SCALAR_T c7) {
 	const compile_assert< sizeof(SCALAR_T[8]) == sizeof(VECTOR_T) > assert_size;
 
 	return (VECTOR_T){ c0, c1, c2, c3, c4, c5, c6, c7 };
 }
 
-/// Build a generic 8-lane vector replicating a scalar across all lanes; an internal helper.
-/// This is an optimisation helper, as some compilers don't optimise adequately vecN(c, c, .. c).
 template < typename VECTOR_T, typename SCALAR_T >
 inline VECTOR_T splat8(
 	const SCALAR_T c) {
@@ -380,7 +594,7 @@ inline VECTOR_T splat8(
 	return (VECTOR_T){ c, c, c, c, c, c, c, c };
 }
 
-#if COMPILER_QUIRK_0000_ARITHMETIC_TYPE != 0
+#else
 // note: no generic vectors with this compiler - specialize vec8 for 'native' vector types
 #if __AVX__ != 0
 template <>
@@ -490,9 +704,52 @@ inline __m128i splat8< __m128i, u16 >(
 	return _mm_set1_epi16(c);
 }
 
+#elif __ARM_NEON != 0
+template <>
+inline int16x8_t vec8< int16x8_t, s16 >(
+	const s16 c0,
+	const s16 c1,
+	const s16 c2,
+	const s16 c3,
+	const s16 c4,
+	const s16 c5,
+	const s16 c6,
+	const s16 c7) {
+
+	return int16x8_t{ .n128_i16 = { c0, c1, c2, c3, c4, c5, c6, c7 } };
+}
+
+template <>
+inline uint16x8_t vec8< uint16x8_t, u16 >(
+	const u16 c0,
+	const u16 c1,
+	const u16 c2,
+	const u16 c3,
+	const u16 c4,
+	const u16 c5,
+	const u16 c6,
+	const u16 c7) {
+
+	return uint16x8_t{ .n128_u16 = { c0, c1, c2, c3, c4, c5, c6, c7 } };
+}
+
+template <>
+inline int16x8_t splat8< int16x8_t, s16 >(
+	const s16 c) {
+
+	return vdupq_n_s16(c);
+}
+
+template <>
+inline uint16x8_t splat8< uint16x8_t, u16 >(
+	const u16 c) {
+
+	return vdupq_n_u16(c);
+}
+
 #endif
 #endif
-/// Build a generic 16-lane vector from up to 16 scalars -- missing lanes are set to zero; an internal helper.
+/// Build a 16-lane vector from up to 16 scalars -- missing lanes are set to zero; an internal helper.
 template < typename VECTOR_T, typename SCALAR_T >
 inline VECTOR_T vec16(
 	const SCALAR_T c0,
@@ -510,15 +767,37 @@ inline VECTOR_T vec16(
 	const SCALAR_T c12 = 0,
 	const SCALAR_T c13 = 0,
 	const SCALAR_T c14 = 0,
-	const SCALAR_T c15 = 0) {
+	const SCALAR_T c15 = 0);
+
+/// Build a 16-lane vector replicating a scalar across all lanes; an internal helper.
+template < typename VECTOR_T, typename SCALAR_T >
+inline VECTOR_T splat16(
+	const SCALAR_T c);
+
+#if COMPILER_QUIRK_0000_ARITHMETIC_TYPE == 0
+template < typename VECTOR_T, typename SCALAR_T >
+inline VECTOR_T vec16(
+	const SCALAR_T c0,
+	const SCALAR_T c1,
+	const SCALAR_T c2,
+	const SCALAR_T c3,
+	const SCALAR_T c4,
+	const SCALAR_T c5,
+	const SCALAR_T c6,
+	const SCALAR_T c7,
+	const SCALAR_T c8,
+	const SCALAR_T c9,
+	const SCALAR_T c10,
+	const SCALAR_T c11,
+	const SCALAR_T c12,
+	const SCALAR_T c13,
+	const SCALAR_T c14,
+	const SCALAR_T c15) {
 	const compile_assert< sizeof(SCALAR_T[16]) == sizeof(VECTOR_T) > assert_size;
 
 	return (VECTOR_T){ c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11, c12, c13, c14, c15 };
-
 }
 
-/// Build a generic 16-lane vector replicating a scalar across all lanes; an internal helper.
-/// This is an optimisation helper, as some compilers don't optimise adequately vecN(c, c, .. c).
 template < typename VECTOR_T, typename SCALAR_T >
 inline VECTOR_T splat16(
 	const SCALAR_T c) {
@@ -527,7 +806,7 @@ inline VECTOR_T splat16(
 	return (VECTOR_T){ c, c, c, c, c, c, c, c, c, c, c, c, c, c, c, c };
 }
 
-#if COMPILER_QUIRK_0000_ARITHMETIC_TYPE != 0
+#else
 // note: no generic vectors with this compiler - specialize vec16 for 'native' vector types
 #if __AVX__ != 0
 template <>
@@ -5556,6 +5835,23 @@ public:
 
 #endif
 #if __ARM_NEON != 0
+#if COMPILER_QUIRK_0000_ARITHMETIC_TYPE != 0
+	// note: no generic vectors with this compiler - use the 'native' vector type as the underlying vector type
+	typedef native2< f64, float64x2_t, float64x2_t > f64x2;
+	typedef native2< s64, int64x2_t,   int64x2_t   > s64x2;
+	typedef native2< u64, uint64x2_t,  uint64x2_t  > u64x2;
+	typedef native4< f32, float32x4_t, float32x4_t > f32x4;
+	typedef native4< s32, int32x4_t,   int32x4_t   > s32x4;
+	typedef native4< u32, uint32x4_t,  uint32x4_t  > u32x4;
+	typedef native2< f32, float32x2_t, float32x2_t > f32x2;
+	typedef native2< s32, int32x2_t,   int32x2_t   > s32x2;
+	typedef native2< u32, uint32x2_t,  uint32x2_t  > u32x2;
+	typedef native8< s16, int16x8_t,   int16x8_t   > s16x8;
+	typedef native8< u16, uint16x8_t,  uint16x8_t  > u16x8;
+	typedef native4< s16, int16x4_t,   int16x4_t   > s16x4;
+	typedef native4< u16, uint16x4_t,  uint16x4_t  > u16x4;
+
+#else
 	typedef native2< f64, f64 __attribute__ ((vector_size(2 * sizeof(f64)))), float64x2_t > f64x2;
 	typedef native2< s64, s64 __attribute__ ((vector_size(2 * sizeof(s64)))), int64x2_t   > s64x2;
 	typedef native2< u64, u64 __attribute__ ((vector_size(2 * sizeof(u64)))), uint64x2_t  > u64x2;
@@ -5570,6 +5866,7 @@ public:
 	typedef native4< s16, s16 __attribute__ ((vector_size(4 * sizeof(s16)))), int16x4_t   > s16x4;
 	typedef native4< u16, u16 __attribute__ ((vector_size(4 * sizeof(u16)))), uint16x4_t  > u16x4;
 
+#endif
 	#define NATIVE_F64X2    1
 	#define NATIVE_S64X2    1
 	#define NATIVE_U64X2    1
@@ -5749,105 +6046,105 @@ public:
 	inline bool all(const u64x2 lane_mask, const uint64_t bit_submask = 3) {
 		assert(bit_submask > 0 && bit_submask < 4);
 
-		const uint64x2_t bitmask = (uint64x2_t) { 1, 2 };
+		const uint64x2_t bitmask = vec2< uint64x2_t, u64 >(1, 2);
 		return bit_submask == (bit_submask & vaddvq_u64(vandq_u64(bitmask, lane_mask.getn())));
 	}
 
 	inline bool all(const u32x4 lane_mask, const uint32_t bit_submask = 15) {
 		assert(bit_submask > 0 && bit_submask < 16);
 
-		const uint32x4_t bitmask = (uint32x4_t) { 1, 2, 4, 8 };
+		const uint32x4_t bitmask = vec4< uint32x4_t, u32 >(1, 2, 4, 8);
 		return bit_submask == (bit_submask & vaddvq_u32(vandq_u32(bitmask, lane_mask.getn())));
 	}
 
 	inline bool all(const u32x2 lane_mask, const uint32_t bit_submask = 3) {
 		assert(bit_submask > 0 && bit_submask < 4);
 
-		const uint32x2_t bitmask = (uint32x2_t) { 1, 2 };
+		const uint32x2_t bitmask = vec2< uint32x2_t, u32 >(1, 2);
 		return bit_submask == (bit_submask & vaddv_u32(vand_u32(bitmask, lane_mask.getn())));
 	}
 
 	inline bool all(const u16x8 lane_mask, const uint16_t bit_submask = 255) {
 		assert(bit_submask > 0 && bit_submask < 256);
 
-		const uint16x8_t bitmask = (uint16x8_t) { 1, 2, 4, 8, 16, 32, 64, 128 };
+		const uint16x8_t bitmask = vec8< uint16x8_t, u16 >(1, 2, 4, 8, 16, 32, 64, 128);
 		return bit_submask == (bit_submask & vaddvq_u16(vandq_u16(bitmask, lane_mask.getn())));
 	}
 
 	inline bool all(const u16x4 lane_mask, const uint16_t bit_submask = 15) {
 		assert(bit_submask > 0 && bit_submask < 256);
 
-		const uint16x4_t bitmask = (uint16x4_t) { 1, 2, 4, 8 };
+		const uint16x4_t bitmask = vec4< uint16x4_t, u16 >(1, 2, 4, 8);
 		return bit_submask == (bit_submask & vaddv_u16(vand_u16(bitmask, lane_mask.getn())));
 	}
 
 	inline bool any(const u64x2 lane_mask, const uint64_t bit_submask = 3) {
 		assert(bit_submask > 0 && bit_submask < 4);
 
-		const uint64x2_t bitmask = (uint64x2_t) { 1, 2 };
+		const uint64x2_t bitmask = vec2< uint64x2_t, u64 >(1, 2);
 		return 0 != (bit_submask & vaddvq_u64(vandq_u64(bitmask, lane_mask.getn())));
 	}
 
 	inline bool any(const u32x4 lane_mask, const uint32_t bit_submask = 15) {
 		assert(bit_submask > 0 && bit_submask < 16);
 
-		const uint32x4_t bitmask = (uint32x4_t) { 1, 2, 4, 8 };
+		const uint32x4_t bitmask = vec4< uint32x4_t, u32 >(1, 2, 4, 8);
 		return 0 != (bit_submask & vaddvq_u32(vandq_u32(bitmask, lane_mask.getn())));
 	}
 
 	inline bool any(const u32x2 lane_mask, const uint32_t bit_submask = 3) {
 		assert(bit_submask > 0 && bit_submask < 4);
 
-		const uint32x2_t bitmask = (uint32x2_t) { 1, 2 };
+		const uint32x2_t bitmask = vec2< uint32x2_t, u32 >(1, 2);
 		return 0 != (bit_submask & vaddv_u32(vand_u32(bitmask, lane_mask.getn())));
 	}
 
 	inline bool any(const u16x8 lane_mask, const uint16_t bit_submask = 255) {
 		assert(bit_submask > 0 && bit_submask < 256);
 
-		const uint16x8_t bitmask = (uint16x8_t) { 1, 2, 4, 8, 16, 32, 64, 128 };
+		const uint16x8_t bitmask = vec8< uint16x8_t, u16 >(1, 2, 4, 8, 16, 32, 64, 128);
 		return 0 != (bit_submask & vaddvq_u16(vandq_u16(bitmask, lane_mask.getn())));
 	}
 
 	inline bool any(const u16x4 lane_mask, const uint16_t bit_submask = 15) {
 		assert(bit_submask > 0 && bit_submask < 256);
 
-		const uint16x4_t bitmask = (uint16x4_t) { 1, 2, 4, 8 };
+		const uint16x4_t bitmask = vec4< uint16x4_t, u16 >(1, 2, 4, 8);
 		return 0 != (bit_submask & vaddv_u16(vand_u16(bitmask, lane_mask.getn())));
 	}
 
 	inline bool none(const u64x2 lane_mask, const uint64_t bit_submask = 3) {
 		assert(bit_submask > 0 && bit_submask < 4);
 
-		const uint64x2_t bitmask = (uint64x2_t) { 1, 2 };
+		const uint64x2_t bitmask = vec2< uint64x2_t, u64 >(1, 2);
 		return 0 == (bit_submask & vaddvq_u64(vandq_u64(bitmask, lane_mask.getn())));
 	}
 
 	inline bool none(const u32x4 lane_mask, const uint32_t bit_submask = 15) {
 		assert(bit_submask > 0 && bit_submask < 16);
 
-		const uint32x4_t bitmask = (uint32x4_t) { 1, 2, 4, 8 };
+		const uint32x4_t bitmask = vec4< uint32x4_t, u32 >(1, 2, 4, 8);
 		return 0 == (bit_submask & vaddvq_u32(vandq_u32(bitmask, lane_mask.getn())));
 	}
 
 	inline bool none(const u32x2 lane_mask, const uint32_t bit_submask = 3) {
 		assert(bit_submask > 0 && bit_submask < 4);
 
-		const uint32x2_t bitmask = (uint32x2_t) { 1, 2 };
+		const uint32x2_t bitmask = vec2< uint32x2_t, u32 >(1, 2);
 		return 0 == (bit_submask & vaddv_u32(vand_u32(bitmask, lane_mask.getn())));
 	}
 
 	inline bool none(const u16x8 lane_mask, const uint16_t bit_submask = 255) {
 		assert(bit_submask > 0 && bit_submask < 256);
 
-		const uint16x8_t bitmask = (uint16x8_t) { 1, 2, 4, 8, 16, 32, 64, 128 };
+		const uint16x8_t bitmask = vec8< uint16x8_t, u16 >(1, 2, 4, 8, 16, 32, 64, 128);
 		return 0 == (bit_submask & vaddvq_u16(vandq_u16(bitmask, lane_mask.getn())));
 	}
 
 	inline bool none(const u16x4 lane_mask, const uint16_t bit_submask = 15) {
 		assert(bit_submask > 0 && bit_submask < 256);
 
-		const uint16x4_t bitmask = (uint16x4_t) { 1, 2, 4, 8 };
+		const uint16x4_t bitmask = vec4< uint16x4_t, u16 >(1, 2, 4, 8);
 		return 0 == (bit_submask & vaddv_u16(vand_u16(bitmask, lane_mask.getn())));
 	}
 
@@ -5999,9 +6296,8 @@ public:
 		const compile_assert< SELECTOR >= 0 && SELECTOR < 4 > assert_selector;
 
 		const uint64_t u = -1;
-		const uint64x2_t vmsk = (uint64x2_t) {
-			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0
-		};
+		const uint64x2_t vmsk = vec2< uint64x2_t, u64 >(
+			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0);
 		return f64x2(vbslq_f64(vmsk, b.getn(), a.getn()), flag_native());
 	}
 
@@ -6010,9 +6306,8 @@ public:
 		const compile_assert< SELECTOR >= 0 && SELECTOR < 4 > assert_selector;
 
 		const uint64_t u = -1;
-		const uint64x2_t vmsk = (uint64x2_t) {
-			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0
-		};
+		const uint64x2_t vmsk = vec2< uint64x2_t, u64 >(
+			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0);
 		return s64x2(vbslq_s64(vmsk, b.getn(), a.getn()), flag_native());
 	}
 
@@ -6021,9 +6316,8 @@ public:
 		const compile_assert< SELECTOR >= 0 && SELECTOR < 4 > assert_selector;
 
 		const uint64_t u = -1;
-		const uint64x2_t vmsk = (uint64x2_t) {
-			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0
-		};
+		const uint64x2_t vmsk = vec2< uint64x2_t, u64 >(
+			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0);
 		return u64x2(vbslq_u64(vmsk, b.getn(), a.getn()), flag_native());
 	}
 
@@ -6032,9 +6326,8 @@ public:
 		const compile_assert< SELECTOR >= 0 && SELECTOR < 16 > assert_selector;
 
 		const uint32_t u = -1;
-		const uint32x4_t vmsk = (uint32x4_t) {
-			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0, SELECTOR & 0x4 ? u : 0, SELECTOR & 0x8 ? u : 0
-		};
+		const uint32x4_t vmsk = vec4< uint32x4_t, u32 >(
+			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0, SELECTOR & 0x4 ? u : 0, SELECTOR & 0x8 ? u : 0);
 		return f32x4(vbslq_f32(vmsk, b.getn(), a.getn()), flag_native());
 	}
 
@@ -6043,9 +6336,8 @@ public:
 		const compile_assert< SELECTOR >= 0 && SELECTOR < 16 > assert_selector;
 
 		const uint32_t u = -1;
-		const uint32x4_t vmsk = (uint32x4_t) {
-			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0, SELECTOR & 0x4 ? u : 0, SELECTOR & 0x8 ? u : 0
-		};
+		const uint32x4_t vmsk = vec4< uint32x4_t, u32 >(
+			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0, SELECTOR & 0x4 ? u : 0, SELECTOR & 0x8 ? u : 0);
 		return s32x4(vbslq_s32(vmsk, b.getn(), a.getn()), flag_native());
 	}
 
@@ -6054,9 +6346,8 @@ public:
 		const compile_assert< SELECTOR >= 0 && SELECTOR < 16 > assert_selector;
 
 		const uint32_t u = -1;
-		const uint32x4_t vmsk = (uint32x4_t) {
-			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0, SELECTOR & 0x4 ? u : 0, SELECTOR & 0x8 ? u : 0
-		};
+		const uint32x4_t vmsk = vec4< uint32x4_t, u32 >(
+			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0, SELECTOR & 0x4 ? u : 0, SELECTOR & 0x8 ? u : 0);
 		return u32x4(vbslq_u32(vmsk, b.getn(), a.getn()), flag_native());
 	}
 
@@ -6065,9 +6356,8 @@ public:
 		const compile_assert< SELECTOR >= 0 && SELECTOR < 4 > assert_selector;
 
 		const uint32_t u = -1;
-		const uint32x2_t vmsk = (uint32x2_t) {
-			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0
-		};
+		const uint32x2_t vmsk = vec2< uint32x2_t, u32 >(
+			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0);
 		return f32x2(vbsl_f32(vmsk, b.getn(), a.getn()), flag_native());
 	}
 
@@ -6076,9 +6366,8 @@ public:
 		const compile_assert< SELECTOR >= 0 && SELECTOR < 4 > assert_selector;
 
 		const uint32_t u = -1;
-		const uint32x2_t vmsk = (uint32x2_t) {
-			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0
-		};
+		const uint32x2_t vmsk = vec2< uint32x2_t, u32 >(
+			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0);
 		return s32x2(vbsl_s32(vmsk, b.getn(), a.getn()), flag_native());
 	}
 
@@ -6087,9 +6376,8 @@ public:
 		const compile_assert< SELECTOR >= 0 && SELECTOR < 4 > assert_selector;
 
 		const uint32_t u = -1;
-		const uint32x2_t vmsk = (uint32x2_t) {
-			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0
-		};
+		const uint32x2_t vmsk = vec2< uint32x2_t, u32 >(
+			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0);
 		return u32x2(vbsl_u32(vmsk, b.getn(), a.getn()), flag_native());
 	}
 
@@ -6098,10 +6386,9 @@ public:
 		const compile_assert< SELECTOR >= 0 && SELECTOR < 256 > assert_selector;
 
 		const uint16_t u = -1;
-		const uint16x8_t vmsk = (uint16x8_t) {
+		const uint16x8_t vmsk = vec8< uint16x8_t, u16 >(
 			SELECTOR & 0x01 ? u : 0, SELECTOR & 0x02 ? u : 0, SELECTOR & 0x04 ? u : 0, SELECTOR & 0x08 ? u : 0,
-			SELECTOR & 0x10 ? u : 0, SELECTOR & 0x20 ? u : 0, SELECTOR & 0x40 ? u : 0, SELECTOR & 0x80 ? u : 0
-		};
+			SELECTOR & 0x10 ? u : 0, SELECTOR & 0x20 ? u : 0, SELECTOR & 0x40 ? u : 0, SELECTOR & 0x80 ? u : 0);
 		return s16x8(vbslq_s16(vmsk, b.getn(), a.getn()), flag_native());
 	}
 
@@ -6110,10 +6397,9 @@ public:
 		const compile_assert< SELECTOR >= 0 && SELECTOR < 256 > assert_selector;
 
 		const uint16_t u = -1;
-		const uint16x8_t vmsk = (uint16x8_t) {
+		const uint16x8_t vmsk = vec8< uint16x8_t, u16 >(
 			SELECTOR & 0x01 ? u : 0, SELECTOR & 0x02 ? u : 0, SELECTOR & 0x04 ? u : 0, SELECTOR & 0x08 ? u : 0,
-			SELECTOR & 0x10 ? u : 0, SELECTOR & 0x20 ? u : 0, SELECTOR & 0x40 ? u : 0, SELECTOR & 0x80 ? u : 0
-		};
+			SELECTOR & 0x10 ? u : 0, SELECTOR & 0x20 ? u : 0, SELECTOR & 0x40 ? u : 0, SELECTOR & 0x80 ? u : 0);
 		return u16x8(vbslq_u16(vmsk, b.getn(), a.getn()), flag_native());
 	}
 
@@ -6122,9 +6408,8 @@ public:
 		const compile_assert< SELECTOR >= 0 && SELECTOR < 16 > assert_selector;
 
 		const uint16_t u = -1;
-		const uint16x4_t vmsk = (uint16x4_t) {
-			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0, SELECTOR & 0x4 ? u : 0, SELECTOR & 0x8 ? u : 0
-		};
+		const uint16x4_t vmsk = vec4< uint16x4_t, u16 >(
+			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0, SELECTOR & 0x4 ? u : 0, SELECTOR & 0x8 ? u : 0);
 		return s16x4(vbsl_s16(vmsk, b.getn(), a.getn()), flag_native());
 	}
 
@@ -6133,9 +6418,8 @@ public:
 		const compile_assert< SELECTOR >= 0 && SELECTOR < 16 > assert_selector;
 
 		const uint16_t u = -1;
-		const uint16x4_t vmsk = (uint16x4_t) {
-			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0, SELECTOR & 0x4 ? u : 0, SELECTOR & 0x8 ? u : 0
-		};
+		const uint16x4_t vmsk = vec4< uint16x4_t, u16 >(
+			SELECTOR & 0x1 ? u : 0, SELECTOR & 0x2 ? u : 0, SELECTOR & 0x4 ? u : 0, SELECTOR & 0x8 ? u : 0);
 		return u16x4(vbsl_u16(vmsk, b.getn(), a.getn()), flag_native());
 	}
 
@@ -6539,6 +6823,184 @@ public:
 	}
 
 #endif
+#if COMPILER_QUIRK_0000_ARITHMETIC_TYPE != 0
+	inline f64x2 operator +(const f64x2 a, const f64x2 b) {
+		return f64x2(vaddq_f64(a.getn(), b.getn()), flag_native());
+	}
+
+	inline s64x2 operator +(const s64x2 a, const s64x2 b) {
+		return s64x2(vaddq_s64(a.getn(), b.getn()), flag_native());
+	}
+
+	inline u64x2 operator +(const u64x2 a, const u64x2 b) {
+		return u64x2(vaddq_u64(a.getn(), b.getn()), flag_native());
+	}
+
+	inline f32x4 operator +(const f32x4 a, const f32x4 b) {
+		return f32x4(vaddq_f32(a.getn(), b.getn()), flag_native());
+	}
+
+	inline s32x4 operator +(const s32x4 a, const s32x4 b) {
+		return s32x4(vaddq_s32(a.getn(), b.getn()), flag_native());
+	}
+
+	inline u32x4 operator +(const u32x4 a, const u32x4 b) {
+		return u32x4(vaddq_u32(a.getn(), b.getn()), flag_native());
+	}
+
+	inline f32x2 operator +(const f32x2 a, const f32x2 b) {
+		return f32x2(vadd_f32(a.getn(), b.getn()), flag_native());
+	}
+
+	inline s32x2 operator +(const s32x2 a, const s32x2 b) {
+		return s32x2(vadd_s32(a.getn(), b.getn()), flag_native());
+	}
+
+	inline u32x2 operator +(const u32x2 a, const u32x2 b) {
+		return u32x2(vadd_u32(a.getn(), b.getn()), flag_native());
+	}
+
+	inline s16x8 operator +(const s16x8 a, const s16x8 b) {
+		return s16x8(vaddq_s16(a.getn(), b.getn()), flag_native());
+	}
+
+	inline u16x8 operator +(const u16x8 a, const u16x8 b) {
+		return u16x8(vaddq_u16(a.getn(), b.getn()), flag_native());
+	}
+
+	inline s16x4 operator +(const s16x4 a, const s16x4 b) {
+		return s16x4(vadd_s16(a.getn(), b.getn()), flag_native());
+	}
+
+	inline u16x4 operator +(const u16x4 a, const u16x4 b) {
+		return u16x4(vadd_u16(a.getn(), b.getn()), flag_native());
+	}
+
+	inline f64x2 operator -(const f64x2 a, const f64x2 b) {
+		return f64x2(vsubq_f64(a.getn(), b.getn()), flag_native());
+	}
+
+	inline s64x2 operator -(const s64x2 a, const s64x2 b) {
+		return s64x2(vsubq_s64(a.getn(), b.getn()), flag_native());
+	}
+
+	inline u64x2 operator -(const u64x2 a, const u64x2 b) {
+		return u64x2(vsubq_u64(a.getn(), b.getn()), flag_native());
+	}
+
+	inline f32x4 operator -(const f32x4 a, const f32x4 b) {
+		return f32x4(vsubq_f32(a.getn(), b.getn()), flag_native());
+	}
+
+	inline s32x4 operator -(const s32x4 a, const s32x4 b) {
+		return s32x4(vsubq_s32(a.getn(), b.getn()), flag_native());
+	}
+
+	inline u32x4 operator -(const u32x4 a, const u32x4 b) {
+		return u32x4(vsubq_u32(a.getn(), b.getn()), flag_native());
+	}
+
+	inline f32x2 operator -(const f32x2 a, const f32x2 b) {
+		return f32x2(vsub_f32(a.getn(), b.getn()), flag_native());
+	}
+
+	inline s32x2 operator -(const s32x2 a, const s32x2 b) {
+		return s32x2(vsub_s32(a.getn(), b.getn()), flag_native());
+	}
+
+	inline u32x2 operator -(const u32x2 a, const u32x2 b) {
+		return u32x2(vsub_u32(a.getn(), b.getn()), flag_native());
+	}
+
+	inline s16x8 operator -(const s16x8 a, const s16x8 b) {
+		return s16x8(vsubq_s16(a.getn(), b.getn()), flag_native());
+	}
+
+	inline u16x8 operator -(const u16x8 a, const u16x8 b) {
+		return u16x8(vsubq_u16(a.getn(), b.getn()), flag_native());
+	}
+
+	inline s16x4 operator -(const s16x4 a, const s16x4 b) {
+		return s16x4(vsub_s16(a.getn(), b.getn()), flag_native());
+	}
+
+	inline u16x4 operator -(const u16x4 a, const u16x4 b) {
+		return u16x4(vsub_u16(a.getn(), b.getn()), flag_native());
+	}
+
+	inline f64x2 operator *(const f64x2 a, const f64x2 b) {
+		return f64x2(vmulq_f64(a.getn(), b.getn()), flag_native());
+	}
+
+	inline f32x4 operator *(const f32x4 a, const f32x4 b) {
+		return f32x4(vmulq_f32(a.getn(), b.getn()), flag_native());
+	}
+
+	inline s32x4 operator *(const s32x4 a, const s32x4 b) {
+		return s32x4(vmulq_s32(a.getn(), b.getn()), flag_native());
+	}
+
+	inline u32x4 operator *(const u32x4 a, const u32x4 b) {
+		return u32x4(vmulq_u32(a.getn(), b.getn()), flag_native());
+	}
+
+	inline f32x2 operator *(const f32x2 a, const f32x2 b) {
+		return f32x2(vmul_f32(a.getn(), b.getn()), flag_native());
+	}
+
+	inline s32x2 operator *(const s32x2 a, const s32x2 b) {
+		return s32x2(vmul_s32(a.getn(), b.getn()), flag_native());
+	}
+
+	inline u32x2 operator *(const u32x2 a, const u32x2 b) {
+		return u32x2(vmul_u32(a.getn(), b.getn()), flag_native());
+	}
+
+	inline s16x8 operator *(const s16x8 a, const s16x8 b) {
+		return s16x8(vmulq_s16(a.getn(), b.getn()), flag_native());
+	}
+
+	inline u16x8 operator *(const u16x8 a, const u16x8 b) {
+		return u16x8(vmulq_u16(a.getn(), b.getn()), flag_native());
+	}
+
+	inline s16x4 operator *(const s16x4 a, const s16x4 b) {
+		return s16x4(vmul_s16(a.getn(), b.getn()), flag_native());
+	}
+
+	inline u16x4 operator *(const u16x4 a, const u16x4 b) {
+		return u16x4(vmul_u16(a.getn(), b.getn()), flag_native());
+	}
+
+	inline f64x2 operator /(const f64x2 a, const f64x2 b) {
+		return f64x2(vdivq_f64(a.getn(), b.getn()), flag_native());
+	}
+
+	inline f32x4 operator /(const f32x4 a, const f32x4 b) {
+		return f32x4(vdivq_f32(a.getn(), b.getn()), flag_native());
+	}
+
+	inline f32x2 operator /(const f32x2 a, const f32x2 b) {
+		return f32x2(vdiv_f32(a.getn(), b.getn()), flag_native());
+	}
+
+	inline f64x2 operator -(const f64x2 x) {
+		return f64x2(vnegq_f64(x.getn()), flag_native());
+	}
+
+	inline f32x4 operator -(const f32x4 x) {
+		return f32x4(vnegq_f32(x.getn()), flag_native());
+	}
+
+	inline s32x4 operator -(const s32x4 x) {
+		return s32x4(vnegq_s32(x.getn()), flag_native());
+	}
+
+	inline s16x8 operator -(const s16x8 x) {
+		return s16x8(vnegq_s16(x.getn()), flag_native());
+	}
+
+#endif
 	/// Shift left logical /////////////////////////////////////////////////////////////////////////
 	template < uint32_t COUNT >
 	inline s64x2 shl(const s64x2 a) {
@@ -6611,7 +7073,7 @@ public:
 	}
 
 	inline u32x2 shl(const u32x2 a, const u32x2 c) {
-		return u32x2(vshl_u32(a.getn(), as_s32x2(c)), flag_native());
+		return u32x2(vshl_u32(a.getn(), as_s32x2(c).getn()), flag_native());
 	}
 
 	inline s16x8 shl(const s16x8 a, const u16x8 c) {

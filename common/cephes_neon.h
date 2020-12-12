@@ -49,12 +49,23 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#if defined(__GNUC__)
 #define _PS_CONST(Name, Val) \
 	static const float pf32_##Name[4] __attribute__ ((aligned(16))) = { Val, Val, Val, Val }
 #define _PI32_CONST(Name, Val) \
 	static const int pi32_##Name[4] __attribute__ ((aligned(16))) = { (int)(Val), (int)(Val), (int)(Val), (int)(Val) }
 #define _PS_CONST_INT(Name, Val) \
 	static const int pf32_##Name[4] __attribute__ ((aligned(16))) = { (int)(Val), (int)(Val), (int)(Val), (int)(Val) }
+
+#else
+#define _PS_CONST(Name, Val) \
+	static const float __declspec (align(16)) pf32_##Name[4] = { Val, Val, Val, Val }
+#define _PI32_CONST(Name, Val) \
+	static const int __declspec (align(16)) pi32_##Name[4] = { (int)(Val), (int)(Val), (int)(Val), (int)(Val) }
+#define _PS_CONST_INT(Name, Val) \
+	static const int __declspec (align(16)) pf32_##Name[4]   = { (int)(Val), (int)(Val), (int)(Val), (int)(Val) }
+
+#endif
 
 _PS_CONST(1  , 1.0f);
 _PS_CONST(0p5, 0.5f);
