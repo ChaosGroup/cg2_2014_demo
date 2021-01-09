@@ -5653,7 +5653,7 @@ public:
 	inline s64x4 operator ~ (const s64x4 a) {
 
 #if __AVX2__ != 0
-		const __m256 nmask = _mm256_cmpeq_epi32(_mm256_setzero_si256(), _mm256_setzero_si256());
+		const __m256i nmask = _mm256_cmpeq_epi32(_mm256_setzero_si256(), _mm256_setzero_si256());
 		return s64x4(_mm256_xor_si256(a.getn(), nmask), flag_native());
 
 #else
@@ -5677,7 +5677,7 @@ public:
 	inline s32x8 operator ~ (const s32x8 a) {
 
 #if __AVX2__ != 0
-		const __m256 nmask = _mm256_cmpeq_epi32(_mm256_setzero_si256(), _mm256_setzero_si256());
+		const __m256i nmask = _mm256_cmpeq_epi32(_mm256_setzero_si256(), _mm256_setzero_si256());
 		return s32x8(_mm256_xor_si256(a.getn(), nmask), flag_native());
 
 #else
@@ -5701,7 +5701,7 @@ public:
 	inline s16x16 operator ~ (const s16x16 a) {
 
 #if __AVX2__ != 0
-		const __m256 nmask = _mm256_cmpeq_epi32(_mm256_setzero_si256(), _mm256_setzero_si256());
+		const __m256i nmask = _mm256_cmpeq_epi32(_mm256_setzero_si256(), _mm256_setzero_si256());
 		return s16x16(_mm256_xor_si256(a.getn(), nmask), flag_native());
 
 #else
