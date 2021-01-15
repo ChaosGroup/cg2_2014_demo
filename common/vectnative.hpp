@@ -68,9 +68,11 @@
 // COMPILER_QUIRK_0001_SUBSCRIPT_IN_ARITHMETIC_TYPE      - the simd arithmetic type does not provide simple lane-access means
 // COMPILER_QUIRK_0002_IMPLICIT_CAST_TO_ARITHMETIC_TYPE  - the compiler does not honor the cast operator to the simd arithmetic type in situations suitable for implicit casts
 // COMPILER_QUIRK_0003_RELATIONAL_OPS                    - the simd arithmetic type does not provide relational ops
+// COMPILER_QUIRK_0004_VMVNQ_U64                         - the arm neon header does not include an intrinsic for vmvnq_u64 (https://developer.arm.com/documentation/ihi0073/latest/)
 
 #if _MSC_VER != 0
 	#define COMPILER_QUIRK_0000_ARITHMETIC_TYPE                          1
+	#define COMPILER_QUIRK_0004_VMVNQ_U64                                1
 #else
 	#if __clang__ == 0 && __GNUC__ != 0
 		#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 8)
@@ -79,6 +81,7 @@
 		#define COMPILER_QUIRK_0002_IMPLICIT_CAST_TO_ARITHMETIC_TYPE     1
 		#define COMPILER_QUIRK_0003_RELATIONAL_OPS                       1
 	#endif
+	#define COMPILER_QUIRK_0004_VMVNQ_U64                                1
 #endif
 
 namespace simd {
@@ -6562,56 +6565,62 @@ public:
 		return u16x4(vceq_u16(a.getn(), b.getn()), flag_native());
 	}
 
+#if COMPILER_QUIRK_0004_VMVNQ_U64 != 0
+	inline uint64x2_t vmvnq_u64(uint64x2_t src) {
+		return vreinterpret_u64_u32(vmvnq_u32(vreinterpret_u32_u64(src)));
+	}
+
+#endif
 	inline u64x2 operator !=(const f64x2 a, const f64x2 b) {
-		return u64x2(veorq_u64(vceqq_f64(a.getn(), b.getn()), vdupq_n_u64(-1)), flag_native());
+		return u64x2(vmvnq_u64(vceqq_f64(a.getn(), b.getn())), flag_native());
 	}
 
 	inline u64x2 operator !=(const s64x2 a, const s64x2 b) {
-		return u64x2(veorq_u64(vceqq_s64(a.getn(), b.getn()), vdupq_n_u64(-1)), flag_native());
+		return u64x2(vmvnq_u64(vceqq_s64(a.getn(), b.getn())), flag_native());
 	}
 
 	inline u64x2 operator !=(const u64x2 a, const u64x2 b) {
-		return u64x2(veorq_u64(vceqq_u64(a.getn(), b.getn()), vdupq_n_u64(-1)), flag_native());
+		return u64x2(vmvnq_u64(vceqq_u64(a.getn(), b.getn())), flag_native());
 	}
 
 	inline u32x4 operator !=(const f32x4 a, const f32x4 b) {
-		return u32x4(veorq_u32(vceqq_f32(a.getn(), b.getn()), vdupq_n_u32(-1)), flag_native());
+		return u32x4(vmvnq_u32(vceqq_f32(a.getn(), b.getn())), flag_native());
 	}
 
 	inline u32x4 operator !=(const s32x4 a, const s32x4 b) {
-		return u32x4(veorq_u32(vceqq_s32(a.getn(), b.getn()), vdupq_n_u32(-1)), flag_native());
+		return u32x4(vmvnq_u32(vceqq_s32(a.getn(), b.getn())), flag_native());
 	}
 
 	inline u32x4 operator !=(const u32x4 a, const u32x4 b) {
-		return u32x4(veorq_u32(vceqq_u32(a.getn(), b.getn()), vdupq_n_u32(-1)), flag_native());
+		return u32x4(vmvnq_u32(vceqq_u32(a.getn(), b.getn())), flag_native());
 	}
 
 	inline u32x2 operator !=(const f32x2 a, const f32x2 b) {
-		return u32x2(veor_u32(vceq_f32(a.getn(), b.getn()), vdup_n_u32(-1)), flag_native());
+		return u32x2(vmvn_u32(vceq_f32(a.getn(), b.getn())), flag_native());
 	}
 
 	inline u32x2 operator !=(const s32x2 a, const s32x2 b) {
-		return u32x2(veor_u32(vceq_s32(a.getn(), b.getn()), vdup_n_u32(-1)), flag_native());
+		return u32x2(vmvn_u32(vceq_s32(a.getn(), b.getn())), flag_native());
 	}
 
 	inline u32x2 operator !=(const u32x2 a, const u32x2 b) {
-		return u32x2(veor_u32(vceq_u32(a.getn(), b.getn()), vdup_n_u32(-1)), flag_native());
+		return u32x2(vmvn_u32(vceq_u32(a.getn(), b.getn())), flag_native());
 	}
 
 	inline u16x8 operator !=(const s16x8 a, const s16x8 b) {
-		return u16x8(veorq_u16(vceqq_s16(a.getn(), b.getn()), vdupq_n_u16(-1)), flag_native());
+		return u16x8(vmvnq_u16(vceqq_s16(a.getn(), b.getn())), flag_native());
 	}
 
 	inline u16x8 operator !=(const u16x8 a, const u16x8 b) {
-		return u16x8(veorq_u16(vceqq_u16(a.getn(), b.getn()), vdupq_n_u16(-1)), flag_native());
+		return u16x8(vmvnq_u16(vceqq_u16(a.getn(), b.getn())), flag_native());
 	}
 
 	inline u16x4 operator !=(const s16x4 a, const s16x4 b) {
-		return u16x4(veor_u16(vceq_s16(a.getn(), b.getn()), vdup_n_u16(-1)), flag_native());
+		return u16x4(vmvn_u16(vceq_s16(a.getn(), b.getn())), flag_native());
 	}
 
 	inline u16x4 operator !=(const u16x4 a, const u16x4 b) {
-		return u16x4(veor_u16(vceq_u16(a.getn(), b.getn()), vdup_n_u16(-1)), flag_native());
+		return u16x4(vmvn_u16(vceq_u16(a.getn(), b.getn())), flag_native());
 	}
 
 	inline u64x2 operator <(const f64x2 a, const f64x2 b) {
