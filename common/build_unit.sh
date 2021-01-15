@@ -72,6 +72,7 @@ else
 	CFLAGS+=(
 # Enable some optimisations that may or may not be enabled by the global optimisation level of choice in this compiler version
 		-ffast-math
+		-fno-unsafe-math-optimizations
 		-fstrict-aliasing
 		-fstrict-overflow
 		-funroll-loops
