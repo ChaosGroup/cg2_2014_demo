@@ -62,7 +62,7 @@ Results from headless build run to the 1000th frame, resolution 3840x2160; on ha
 | Intel P8600 (MCP89)               |   1x MCP89                  | 8.53              | 1.427    | NVIDIA GeForce 320M OpenCL 1.0 10.2.37 310.90.10.05b54, CLI: -use_images, 950 MHz               |
 | NVIDIA Jetson Nano (GM20B)        |   1x GM20B (128 cores)      | 25.6              | 4.754    | pocl 1.6-pre, LLVM 8.0.0, CUDA-sm_53, NVIDIA Tegra X1, 922 MHz                                  |
 | NVIDIA Jetson Xavier NX (GV10B)   |   1x GV10B (348 cores)      | 51.2              | 14.744   | pocl 1.6-pre, LLVM 8.0.0, CUDA-sm_72, NVIDIA Xavier, 1100 MHz                                   |
-| Apple M1 (AppleFamily7)           |   1x AppleFamily7 (7 cores) | 68.25             | 46.146   | Apple M1 OpenCL 1.2 (Oct 29 2020 19:50:08), 1000 MHz                                            |
+| Apple M1 (AppleFamily7)           |   1x AppleFamily7 (7 cores) | 68.25             | 60.565   | Apple M1 OpenCL 1.2 (Nov 23 2020 03:06:28), 1000 MHz                                            |
 
 Same as above but from branch `better_cpu` and `pocl` patched for good-codegen `convert_T` function:
 
