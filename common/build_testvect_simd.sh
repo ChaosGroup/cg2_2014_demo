@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CC=clang++-3.5
+CXX=${CXX:-clang++}
 TARGET=testvect_simd
 SOURCE=(
 	testvect_simd.cpp
@@ -14,6 +14,12 @@ if [[ ${MACHTYPE} =~ "-apple-darwin" ]]; then
 	SOURCE+=(
 		pthread_barrier.cpp
 	)
+	CXXFLAGS+=(
+		-DCACHELINE_SIZE=`sysctl hw.cachelinesize | sed 's/^hw.cachelinesize: //g'`
+		-march=armv8.4-a
+		-mtune=native
+	)
+
 elif [[ ${MACHTYPE} =~ "-linux-" ]]; then
 	NUM_LOGICAL_CORES=`lscpu | grep ^"CPU(s)" | sed s/^[^[:digit:]]*//`
 	LFLAGS+=(
@@ -23,7 +29,10 @@ else
 	echo Unknown platform
 	exit 255
 fi
-CFLAGS=(
+
+source cxx_util.sh
+
+CXXFLAGS+=(
 	-pipe
 	-fno-exceptions
 	-fno-rtti
@@ -67,128 +76,43 @@ CFLAGS=(
 # Produce asm listings instead of binaries
 #	-S
 )
-CC_FILENAME=${CC##*/}
-if [[ ${CC_FILENAME:0:3} == "g++" ]]; then
-	CFLAGS+=(
+CXX_FILENAME=${CXX##*/}
+if [[ ${CXX_FILENAME:0:3} == "g++" ]]; then
+	CXXFLAGS+=(
 		-ffast-math
 	)
 
-elif [[ ${CC_FILENAME:0:7} == "clang++" ]]; then
-	CFLAGS+=(
+elif [[ ${CXX_FILENAME:0:7} == "clang++" ]]; then
+	CXXFLAGS+=(
 		-ffp-contract=fast
 	)
 
-elif [[ ${CC_FILENAME:0:4} == "icpc" ]]; then
-	CFLAGS+=(
+elif [[ ${CXX_FILENAME:0:4} == "icpc" ]]; then
+	CXXFLAGS+=(
 		-fp-model fast=2
 		-opt-prefetch=0
 		-opt-streaming-cache-evict=0
 	)
 fi
 
-if [[ ${HOSTTYPE:0:3} == "arm" ]]; then
+if [[ ${HOSTTYPE:0:3} == "arm" && ${MACHTYPE} =~ "-linux-" ]]; then
 
 	# clang can fail auto-detecting the host armv7/armv8 cpu on some setups; collect all part numbers
-	UARCH=`cat /proc/cpuinfo | grep "^CPU part" | sed s/^[^[:digit:]]*//`
+	cxx_uarch_arm
 
-	# in order of preference, in case of big.LITTLE (armv7 and armv8 lumped together)
-	if   [ `echo $UARCH | grep -c 0xd09` -ne 0 ]; then
-		CFLAGS+=(
-			-march=armv8-a
-			-mtune=cortex-a73
-		)
-	elif [ `echo $UARCH | grep -c 0xd08` -ne 0 ]; then
-		CFLAGS+=(
-			-march=armv8-a
-			-mtune=cortex-a72
-		)
-	elif [ `echo $UARCH | grep -c 0xd07` -ne 0 ]; then
-		CFLAGS+=(
-			-march=armv8-a
-			-mtune=cortex-a57
-		)
-	elif [ `echo $UARCH | grep -c 0xd03` -ne 0 ]; then
-		CFLAGS+=(
-			-march=armv8-a
-			-mtune=cortex-a53
-		)
-	elif [ `echo $UARCH | grep -c 0xc0f` -ne 0 ]; then
-		CFLAGS+=(
-			-march=armv7-a
-			-mtune=cortex-a15
-		)
-	elif [ `echo $UARCH | grep -c 0xc0e` -ne 0 ]; then
-		CFLAGS+=(
-			-march=armv7-a
-			-mtune=cortex-a17
-		)
-	elif [ `echo $UARCH | grep -c 0xc09` -ne 0 ]; then
-		CFLAGS+=(
-			-march=armv7-a
-			-mtune=cortex-a9
-		)
-	elif [ `echo $UARCH | grep -c 0xc08` -ne 0 ]; then
-		CFLAGS+=(
-			-march=armv7-a
-			-mtune=cortex-a8
-		)
-	elif [ `echo $UARCH | grep -c 0xc07` -ne 0 ]; then
-		CFLAGS+=(
-			-march=armv7-a
-			-mtune=cortex-a7
-		)
-	fi
-
-	UNAME_MACHINE=`uname -m`
-
-	if [[ $UNAME_MACHINE == "armv7l" ]]; then
-
-		CFLAGS+=(
-			-marm
-			-mfpu=neon
-			-DCACHELINE_SIZE=32
-		)
-	elif [[ $UNAME_MACHINE == "aarch64" ]]; then # for armv8 devices with aarch64 kernels + armv7 userspaces
-
-		CFLAGS+=(
-			-marm
-			-mfpu=neon
-			-DCACHELINE_SIZE=64
-		)
-	fi
-
-elif [[ $HOSTTYPE == "aarch64" ]]; then
-
-	# clang can fail auto-detecting the host armv8 cpu on some setups; collect all part numbers
-	UARCH=`cat /proc/cpuinfo | grep "^CPU part" | sed s/^[^[:digit:]]*//`
-
-	# choose in order of preference, in case of big.LITTLE
-	if   [ `echo $UARCH | grep -c 0xd09` -ne 0 ]; then
-		CFLAGS+=(
-			-mtune=cortex-a73
-		)
-	elif [ `echo $UARCH | grep -c 0xd08` -ne 0 ]; then
-		CFLAGS+=(
-			-mtune=cortex-a72
-		)
-	elif [ `echo $UARCH | grep -c 0xd07` -ne 0 ]; then
-		CFLAGS+=(
-			-mtune=cortex-a57
-		)
-	elif [ `echo $UARCH | grep -c 0xd03` -ne 0 ]; then
-		CFLAGS+=(
-			-mtune=cortex-a53
-		)
-	fi
-
-	CFLAGS+=(
-		-march=armv8-a
-		-DCACHELINE_SIZE=64
+	CXXFLAGS+=(
+		-marm
+		-mfpu=neon
 	)
 
-elif [[ $HOSTTYPE == "x86_64" ]]; then
+elif [[ ${HOSTTYPE} == "aarch64" ]]; then
 
-	CFLAGS+=(
+	# clang can fail auto-detecting the host armv8 cpu on some setups; collect all part numbers
+	cxx_uarch_arm
+
+elif [[ ${HOSTTYPE} == "x86_64" ]]; then
+
+	CXXFLAGS+=(
 # Set -march and -mtune accordingly:
 		-march=native
 		-mtune=native
@@ -213,16 +137,16 @@ elif [[ $HOSTTYPE == "x86_64" ]]; then
 		-DCACHELINE_SIZE=64
 	)
 
-elif [[ $HOSTTYPE == "powerpc" ]]; then
+elif [[ ${HOSTTYPE} == "powerpc" ]]; then
 
 	UNAME_SUFFIX=`uname -r | grep -o -E -e -[^-]+$`
-	CFLAGS+=(
+	CXXFLAGS+=(
 		-DCACHELINE_SIZE=32
 	)
 
 	if [[ $UNAME_SUFFIX == "-wii" ]]; then
 
-		CFLAGS+=(
+		CXXFLAGS+=(
 			-mpowerpc
 			-mcpu=750
 			-mpaired
@@ -231,7 +155,7 @@ elif [[ $HOSTTYPE == "powerpc" ]]; then
 
 	elif [[ $UNAME_SUFFIX == "-powerpc" || $UNAME_SUFFIX == "-smp" ]]; then
 
-		CFLAGS+=(
+		CXXFLAGS+=(
 			-mpowerpc
 			-mcpu=7450
 			-maltivec
@@ -242,9 +166,9 @@ elif [[ $HOSTTYPE == "powerpc" ]]; then
 		)
 	fi
 
-elif [[ $HOSTTYPE == "powerpc64" || $HOSTTYPE == "ppc64" ]]; then
+elif [[ ${HOSTTYPE} == "powerpc64" || ${HOSTTYPE} == "ppc64" ]]; then
 
-	CFLAGS+=(
+	CXXFLAGS+=(
 		-mpowerpc64
 		-mcpu=powerpc64
 		-mtune=power6
@@ -258,18 +182,18 @@ elif [[ $HOSTTYPE == "powerpc64" || $HOSTTYPE == "ppc64" ]]; then
 fi
 
 if [[ $1 == "debug" ]]; then
-	CFLAGS+=(
+	CXXFLAGS+=(
 		-Wall
 		-O0
 		-g
 		-DDEBUG)
 else
-	CFLAGS+=(
+	CXXFLAGS+=(
 		-funroll-loops
 		-O3
 		-DNDEBUG)
 fi
 
-BUILD_CMD=$CC" -o "$TARGET" "${CFLAGS[@]}" "${SOURCE[@]}" "${LFLAGS[@]}
+BUILD_CMD=$CXX" -o "$TARGET" "${CXXFLAGS[@]}" "${SOURCE[@]}" "${LFLAGS[@]}
 echo $BUILD_CMD
 $BUILD_CMD

@@ -989,7 +989,7 @@ struct compile_assert< true > {
 	compile_assert() {}
 };
 
-static compile_assert< sizeof(space::matx4) / CACHELINE_SIZE * CACHELINE_SIZE == sizeof(space::matx4) > assert_ra_element_size;
+const compile_assert< sizeof(ma) / CACHELINE_SIZE * CACHELINE_SIZE == sizeof(ma) > assert_ra_element_size;
 
 enum {
 	BARRIER_START,
@@ -1369,6 +1369,24 @@ conformance() {
 		success = false;
 	}
 
+#if __cpp_rvalue_references >= 200610
+	vect2&& precision2 = vect2(
+		 1.f + 1.f / (1 << 23),
+		-1.f - 1.f / (1 << 23));
+	precision2.mul(2.f);
+	vect3&& precision3 = vect3(
+		 1.f + 1.f / (1 << 23),
+		-1.f - 1.f / (1 << 23),
+		 1.f + 1.f / (1 << 23));
+	precision3.mul(2.f);
+	vect4&& precision4 = vect4(
+		 1.f + 1.f / (1 << 23),
+		-1.f - 1.f / (1 << 23),
+		 1.f + 1.f / (1 << 23),
+		-1.f - 1.f / (1 << 23));
+	precision4.mul(2.f);
+
+#else
 	const vect2& precision2 = vect2(
 		 1.f + 1.f / (1 << 23),
 		-1.f - 1.f / (1 << 23)).mul(2.f);
@@ -1382,6 +1400,7 @@ conformance() {
 		 1.f + 1.f / (1 << 23),
 		-1.f - 1.f / (1 << 23)).mul(2.f);
 
+#endif
 	if (precision2[0] !=  2.f + 2.f / (1 << 23) ||
 		precision2[1] != -2.f - 2.f / (1 << 23) ||
 		precision3[0] !=  2.f + 2.f / (1 << 23) ||
