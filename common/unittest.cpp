@@ -24,9 +24,6 @@ out cout;
 out cerr;
 }
 
-#if _MSC_VER != 0
-using namespace simd; // oldest msvc we target does not support using-declarations, so we go full monty there
-#else
 #if NATIVE_F64X4 != 0
 using simd::f64x4;
 using simd::as_f64x4;
@@ -127,7 +124,6 @@ using simd::operator <=;
 using simd::operator >=;
 using simd::flag_zero;
 using simd::flag_native;
-#endif
 
 template < typename T >
 const T& min(const T& a, const T& b) {
