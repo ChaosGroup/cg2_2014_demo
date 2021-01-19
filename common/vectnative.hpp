@@ -6567,7 +6567,7 @@ public:
 
 #if COMPILER_QUIRK_0004_VMVNQ_U64 != 0
 	inline uint64x2_t vmvnq_u64(uint64x2_t src) {
-		return vreinterpret_u64_u32(vmvnq_u32(vreinterpret_u32_u64(src)));
+		return vreinterpretq_u64_u32(vmvnq_u32(vreinterpretq_u32_u64(src)));
 	}
 
 #endif
