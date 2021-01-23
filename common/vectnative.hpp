@@ -1895,24 +1895,39 @@ public:
 	/// \param bit_submask bitmask of the lanes of interest; a set bit indicates interest in the lane
 	/// of the same index as the bit.
 	/// \return true if all lanes, specified in the submask, are set to -1, false otherwise.
-	inline bool all(const u64x2 lane_mask, const uint64_t bit_submask = 3) {
+	inline bool all(const u64x2 lane_mask, const uint64_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 4);
 
 		return bit_submask == (bit_submask & _mm_movemask_pd(_mm_castsi128_pd(lane_mask.getn())));
 	}
 
 	/// \copydoc all(const u64x2, const uint64_t)
-	inline bool all(const u32x4 lane_mask, const uint32_t bit_submask = 15) {
+	inline bool all(const u32x4 lane_mask, const uint32_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 16);
 
 		return bit_submask == (bit_submask & _mm_movemask_ps(_mm_castsi128_ps(lane_mask.getn())));
 	}
 
 	/// \copydoc all(const u64x2, const uint64_t)
-	inline bool all(const u16x8 lane_mask, const uint16_t bit_submask = 255) {
+	inline bool all(const u16x8 lane_mask, const uint16_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 256);
 
 		return bit_submask == (bit_submask & deinterleaveBits8(_mm_movemask_epi8(lane_mask.getn())));
+	}
+
+	/// \copydoc all(const u64x2, const uint64_t)
+	inline bool all(const u64x2 lane_mask) {
+		return 65535 == _mm_movemask_epi8(lane_mask.getn());
+	}
+
+	/// \copydoc all(const u64x2, const uint64_t)
+	inline bool all(const u32x4 lane_mask) {
+		return 65535 == _mm_movemask_epi8(lane_mask.getn());
+	}
+
+	/// \copydoc all(const u64x2, const uint64_t)
+	inline bool all(const u16x8 lane_mask) {
+		return 65535 == _mm_movemask_epi8(lane_mask.getn());
 	}
 
 	/// Any-reduction. True if any of the masked lanes of the specified integral-type vector are set to -1.
@@ -1920,24 +1935,39 @@ public:
 	/// \param bit_submask bitmask of the lanes of interest; a set bit indicates interest in the lane
 	/// of the same index as the bit.
 	/// \return true if any of the lanes, specified in the submask, are set to -1, false otherwise.
-	inline bool any(const u64x2 lane_mask, const uint64_t bit_submask = 3) {
+	inline bool any(const u64x2 lane_mask, const uint64_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 4);
 
 		return 0 != (bit_submask & _mm_movemask_pd(_mm_castsi128_pd(lane_mask.getn())));
 	}
 
 	/// \copydoc any(const u64x2, const uint64_t)
-	inline bool any(const u32x4 lane_mask, const uint32_t bit_submask = 15) {
+	inline bool any(const u32x4 lane_mask, const uint32_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 16);
 
 		return 0 != (bit_submask & _mm_movemask_ps(_mm_castsi128_ps(lane_mask.getn())));
 	}
 
 	/// \copydoc any(const u64x2, const uint64_t)
-	inline bool any(const u16x8 lane_mask, const uint16_t bit_submask = 255) {
+	inline bool any(const u16x8 lane_mask, const uint16_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 256);
 
 		return 0 != (bit_submask & deinterleaveBits8(_mm_movemask_epi8(lane_mask.getn())));
+	}
+
+	/// \copydoc any(const u64x2, const uint64_t)
+	inline bool any(const u64x2 lane_mask) {
+		return 0 != _mm_movemask_epi8(lane_mask.getn());
+	}
+
+	/// \copydoc any(const u64x2, const uint64_t)
+	inline bool any(const u32x4 lane_mask) {
+		return 0 != _mm_movemask_epi8(lane_mask.getn());
+	}
+
+	/// \copydoc any(const u64x2, const uint64_t)
+	inline bool any(const u16x8 lane_mask) {
+		return 0 != _mm_movemask_epi8(lane_mask.getn());
 	}
 
 	/// None-reduction. True if none of the masked lanes of the specified integral-type vector are set to -1.
@@ -1945,24 +1975,39 @@ public:
 	/// \param bit_submask bitmask of the lanes of interest; a set bit indicates interest in the lane
 	/// of the same index as the bit.
 	/// \return true if none of the lanes, specified in the submask, are set to -1, false otherwise.
-	inline bool none(const u64x2 lane_mask, const uint64_t bit_submask = 3) {
+	inline bool none(const u64x2 lane_mask, const uint64_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 4);
 
 		return 0 == (bit_submask & _mm_movemask_pd(_mm_castsi128_pd(lane_mask.getn())));
 	}
 
 	/// \copydoc none(const u64x4, const uint64_t)
-	inline bool none(const u32x4 lane_mask, const uint32_t bit_submask = 15) {
+	inline bool none(const u32x4 lane_mask, const uint32_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 16);
 
 		return 0 == (bit_submask & _mm_movemask_ps(_mm_castsi128_ps(lane_mask.getn())));
 	}
 
 	/// \copydoc none(const u64x4, const uint64_t)
-	inline bool none(const u16x8 lane_mask, const uint16_t bit_submask = 255) {
+	inline bool none(const u16x8 lane_mask, const uint16_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 256);
 
 		return 0 == (bit_submask & deinterleaveBits8(_mm_movemask_epi8(lane_mask.getn())));
+	}
+
+	/// \copydoc none(const u64x4, const uint64_t)
+	inline bool none(const u64x2 lane_mask) {
+		return 0 == _mm_movemask_epi8(lane_mask.getn());
+	}
+
+	/// \copydoc none(const u64x4, const uint64_t)
+	inline bool none(const u32x4 lane_mask) {
+		return 0 == _mm_movemask_epi8(lane_mask.getn());
+	}
+
+	/// \copydoc none(const u64x4, const uint64_t)
+	inline bool none(const u16x8 lane_mask) {
+		return 0 == _mm_movemask_epi8(lane_mask.getn());
 	}
 
 	// extrema /////////////////////////////////////////////////////////////////////////////////////
@@ -3796,17 +3841,27 @@ public:
 	/// \param bit_submask bitmask of the lanes of interest; a set bit indicates interest in the lane
 	/// of the same index as the bit.
 	/// \return true if all lanes, specified in the submask, are set to -1, false otherwise.
-	inline bool all(const u64x4 lane_mask, const uint64_t bit_submask = 15) {
+	inline bool all(const u64x4 lane_mask, const uint64_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 16);
 
 		return bit_submask == (bit_submask & _mm256_movemask_pd(_mm256_castsi256_pd(lane_mask.getn())));
 	}
 
 	/// \copydoc all(const u64x4, const uint64_t)
-	inline bool all(const u32x8 lane_mask, const uint32_t bit_submask = 255) {
+	inline bool all(const u32x8 lane_mask, const uint32_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 256);
 
 		return bit_submask == (bit_submask & _mm256_movemask_ps(_mm256_castsi256_ps(lane_mask.getn())));
+	}
+
+	/// \copydoc all(const u64x4, const uint64_t)
+	inline bool all(const u64x4 lane_mask) {
+		return 15 == _mm256_movemask_pd(_mm256_castsi256_pd(lane_mask.getn()));
+	}
+
+	/// \copydoc all(const u64x4, const uint64_t)
+	inline bool all(const u32x8 lane_mask) {
+		return 255 == _mm256_movemask_ps(_mm256_castsi256_ps(lane_mask.getn()));
 	}
 
 	/// Any-reduction. True if any of the masked lanes of the specified integral-type vector are set to -1.
@@ -3814,17 +3869,27 @@ public:
 	/// \param bit_submask bitmask of the lanes of interest; a set bit indicates interest in the lane
 	/// of the same index as the bit.
 	/// \return true if any of the lanes, specified in the submask, are set to -1, false otherwise.
-	inline bool any(const u64x4 lane_mask, const uint64_t bit_submask = 15) {
+	inline bool any(const u64x4 lane_mask, const uint64_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 16);
 
 		return 0 != (bit_submask & _mm256_movemask_pd(_mm256_castsi256_pd(lane_mask.getn())));
 	}
 
 	/// \copydoc any(const u64x4, const uint64_t)
-	inline bool any(const u32x8 lane_mask, const uint32_t bit_submask = 255) {
+	inline bool any(const u32x8 lane_mask, const uint32_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 256);
 
 		return 0 != (bit_submask & _mm256_movemask_ps(_mm256_castsi256_ps(lane_mask.getn())));
+	}
+
+	/// \copydoc any(const u64x4, const uint64_t)
+	inline bool any(const u64x4 lane_mask) {
+		return 0 != _mm256_movemask_pd(_mm256_castsi256_pd(lane_mask.getn()));
+	}
+
+	/// \copydoc any(const u64x4, const uint64_t)
+	inline bool any(const u32x8 lane_mask) {
+		return 0 != _mm256_movemask_ps(_mm256_castsi256_ps(lane_mask.getn()));
 	}
 
 	/// None-reduction. True if none of the masked lanes of the specified integral-type vector are set to -1.
@@ -3832,39 +3897,64 @@ public:
 	/// \param bit_submask bitmask of the lanes of interest; a set bit indicates interest in the lane
 	/// of the same index as the bit.
 	/// \return true if none of the lanes, specified in the submask, are set to -1, false otherwise.
-	inline bool none(const u64x4 lane_mask, const uint64_t bit_submask = 15) {
+	inline bool none(const u64x4 lane_mask, const uint64_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 16);
 
 		return 0 == (bit_submask & _mm256_movemask_pd(_mm256_castsi256_pd(lane_mask.getn())));
 	}
 
 	/// \copydoc none(const u64x4, const uint64_t)
-	inline bool none(const u32x8 lane_mask, const uint32_t bit_submask = 255) {
+	inline bool none(const u32x8 lane_mask, const uint32_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 256);
 
 		return 0 == (bit_submask & _mm256_movemask_ps(_mm256_castsi256_ps(lane_mask.getn())));
 	}
 
+	/// \copydoc none(const u64x4, const uint64_t)
+	inline bool none(const u64x4 lane_mask) {
+		return 0 == _mm256_movemask_pd(_mm256_castsi256_pd(lane_mask.getn()));
+	}
+
+	/// \copydoc none(const u64x4, const uint64_t)
+	inline bool none(const u32x8 lane_mask) {
+		return 0 == _mm256_movemask_ps(_mm256_castsi256_ps(lane_mask.getn()));
+	}
+
 #if __AVX2__ != 0
 	/// \copydoc all(const u64x4, const uint64_t)
-	inline bool all(const u16x16 lane_mask, const uint32_t bit_submask = 65535) {
+	inline bool all(const u16x16 lane_mask, const uint32_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 65536);
 
 		return bit_submask == (bit_submask & deinterleaveBits16(_mm256_movemask_epi8(lane_mask.getn())));
 	}
 
 	/// \copydoc any(const u64x4, const uint64_t)
-	inline bool any(const u16x16 lane_mask, const uint32_t bit_submask = 65535) {
+	inline bool any(const u16x16 lane_mask, const uint32_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 65536);
 
 		return 0 != (bit_submask & deinterleaveBits16(_mm256_movemask_epi8(lane_mask.getn())));
 	}
 
 	/// \copydoc none(const u64x4, const uint64_t)
-	inline bool none(const u16x16 lane_mask, const uint32_t bit_submask = 65535) {
+	inline bool none(const u16x16 lane_mask, const uint32_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 65536);
 
 		return 0 == (bit_submask & deinterleaveBits16(_mm256_movemask_epi8(lane_mask.getn())));
+	}
+
+	/// \copydoc all(const u64x4, const uint64_t)
+	inline bool all(const u16x16 lane_mask) {
+		return 4294967295 == _mm256_movemask_epi8(lane_mask.getn());
+	}
+
+	/// \copydoc any(const u64x4, const uint64_t)
+	inline bool any(const u16x16 lane_mask) {
+		return 0 != _mm256_movemask_epi8(lane_mask.getn());
+	}
+
+	/// \copydoc none(const u64x4, const uint64_t)
+	inline bool none(const u16x16 lane_mask) {
+		return 0 == _mm256_movemask_epi8(lane_mask.getn());
 	}
 
 #else
@@ -3879,24 +3969,39 @@ public:
 	}
 
 	/// \copydoc all(const u64x4, const uint64_t)
-	inline bool all(const u16x16 lane_mask, const uint32_t bit_submask = 65535) {
+	inline bool all(const u16x16 lane_mask, const uint32_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 65536);
 
 		return bit_submask == (bit_submask & deinterleaveBits16(movemask_base(lane_mask.getn())));
 	}
 
 	/// \copydoc any(const u64x4, const uint64_t)
-	inline bool any(const u16x16 lane_mask, const uint32_t bit_submask = 65535) {
+	inline bool any(const u16x16 lane_mask, const uint32_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 65536);
 
 		return 0 != (bit_submask & deinterleaveBits16(movemask_base(lane_mask.getn())));
 	}
 
 	/// \copydoc none(const u64x4, const uint64_t)
-	inline bool none(const u16x16 lane_mask, const uint32_t bit_submask = 65535) {
+	inline bool none(const u16x16 lane_mask, const uint32_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 65536);
 
 		return 0 == (bit_submask & deinterleaveBits16(movemask_base(lane_mask.getn())));
+	}
+
+	/// \copydoc all(const u64x4, const uint64_t)
+	inline bool all(const u16x16 lane_mask) {
+		return 4294967295 == movemask_base(lane_mask.getn());
+	}
+
+	/// \copydoc any(const u64x4, const uint64_t)
+	inline bool any(const u16x16 lane_mask) {
+		return 0 != movemask_base(lane_mask.getn());
+	}
+
+	/// \copydoc none(const u64x4, const uint64_t)
+	inline bool none(const u16x16 lane_mask) {
+		return 0 == movemask_base(lane_mask.getn());
 	}
 
 #endif
@@ -6046,109 +6151,169 @@ public:
 	}
 
 	// reduction predicates ////////////////////////////////////////////////////////////////////////
-	inline bool all(const u64x2 lane_mask, const uint64_t bit_submask = 3) {
+	inline bool all(const u64x2 lane_mask, const uint64_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 4);
 
 		const uint64x2_t bitmask = vec2< uint64x2_t, u64 >(1, 2);
 		return bit_submask == (bit_submask & vaddvq_u64(vandq_u64(bitmask, lane_mask.getn())));
 	}
 
-	inline bool all(const u32x4 lane_mask, const uint32_t bit_submask = 15) {
+	inline bool all(const u32x4 lane_mask, const uint32_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 16);
 
 		const uint32x4_t bitmask = vec4< uint32x4_t, u32 >(1, 2, 4, 8);
 		return bit_submask == (bit_submask & vaddvq_u32(vandq_u32(bitmask, lane_mask.getn())));
 	}
 
-	inline bool all(const u32x2 lane_mask, const uint32_t bit_submask = 3) {
+	inline bool all(const u32x2 lane_mask, const uint32_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 4);
 
 		const uint32x2_t bitmask = vec2< uint32x2_t, u32 >(1, 2);
 		return bit_submask == (bit_submask & vaddv_u32(vand_u32(bitmask, lane_mask.getn())));
 	}
 
-	inline bool all(const u16x8 lane_mask, const uint16_t bit_submask = 255) {
+	inline bool all(const u16x8 lane_mask, const uint16_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 256);
 
 		const uint16x8_t bitmask = vec8< uint16x8_t, u16 >(1, 2, 4, 8, 16, 32, 64, 128);
 		return bit_submask == (bit_submask & vaddvq_u16(vandq_u16(bitmask, lane_mask.getn())));
 	}
 
-	inline bool all(const u16x4 lane_mask, const uint16_t bit_submask = 15) {
+	inline bool all(const u16x4 lane_mask, const uint16_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 256);
 
 		const uint16x4_t bitmask = vec4< uint16x4_t, u16 >(1, 2, 4, 8);
 		return bit_submask == (bit_submask & vaddv_u16(vand_u16(bitmask, lane_mask.getn())));
 	}
 
-	inline bool any(const u64x2 lane_mask, const uint64_t bit_submask = 3) {
+	inline bool all(const u64x2 lane_mask) {
+		return u64(-2) == vaddvq_u64(lane_mask.getn());
+	}
+
+	inline bool all(const u32x4 lane_mask) {
+		return u32(-4) == vaddvq_u32(lane_mask.getn());
+	}
+
+	inline bool all(const u32x2 lane_mask) {
+		return u32(-2) == vaddv_u32(lane_mask.getn());
+	}
+
+	inline bool all(const u16x8 lane_mask) {
+		return u16(-8) == vaddvq_u16(lane_mask.getn());
+	}
+
+	inline bool all(const u16x4 lane_mask) {
+		return u16(-4) == vaddv_u16(lane_mask.getn());
+	}
+
+	inline bool any(const u64x2 lane_mask, const uint64_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 4);
 
 		const uint64x2_t bitmask = vec2< uint64x2_t, u64 >(1, 2);
 		return 0 != (bit_submask & vaddvq_u64(vandq_u64(bitmask, lane_mask.getn())));
 	}
 
-	inline bool any(const u32x4 lane_mask, const uint32_t bit_submask = 15) {
+	inline bool any(const u32x4 lane_mask, const uint32_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 16);
 
 		const uint32x4_t bitmask = vec4< uint32x4_t, u32 >(1, 2, 4, 8);
 		return 0 != (bit_submask & vaddvq_u32(vandq_u32(bitmask, lane_mask.getn())));
 	}
 
-	inline bool any(const u32x2 lane_mask, const uint32_t bit_submask = 3) {
+	inline bool any(const u32x2 lane_mask, const uint32_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 4);
 
 		const uint32x2_t bitmask = vec2< uint32x2_t, u32 >(1, 2);
 		return 0 != (bit_submask & vaddv_u32(vand_u32(bitmask, lane_mask.getn())));
 	}
 
-	inline bool any(const u16x8 lane_mask, const uint16_t bit_submask = 255) {
+	inline bool any(const u16x8 lane_mask, const uint16_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 256);
 
 		const uint16x8_t bitmask = vec8< uint16x8_t, u16 >(1, 2, 4, 8, 16, 32, 64, 128);
 		return 0 != (bit_submask & vaddvq_u16(vandq_u16(bitmask, lane_mask.getn())));
 	}
 
-	inline bool any(const u16x4 lane_mask, const uint16_t bit_submask = 15) {
+	inline bool any(const u16x4 lane_mask, const uint16_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 256);
 
 		const uint16x4_t bitmask = vec4< uint16x4_t, u16 >(1, 2, 4, 8);
 		return 0 != (bit_submask & vaddv_u16(vand_u16(bitmask, lane_mask.getn())));
 	}
 
-	inline bool none(const u64x2 lane_mask, const uint64_t bit_submask = 3) {
+	inline bool any(const u64x2 lane_mask) {
+		return 0 != vaddvq_u64(lane_mask.getn());
+	}
+
+	inline bool any(const u32x4 lane_mask) {
+		return 0 != vaddvq_u32(lane_mask.getn());
+	}
+
+	inline bool any(const u32x2 lane_mask) {
+		return 0 != vaddv_u32(lane_mask.getn());
+	}
+
+	inline bool any(const u16x8 lane_mask) {
+		return 0 != vaddvq_u16(lane_mask.getn());
+	}
+
+	inline bool any(const u16x4 lane_mask) {
+		return 0 != vaddv_u16(lane_mask.getn());
+	}
+
+	inline bool none(const u64x2 lane_mask, const uint64_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 4);
 
 		const uint64x2_t bitmask = vec2< uint64x2_t, u64 >(1, 2);
 		return 0 == (bit_submask & vaddvq_u64(vandq_u64(bitmask, lane_mask.getn())));
 	}
 
-	inline bool none(const u32x4 lane_mask, const uint32_t bit_submask = 15) {
+	inline bool none(const u32x4 lane_mask, const uint32_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 16);
 
 		const uint32x4_t bitmask = vec4< uint32x4_t, u32 >(1, 2, 4, 8);
 		return 0 == (bit_submask & vaddvq_u32(vandq_u32(bitmask, lane_mask.getn())));
 	}
 
-	inline bool none(const u32x2 lane_mask, const uint32_t bit_submask = 3) {
+	inline bool none(const u32x2 lane_mask, const uint32_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 4);
 
 		const uint32x2_t bitmask = vec2< uint32x2_t, u32 >(1, 2);
 		return 0 == (bit_submask & vaddv_u32(vand_u32(bitmask, lane_mask.getn())));
 	}
 
-	inline bool none(const u16x8 lane_mask, const uint16_t bit_submask = 255) {
+	inline bool none(const u16x8 lane_mask, const uint16_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 256);
 
 		const uint16x8_t bitmask = vec8< uint16x8_t, u16 >(1, 2, 4, 8, 16, 32, 64, 128);
 		return 0 == (bit_submask & vaddvq_u16(vandq_u16(bitmask, lane_mask.getn())));
 	}
 
-	inline bool none(const u16x4 lane_mask, const uint16_t bit_submask = 15) {
+	inline bool none(const u16x4 lane_mask, const uint16_t bit_submask) {
 		assert(bit_submask > 0 && bit_submask < 256);
 
 		const uint16x4_t bitmask = vec4< uint16x4_t, u16 >(1, 2, 4, 8);
 		return 0 == (bit_submask & vaddv_u16(vand_u16(bitmask, lane_mask.getn())));
+	}
+
+	inline bool none(const u64x2 lane_mask) {
+		return 0 == vaddvq_u64(lane_mask.getn());
+	}
+
+	inline bool none(const u32x4 lane_mask) {
+		return 0 == vaddvq_u32(lane_mask.getn());
+	}
+
+	inline bool none(const u32x2 lane_mask) {
+		return 0 == vaddv_u32(lane_mask.getn());
+	}
+
+	inline bool none(const u16x8 lane_mask) {
+		return 0 == vaddvq_u16(lane_mask.getn());
+	}
+
+	inline bool none(const u16x4 lane_mask) {
+		return 0 == vaddv_u16(lane_mask.getn());
 	}
 
 	// extrema /////////////////////////////////////////////////////////////////////////////////////
