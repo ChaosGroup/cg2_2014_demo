@@ -80,15 +80,28 @@ if [[ $1 == "debug" ]]; then
 	)
 else
 	CXXFLAGS+=(
+		-O3
 		-ffast-math
 		-fno-unsafe-math-optimizations
 		-fstrict-aliasing
 		-fstrict-overflow
 		-funroll-loops
 		-fomit-frame-pointer
-		-O3
 		-flto
 		-DNDEBUG
+	)
+fi
+
+CXX_FILENAME=${CXX##*/}
+if [[ ${CXX_FILENAME:0:3} == "g++" ]]; then
+	if [[ ${HOSTTYPE} == "arm64" || ${HOSTTYPE} == "aarch64" ]]; then
+		CXXFLAGS+=(
+			-mpc-relative-literal-loads
+		)
+	fi
+elif [[ ${CXX_FILENAME:0:7} == "clang++" ]]; then
+	CXXFLAGS+=(
+		# no idea yet how to enforce PC-relative literals
 	)
 fi
 

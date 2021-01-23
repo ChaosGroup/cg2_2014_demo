@@ -735,6 +735,21 @@ int main(int argc, char**) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
+
+		if (!all(x == f64x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != f64x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != f64x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
 	}
 
 #endif
@@ -753,6 +768,21 @@ int main(int argc, char**) {
 		}
 
 		if (!none(x != s64x4(5))) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!all(x == s64x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != s64x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != s64x4(5), 0xf)) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
@@ -777,6 +807,21 @@ int main(int argc, char**) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
+
+		if (!all(x == u64x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != u64x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != u64x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
 	}
 
 #endif
@@ -794,6 +839,21 @@ int main(int argc, char**) {
 		}
 
 		if (!none(x != f64x2(5))) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!all(x == f64x2(5), 0x3)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != f64x2(5), 0x3)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != f64x2(5), 0x3)) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
@@ -815,6 +875,21 @@ int main(int argc, char**) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
+
+		if (!all(x == s64x2(5), 0x3)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != s64x2(5), 0x3)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != s64x2(5), 0x3)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
 	}
 	{
 		const u64x2 x = u64x2(1, 2) + u64x2(4, 3);
@@ -830,6 +905,21 @@ int main(int argc, char**) {
 		}
 
 		if (!none(x != u64x2(5))) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!all(x == u64x2(5), 0x3)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != u64x2(5), 0x3)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != u64x2(5), 0x3)) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
@@ -849,6 +939,21 @@ int main(int argc, char**) {
 		}
 
 		if (!none(x != f32x8(9))) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!all(x == f32x8(9), 0xff)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != f32x8(9), 0xff)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != f32x8(9), 0xff)) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
@@ -873,6 +978,21 @@ int main(int argc, char**) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
+
+		if (!all(x == s32x8(9), 0xff)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != s32x8(9), 0xff)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != s32x8(9), 0xff)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
 	}
 
 #endif
@@ -891,6 +1011,21 @@ int main(int argc, char**) {
 		}
 
 		if (!none(x != u32x8(9))) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!all(x == u32x8(9), 0xff)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != u32x8(9), 0xff)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != u32x8(9), 0xff)) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
@@ -914,6 +1049,21 @@ int main(int argc, char**) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
+
+		if (!all(x == f32x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != f32x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != f32x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
 	}
 	{
 		const s32x4 x = s32x4(1, 2, 3, 4) + s32x4(4, 3, 2, 1);
@@ -929,6 +1079,21 @@ int main(int argc, char**) {
 		}
 
 		if (!none(x != s32x4(5))) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!all(x == s32x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != s32x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != s32x4(5), 0xf)) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
@@ -950,6 +1115,21 @@ int main(int argc, char**) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
+
+		if (!all(x == u32x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != u32x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != u32x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
 	}
 
 #if NATIVE_F32X2 != 0
@@ -967,6 +1147,21 @@ int main(int argc, char**) {
 		}
 
 		if (!none(x != f32x2(5))) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!all(x == f32x2(5), 0x3)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != f32x2(5), 0x3)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != f32x2(5), 0x3)) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
@@ -991,6 +1186,21 @@ int main(int argc, char**) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
+
+		if (!all(x == s32x2(5), 0x3)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != s32x2(5), 0x3)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != s32x2(5), 0x3)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
 	}
 
 #endif
@@ -1009,6 +1219,21 @@ int main(int argc, char**) {
 		}
 
 		if (!none(x != u32x2(5))) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!all(x == u32x2(5), 0x3)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != u32x2(5), 0x3)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != u32x2(5), 0x3)) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
@@ -1034,6 +1259,21 @@ int main(int argc, char**) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
+
+		if (!all(x == s16x16(17), 0xffff)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != s16x16(17), 0xffff)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != s16x16(17), 0xffff)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
 	}
 
 #endif
@@ -1053,6 +1293,21 @@ int main(int argc, char**) {
 		}
 
 		if (!none(x != u16x16(17))) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!all(x == u16x16(17), 0xffff)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != u16x16(17), 0xffff)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != u16x16(17), 0xffff)) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
@@ -1076,6 +1331,21 @@ int main(int argc, char**) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
+
+		if (!all(x == s16x8(9), 0xff)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != s16x8(9), 0xff)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != s16x8(9), 0xff)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
 	}
 	{
 		const u16x8 x = u16x8(1, 2, 3, 4, 5, 6, 7, 8) + u16x8(8, 7, 6, 5, 4, 3, 2, 1);
@@ -1091,6 +1361,21 @@ int main(int argc, char**) {
 		}
 
 		if (!none(x != u16x8(9))) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!all(x == u16x8(9), 0xff)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != u16x8(9), 0xff)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != u16x8(9), 0xff)) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
@@ -1114,6 +1399,21 @@ int main(int argc, char**) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
+
+		if (!all(x == s16x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != s16x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != s16x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
 	}
 
 #endif
@@ -1132,6 +1432,21 @@ int main(int argc, char**) {
 		}
 
 		if (!none(x != u16x4(5))) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!all(x == u16x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (any(x != u16x4(5), 0xf)) {
+			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
+			success = false;
+		}
+
+		if (!none(x != u16x4(5), 0xf)) {
 			stream::cerr << "failed test at line " << stream::dec << __LINE__ << stream::hex << ": " << x << '\n';
 			success = false;
 		}
