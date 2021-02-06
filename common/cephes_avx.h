@@ -654,14 +654,8 @@ inline void cephes_sincos(v8sf x, v8sf *s, v8sf *c) {
 	y2 = _mm256_add_ps(y2, x);
 
 	/* select the correct result from the two polynoms */
-	xmm3 = poly_mask;
-	v8sf ysin2 = _mm256_and_ps(xmm3, y2);
-	v8sf ysin1 = _mm256_andnot_ps(xmm3, y);
-	y2 = _mm256_sub_ps(y2, ysin2);
-	y = _mm256_sub_ps(y, ysin1);
-
-	xmm1 = _mm256_add_ps(ysin1, ysin2);
-	xmm2 = _mm256_add_ps(y, y2);
+	xmm1 = _mm256_blendv_ps(y, y2, poly_mask);
+	xmm2 = _mm256_blendv_ps(y2, y, poly_mask);
 
 	/* update the sign */
 	*s = _mm256_xor_ps(xmm1, sign_bit_sin);

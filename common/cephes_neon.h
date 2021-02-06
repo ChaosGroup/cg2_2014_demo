@@ -522,13 +522,8 @@ inline void cephes_sincos(v4sf x, v4sf *s, v4sf *c) {
 	y2 = vaddq_f32(y2, x);
 
 	/* select the correct result from the two polynoms */
-	v4sf ysin2 = vreinterpretq_f32_s32(vandq_s32(poly_mask, vreinterpretq_s32_f32(y2)));
-	v4sf ysin1 = vreinterpretq_f32_s32(vbicq_s32(vreinterpretq_s32_f32(y), poly_mask));
-	y2 = vsubq_f32(y2, ysin2);
-	y = vsubq_f32(y, ysin1);
-
-	xmm1 = vaddq_f32(ysin1, ysin2);
-	xmm2 = vaddq_f32(y, y2);
+	xmm1 = vbslq_f32(vreinterpretq_u32_s32(poly_mask), y2, y);
+	xmm2 = vbslq_f32(vreinterpretq_u32_s32(poly_mask), y, y2);
 
 	/* update the sign */
 	*s = vreinterpretq_f32_s32(veorq_s32(vreinterpretq_s32_f32(xmm1), sign_bit_sin));
