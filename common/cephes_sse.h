@@ -531,15 +531,20 @@ inline void cephes_sincos(v4sf x, v4sf *s, v4sf *c) {
 	y2 = _mm_add_ps(y2, x);
 
 	/* select the correct result from the two polynoms */
-	xmm3 = poly_mask;
-	v4sf ysin2 = _mm_and_ps(xmm3, y2);
-	v4sf ysin1 = _mm_andnot_ps(xmm3, y);
+#if __SSE4_1__ != 0
+	xmm1 = _mm_blendv_ps(y, y2, poly_mask);
+	xmm2 = _mm_blendv_ps(y2, y, poly_mask);
+
+#else
+	v4sf ysin2 = _mm_and_ps(poly_mask, y2);
+	v4sf ysin1 = _mm_andnot_ps(poly_mask, y);
 	y2 = _mm_sub_ps(y2, ysin2);
 	y = _mm_sub_ps(y, ysin1);
 
 	xmm1 = _mm_add_ps(ysin1, ysin2);
 	xmm2 = _mm_add_ps(y, y2);
 
+#endif
 	/* update the sign */
 	*s = _mm_xor_ps(xmm1, sign_bit_sin);
 	*c = _mm_xor_ps(xmm2, sign_bit_cos);
