@@ -3944,7 +3944,7 @@ public:
 
 	/// \copydoc all(const u64x4, const uint64_t)
 	inline bool all(const u16x16 lane_mask) {
-		return 4294967295 == _mm256_movemask_epi8(lane_mask.getn());
+		return -1 == _mm256_movemask_epi8(lane_mask.getn());
 	}
 
 	/// \copydoc any(const u64x4, const uint64_t)
@@ -3991,7 +3991,7 @@ public:
 
 	/// \copydoc all(const u64x4, const uint64_t)
 	inline bool all(const u16x16 lane_mask) {
-		return 4294967295 == movemask_base(lane_mask.getn());
+		return -1 == movemask_base(lane_mask.getn());
 	}
 
 	/// \copydoc any(const u64x4, const uint64_t)
