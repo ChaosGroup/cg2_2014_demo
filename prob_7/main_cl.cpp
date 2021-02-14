@@ -2477,8 +2477,8 @@ int main(int argc, char** argv) {
 #endif
 		vect3 (& carb)[carb_count] = *reinterpret_cast< vect3 (*)[carb_count] >(carb_map_buffer[frame & 1]);
 		// camera
-		carb[0] = vect3(mv_inv[0][0], mv_inv[0][1], mv_inv[0][2]);
-		carb[1] = vect3(mv_inv[1][0], mv_inv[1][1], mv_inv[1][2]) * vect3(float(image_h) / image_w);
+		carb[0] = vect3(mv_inv[0][0], mv_inv[0][1], mv_inv[0][2]) * vect3(float(image_w) / image_h);
+		carb[1] = vect3(mv_inv[1][0], mv_inv[1][1], mv_inv[1][2]);
 		carb[2] = vect3(mv_inv[2][0], mv_inv[2][1], mv_inv[2][2]) * vect3(-1);
 		carb[3] = vect3(mv_inv[3][0], mv_inv[3][1], mv_inv[3][2]);
 		// root bbox

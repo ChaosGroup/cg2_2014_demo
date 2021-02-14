@@ -2364,8 +2364,8 @@ int main(
 		const simd::matx4 mv_inv = simd::matx4().inverse(post_op);
 		const simd::vect3 cam[] =
 		{
-			simd::vect3(mv_inv[0][0], mv_inv[0][1], mv_inv[0][2]),
-			simd::vect3(mv_inv[1][0], mv_inv[1][1], mv_inv[1][2]).mul(float(h) / w),
+			simd::vect3(mv_inv[0][0], mv_inv[0][1], mv_inv[0][2]).mul(float(w) / h),
+			simd::vect3(mv_inv[1][0], mv_inv[1][1], mv_inv[1][2]),
 			simd::vect3(mv_inv[2][0], mv_inv[2][1], mv_inv[2][2]).negate(),
 			simd::vect3(mv_inv[3][0], mv_inv[3][1], mv_inv[3][2])
 		};
