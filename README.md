@@ -73,7 +73,9 @@ Same as above but from branch `better_cpu` and `pocl` patched for good-codegen `
 | Amlogic S922X (Cortex-A73)        |   4x Cortex-A73             | 10.56             | 0.819    | pocl 1.3, LLVM 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a73, 1800 MHz                               |
 | Marvell ARMADA 8040 (Cortex-A72)  |   4x Cortex-A72             | 19.2              | 0.912    | pocl 1.3, LLVM 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2000 MHz                               |
 | Snapdragon 835 (Cortex-A73)       |   4x Cortex-A73             | 14.93             | 0.958    | pocl 1.5, LLVM 9.0.0, OCL_KERNEL_TARGET_CPU: cortex-a73, 2200 MHz                               |
-| Snapdragon SQ1 (Cortex-A76)       |   4x Cortex-A76 + 4x A55    | 68.26             | 2.652    | pocl 1.5, LLVM 9.0.1, OCL_KERNEL_TARGET_CPU: cortex-a76, 3000 MHz + 1800 MHz                    |
+| Snapdragon SQ1 (Cortex-A76)       |   4x Cortex-A76 + 4x A55    | 68.25             | 2.652    | pocl 1.5, LLVM 9.0.1, OCL_KERNEL_TARGET_CPU: cortex-a76, 3000 MHz + 1800 MHz                    |
+| Apple M1 (Firestorm)              |   4x Firestorm (passive)    | 68.25             | 3.499    | pocl 1.7, LLVM 11.0.0, OCL_KERNEL_TARGET_CPU: cyclone, 3200 MHz                                 |
+| Apple M1 (Firestorm)              |   4x Firestorm (active)     | 68.25             | 3.580    | pocl 1.7, LLVM 11.0.0, OCL_KERNEL_TARGET_CPU: cyclone, 3200 MHz                                 |
 | NXP LX2160A (Cortex-A72)          |  16x Cortex-A72             | 38.4              | 3.551    | pocl 1.4, LLVM 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2000 MHz                               |
 | AWS Graviton (Cortex-A72)         |  16x Cortex-A72             | 38.4              | 4.049    | pocl 1.3, LLVM 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2290 MHz                               |
 | AWS Graviton2 (Cortex-A76)        |  64x Cortex-A76             | 40 (tinymembench) | 26.491   | pocl 1.4, LLVM 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a75, 2500 MHz                               |
