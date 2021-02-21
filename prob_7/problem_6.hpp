@@ -19,82 +19,7 @@ struct compile_assert< true > {
 	compile_assert() {}
 };
 
-class vect3 : public simd::f32x4 {
-public:
-	// indices for subscript op
-	enum axis {
-		axis_x,
-		axis_y,
-		axis_z
-	};
-
-	enum flag_zero {};
-	vect3() {}
-
-	vect3(
-		const float x,
-		const float y,
-		const float z)
-	: simd::f32x4(x, y, z) {
-	}
-
-	vect3(
-		const float x,
-		const float y,
-		const float z,
-		const flag_zero)
-	: simd::f32x4(x, y, z, simd::flag_zero()) {
-	}
-
-	explicit vect3(const float c)
-	: simd::f32x4(c) {
-	}
-
-	explicit vect3(const float (& arr)[3])
-	: simd::f32x4(arr[0], arr[1], arr[2]) {
-	}
-
-	vect3(const float (& arr)[3], const flag_zero)
-	: simd::f32x4(arr[0], arr[1], arr[2], simd::flag_zero()) {
-	}
-
-	vect3(const simd::f32x4 c)
-	: simd::f32x4(c) {
-	}
-};
-
-class vect4 : public simd::f32x4 {
-public:
-	// indices for subscript op
-	enum axis {
-		axis_x,
-		axis_y,
-		axis_z,
-		axis_w
-	};
-
-	vect4() {}
-
-	vect4(
-		const float x,
-		const float y,
-		const float z,
-		const float w)
-	: simd::f32x4(x, y, z, w) {
-	}
-
-	explicit vect4(const float c)
-	: simd::f32x4(c) {
-	}
-
-	explicit vect4(const float (& arr)[4])
-	: simd::f32x4(arr[0], arr[1], arr[2], arr[3]) {
-	}
-
-	vect4(const simd::f32x4 c)
-	: simd::f32x4(c) {
-	}
-};
+typedef simd::f32x4 vect3;
 
 class matx3 {
 protected:
@@ -165,17 +90,17 @@ public:
 		m[3] = row3;
 	}
 
-	vect4 get(const size_t rowIdx) const {
+	simd::f32x4 get(const size_t rowIdx) const {
 		assert(4 > rowIdx);
 		return m[rowIdx];
 	}
 
-	void set(const size_t rowIdx, const vect4& row) {
+	void set(const size_t rowIdx, const simd::f32x4& row) {
 		assert(4 > rowIdx);
 		m[rowIdx] = row;
 	}
 
-	vect4 operator[](const size_t rowIdx) const {
+	simd::f32x4 operator[](const size_t rowIdx) const {
 		return get(rowIdx);
 	}
 };
