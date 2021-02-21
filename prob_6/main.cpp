@@ -202,7 +202,8 @@ shade(
 	const simd::vect3 orig = simd::vect3().add(
 		ray.get_origin(), simd::vect3().mul(ray.get_direction(), hit.dist));
 
-	int unoccluded = 0;
+	__m128 lit = _mm_set1_ps(0.f);
+	__m128 all = _mm_set1_ps(0.f);
 
 	// manually unroll the AO shading loop by 4
 	for (size_t i = 0; i < ao_probe_count / 4; ++i)
@@ -232,6 +233,7 @@ shade(
 			M_PI * 2 / (RAND_MAX + 1L))); // azim3
 		const __m128 sin_decl = _mm_sqrt_ps(_mm_sub_ps(_mm_set1_ps(1.f), r0));
 		const __m128 cos_decl = _mm_sqrt_ps(r0);
+		all = _mm_add_ps(all, cos_decl);
 		__m128 sin_azim;
 		__m128 cos_azim;
 		sincos_ps(r1, &sin_azim, &cos_azim);
@@ -268,20 +270,15 @@ shade(
 		const Ray probe2(orig, probe_dir2);
 		const Ray probe3(orig, probe_dir3);
 
-		if (!ts.traverse_litest(probe0, hit))
-			++unoccluded;
-
-		if (!ts.traverse_litest(probe1, hit))
-			++unoccluded;
-
-		if (!ts.traverse_litest(probe2, hit))
-			++unoccluded;
-
-		if (!ts.traverse_litest(probe3, hit))
-			++unoccluded;
+		const __m128i shadow_hit = _mm_setr_epi32(
+			ts.traverse_litest(probe0, hit) ? 0 : -1,
+			ts.traverse_litest(probe1, hit) ? 0 : -1,
+			ts.traverse_litest(probe2, hit) ? 0 : -1,
+			ts.traverse_litest(probe3, hit) ? 0 : -1);
+		lit = _mm_add_ps(lit, _mm_and_ps(cos_decl, _mm_castsi128_ps(shadow_hit)));
 	}
 
-	const float intensity = unoccluded * (1.f / ao_probe_count);
+	const float intensity = sqrtf((lit[0] + lit[1] + lit[2] + lit[3]) / (all[0] + all[1] + all[2] + all[3]));
 
 	pixel[0] = uint8_t(255.f * intensity);
 	pixel[1] = uint8_t(255.f * intensity);
