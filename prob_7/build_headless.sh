@@ -94,12 +94,12 @@ if [[ $1 == "debug" ]]; then
 else
 	CFLAGS+=(
 # Enable some optimisations that may or may not be enabled by the global optimisation level of choice in this compiler version
-		-ffast-math
+		-Ofast
+		-fno-unsafe-math-optimizations
 		-fstrict-aliasing
 		-fstrict-overflow
 		-funroll-loops
 		-fomit-frame-pointer
-		-O3
 		-flto
 		-DNDEBUG
 	)

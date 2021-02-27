@@ -23,7 +23,8 @@ CFLAGS=(
 	-fdata-sections
 	-ffunction-sections
 # Enable some optimisations that may or may not be enabled by the global optimisation level of choice in this compiler version
-	-ffast-math
+	-Ofast
+	-fno-unsafe-math-optimizations
 	-fstrict-aliasing
 	-fstrict-overflow
 	-funroll-loops
@@ -102,7 +103,7 @@ BITCODE=( "${BITCODE[@]/%/.bc}" )
 SOURCE_COUNT=${#SOURCE[@]}
 
 for (( i=0; i < $SOURCE_COUNT; i++ )); do
-	BUILD_CMD="clang++"${VERSION}" -c -flto -emit-llvm -O3 "${CFLAGS[@]}" -march="${TARGET[@]}" "${SOURCE[$i]}" -o "${BITCODE[$i]}
+	BUILD_CMD="clang++"${VERSION}" -c -flto -emit-llvm "${CFLAGS[@]}" -march="${TARGET[@]}" "${SOURCE[$i]}" -o "${BITCODE[$i]}
 	echo $BUILD_CMD
 	$BUILD_CMD
 done
