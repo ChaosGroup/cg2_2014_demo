@@ -80,8 +80,7 @@ if [[ $1 == "debug" ]]; then
 	)
 else
 	CXXFLAGS+=(
-		-O3
-		-ffast-math
+		-Ofast
 		-fno-unsafe-math-optimizations
 		-fstrict-aliasing
 		-fstrict-overflow
