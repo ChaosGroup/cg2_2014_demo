@@ -201,9 +201,10 @@ void monokernel(
 	__constant float4* const src_d,
 #endif
 #if OCL_OGL_INTEROP
-	__write_only image2d_t dst)
+	__write_only image2d_t dst,
 #else
-	__global uchar* const dst)
+	__global uchar* const dst,
 #endif
+	const uint frame)
 {
 

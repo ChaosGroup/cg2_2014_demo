@@ -26,23 +26,39 @@
 	const float3 ray_rcpdir = clamp(1.f / ray_direction, -MAXFLOAT, MAXFLOAT);
 	struct RayHit ray = (struct RayHit){ (struct Ray){ (float4)(ray_origin, as_float(-1U)), (float4)(ray_rcpdir, MAXFLOAT) } };
 	uint result = traverse(get_octet(src_a, 0), src_b, src_c, &root_bbox, &ray.ray, &ray.hit);
-	const int3 axis_sign = (int3)(0x80000000) & ray.hit.min_mask;
-#if OCL_QUIRK_0002
-	const uint a_mask = ray.hit.a_mask;
-	const uint b_mask = ray.hit.b_mask;
-	const float3 normal = b_mask ? (a_mask ? (float3)(1.f, 0.f, 0.f) : (float3)(0.f, 1.f, 0.f)) : (float3)(0.f, 0.f, 1.f);
-#else
-	const uint a_mask = -ray.hit.a_mask;
-	const uint b_mask = -ray.hit.b_mask;
-	const float3 normal = select((float3)(0.f, 0.f, 1.f), select((float3)(0.f, 1.f, 0.f), (float3)(1.f, 0.f, 0.f), (uint3)(a_mask)), (uint3)(b_mask));
-#endif
-	const uint luma = convert_int(max(1.f / 16.f, dot(as_float3(as_int3(normal) ^ axis_sign), sun)) * 255.f);
 
 	if (-1U != result) {
+		const unsigned seed = get_global_id(0) + get_global_id(1) * get_global_size(0) + frame * get_global_size(1);
+		const unsigned ri0 = xorshift(seed) * 42111 >> 8;
+		const unsigned ri1 = xorshift(seed) * 43333 >> 8;
+		const unsigned max_rand = (1U << 24) - 1;
+
+		// cosine-weighted distribution
+		const float r0 = ri0 * (1.f / max_rand); // decl (cos^2)
+		const float r1 = ri1 * (M_PI / (1U << 23)); // azim
+		const float sin_decl = sqrt(1.f - r0);
+		const float cos_decl = sqrt(r0);
+		float sin_azim;
+		float cos_azim;
+		sin_azim = sincos(r1, &cos_azim);
+
+		// compute a bounce vector in some TBN space, in this case of an assumed normal along x-axis
+		const float3 hemi = (float3)(cos_decl, cos_azim * sin_decl, sin_azim * sin_decl);
+
+#if OCL_QUIRK_0002
+		const uint a_mask = ray.hit.a_mask;
+		const uint b_mask = ray.hit.b_mask;
+		const float3 normal = b_mask ? (a_mask ? hemi.xyz : hemi.zxy) : hemi.yzx;
+#else
+		const uint a_mask = -ray.hit.a_mask;
+		const uint b_mask = -ray.hit.b_mask;
+		const float3 normal = select(hemi.yzx, select(hemi.zxy, hemi.xyz, (uint3)(a_mask)), (uint3)(b_mask));
+#endif
+		const int3 axis_sign = (int3)(0x80000000) & ray.hit.min_mask;
 		const float dist = ray.ray.rcpdir.w;
-		const float3 ray_rcpdir = clamp(1.f / sun, -MAXFLOAT, MAXFLOAT);
+		const float3 ray_rcpdir = clamp(1.f / as_float3(as_int3(normal) ^ axis_sign), -MAXFLOAT, MAXFLOAT);
 		const struct Ray ray = (struct Ray){ (float4)(ray_origin + ray_direction * dist, as_float(result)), (float4)(ray_rcpdir, MAXFLOAT) };
-		result = select(luma, convert_uint(1.f / 16.f * 255.f), occlude(get_octet(src_a, 0), src_b, src_c, &root_bbox, &ray));
+		result = select(255, 16, occlude(get_octet(src_a, 0), src_b, src_c, &root_bbox, &ray));
 	}
 	else
 		result = 0;

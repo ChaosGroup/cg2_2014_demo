@@ -1,9 +1,4 @@
 // source_prologue
-#if 0
-constant float3 sun = (float3)(0.57735026919f, -0.57735026919f, 0.57735026919f);
-#else
-constant float3 sun = (float3)(0.87287156094f, -0.21821789023f, 0.43643578047f);
-#endif
 struct BBox {
 	float3 min;
 	float3 max;
@@ -358,3 +353,10 @@ uint octet_intersect_wide(
 	return as_uint(count);
 }
 
+// see George Marsaglia http://www.jstatsoft.org/v08/i14/paper
+unsigned xorshift(unsigned value) {
+    value ^= value << 13;
+    value ^= value >> 17;
+    value ^= value << 5;
+    return value;
+}

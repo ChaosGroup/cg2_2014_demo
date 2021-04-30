@@ -2627,6 +2627,13 @@ int main(int argc, char** argv) {
 			break;
 		}
 
+		success = clSetKernelArg(kernel, 5, sizeof(cl_uint), &frame);
+
+		if (reportCLError(success)) {
+			stream::cerr << "error setting kernel arg 5\n";
+			return -1;
+		}
+
 		success = clEnqueueNDRangeKernel(queue, kernel, work_dim, 0, global_ws, local_ws,
 			sizeof(event_data_set_ready[0]) / sizeof(event_data_set_ready[0][0]), event_data_set_ready[frame & 1], &event_kernel_complete[frame & 1]);
 
