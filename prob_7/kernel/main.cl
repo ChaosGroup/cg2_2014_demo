@@ -30,7 +30,7 @@
 	if (-1U != result) {
 		const unsigned seed = get_global_id(0) + get_global_id(1) * get_global_size(0) + frame * get_global_size(1);
 		const unsigned ri0 = xorshift(seed) * 42111 >> 8;
-		const unsigned ri1 = xorshift(seed) * 43333 >> 8;
+		const unsigned ri1 = xorshift(seed) * 41333 >> 8; // 43333
 		const unsigned max_rand = (1U << 24) - 1;
 
 		// cosine-weighted distribution
