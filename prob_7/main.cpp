@@ -439,7 +439,7 @@ frame_loop:
 static pthread_t thread[one_less];
 static compute_arg record[one_less];
 
-static const compile_assert< sizeof(thread) / sizeof(thread[0]) == sizeof(record) / sizeof(record[0]) > assert_record_number;
+static const compile_assert< COUNT_OF(thread) == COUNT_OF(record) > assert_record_number;
 
 
 class workforce_t
@@ -484,7 +484,7 @@ workforce_t::workforce_t(
 , threads_created(0)
 , successfully_init(false)
 {
-	for (size_t i = 0; i < sizeof(barrier) / sizeof(barrier[0]); ++i)
+	for (size_t i = 0; i < COUNT_OF(barrier); ++i)
 	{
 		const int r = pthread_barrier_init(barrier + i, 0, nthreads);
 
@@ -497,7 +497,7 @@ workforce_t::workforce_t(
 		++barriers_created;
 	}
 
-	for (size_t i = 0; i < sizeof(record) / sizeof(record[0]); ++i)
+	for (size_t i = 0; i < COUNT_OF(record); ++i)
 	{
 		const size_t id = i + 1;
 		record[i] = compute_arg(id, framebuffer, w, h);
@@ -568,7 +568,7 @@ workforce_t::workforce_t(
 
 workforce_t::~workforce_t()
 {
-	for (size_t i = 0; i < sizeof(record) / sizeof(record[0]); ++i)
+	for (size_t i = 0; i < COUNT_OF(record); ++i)
 		record[i].id = uint32_t(-1);
 
 	if (barriers_created)
@@ -605,7 +605,7 @@ workforce_t::update(
 	const simd::vect3 (& cam)[4],
 	const Timeslice& tree)
 {
-	for (size_t i = 0; i < sizeof(record) / sizeof(record[0]); ++i)
+	for (size_t i = 0; i < COUNT_OF(record); ++i)
 	{
 		record[i].frame = frame;
 		record[i].tree = &tree;
@@ -2276,10 +2276,10 @@ int main(
 				action[i--] = action[--action_count];
 
 		// start any pending actions
-		for (; track_cursor < sizeof(track) / sizeof(track[0]) && c::accum_time >= track[track_cursor].start; ++track_cursor)
+		for (; track_cursor < COUNT_OF(track) && c::accum_time >= track[track_cursor].start; ++track_cursor)
 			if (track[track_cursor].action.start(c::accum_time - track[track_cursor].start, track[track_cursor].duration))
 			{
-				if (action_count == sizeof(action) / sizeof(action[0]))
+				if (action_count == COUNT_OF(action))
 				{
 					stream::cerr << "error: too many pending actions\n";
 					return 999;
