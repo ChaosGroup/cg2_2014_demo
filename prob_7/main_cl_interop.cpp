@@ -1718,7 +1718,7 @@ int main(int argc, char** argv) {
 
 	cl_ushort8* octet_map_buffer[n_buffering];
 
-	for (size_t i = 0; i < sizeof(octet_map_buffer) / sizeof(octet_map_buffer[0]); ++i)
+	for (size_t i = 0; i < COUNT_OF(octet_map_buffer); ++i)
 		octet_map_buffer[i] = octet_map() + i * octet_count;
 
 	// leaf map element:
@@ -1743,7 +1743,7 @@ int main(int argc, char** argv) {
 
 	cl_ushort16* leaf_map_buffer[n_buffering];
 
-	for (size_t i = 0; i < sizeof(leaf_map_buffer) / sizeof(leaf_map_buffer[0]); ++i)
+	for (size_t i = 0; i < COUNT_OF(leaf_map_buffer); ++i)
 		leaf_map_buffer[i] = leaf_map() + i * leaf_count;
 
 	// voxel map element:
@@ -1770,7 +1770,7 @@ int main(int argc, char** argv) {
 
 	cl_float8* voxel_map_buffer[n_buffering];
 
-	for (size_t i = 0; i < sizeof(voxel_map_buffer) / sizeof(voxel_map_buffer[0]); ++i)
+	for (size_t i = 0; i < COUNT_OF(voxel_map_buffer); ++i)
 		voxel_map_buffer[i] = voxel_map() + i * voxel_count;
 
 	// CARB (camera and root bbox) constant buffer element:
@@ -1791,7 +1791,7 @@ int main(int argc, char** argv) {
 
 	cl_float4* carb_map_buffer[n_buffering];
 
-	for (size_t i = 0; i < sizeof(carb_map_buffer) / sizeof(carb_map_buffer[0]); ++i)
+	for (size_t i = 0; i < COUNT_OF(carb_map_buffer); ++i)
 		carb_map_buffer[i] = carb_map() + i * carb_count;
 
 	// create cl mem objects ///////////////////////////////////////////////////
@@ -1856,7 +1856,7 @@ int main(int argc, char** argv) {
 
 	switch (kern_param_type) {
 	case PARAM_TYPE_BUFFER:
-		for (size_t i = 0; i < sizeof(src_a_d) / sizeof(src_a_d[0]); ++i) {
+		for (size_t i = 0; i < COUNT_OF(src_a_d); ++i) {
 			src_a_d[i] = clCreateBuffer(context, src_flags, mem_size_octet, 0, &success);
 
 			if (reportCLError(success)) {
@@ -1867,7 +1867,7 @@ int main(int argc, char** argv) {
 		break;
 
 	case PARAM_TYPE_IMAGE:
-		for (size_t i = 0; i < sizeof(src_a_d) / sizeof(src_a_d[0]); ++i) {
+		for (size_t i = 0; i < COUNT_OF(src_a_d); ++i) {
 			src_a_d[i] = clwrap::clCreateImage(context,
 				src_flags, &src_image_format_ushort4, &src_image_desc_octet, 0, &success);
 
@@ -1886,7 +1886,7 @@ int main(int argc, char** argv) {
 
 	switch (kern_param_type) {
 	case PARAM_TYPE_BUFFER:
-		for (size_t i = 0; i < sizeof(src_b_d) / sizeof(src_b_d[0]); ++i) {
+		for (size_t i = 0; i < COUNT_OF(src_b_d); ++i) {
 			src_b_d[i] = clCreateBuffer(context, src_flags, mem_size_leaf, 0, &success);
 
 			if (reportCLError(success)) {
@@ -1897,7 +1897,7 @@ int main(int argc, char** argv) {
 		break;
 
 	case PARAM_TYPE_IMAGE:
-		for (size_t i = 0; i < sizeof(src_b_d) / sizeof(src_b_d[0]); ++i) {
+		for (size_t i = 0; i < COUNT_OF(src_b_d); ++i) {
 			src_b_d[i] = clwrap::clCreateImage(context,
 				src_flags, &src_image_format_ushort4, &src_image_desc_leaf, 0, &success);
 
@@ -1916,7 +1916,7 @@ int main(int argc, char** argv) {
 
 	switch (kern_param_type) {
 	case PARAM_TYPE_BUFFER:
-		for (size_t i = 0; i < sizeof(src_c_d) / sizeof(src_c_d[0]); ++i) {
+		for (size_t i = 0; i < COUNT_OF(src_c_d); ++i) {
 			src_c_d[i] = clCreateBuffer(context, src_flags, mem_size_voxel, 0, &success);
 
 			if (reportCLError(success)) {
@@ -1927,7 +1927,7 @@ int main(int argc, char** argv) {
 		break;
 
 	case PARAM_TYPE_IMAGE:
-		for (size_t i = 0; i < sizeof(src_c_d) / sizeof(src_c_d[0]); ++i) {
+		for (size_t i = 0; i < COUNT_OF(src_c_d); ++i) {
 			src_c_d[i] = clwrap::clCreateImage(context,
 				src_flags, &src_image_format_float4, &src_image_desc_voxel, 0, &success);
 
@@ -1944,7 +1944,7 @@ int main(int argc, char** argv) {
 
 	const scoped_ptr< cl_mem, scoped_functor > release_src_d(src_d_d);
 
-	for (size_t i = 0; i < sizeof(src_d_d) / sizeof(src_d_d[0]); ++i) {
+	for (size_t i = 0; i < COUNT_OF(src_d_d); ++i) {
 		src_d_d[i] = clCreateBuffer(context, src_flags, mem_size_carb, 0, &success);
 
 		if (reportCLError(success)) {
@@ -1955,11 +1955,11 @@ int main(int argc, char** argv) {
 
 	// output map /////////////////////////////////////////////////////////////////
 	GLuint tex_name[n_buffering];
-	glGenTextures(sizeof(tex_name) / sizeof(tex_name[0]), tex_name);
+	glGenTextures(COUNT_OF(tex_name), tex_name);
 
 	const scoped_ptr< GLuint, scoped_functor > release_tex(tex_name);
 
-	for (size_t i = 0; i < sizeof(tex_name) / sizeof(tex_name[0]); ++i) {
+	for (size_t i = 0; i < COUNT_OF(tex_name); ++i) {
 
 		if (0 == tex_name[i]) {
 			stream::cerr << "error at glGenTextures\n";
@@ -1987,7 +1987,7 @@ int main(int argc, char** argv) {
 
 	const scoped_ptr< cl_mem, scoped_functor > release_dst(dst_d);
 
-	for (size_t i = 0; i < sizeof(dst_d) / sizeof(dst_d[0]); ++i) {
+	for (size_t i = 0; i < COUNT_OF(dst_d); ++i) {
 
 #if DEPRECATED_CreateFromGLTexture2D
 		dst_d[i] = clCreateFromGLTexture(context, CL_MEM_WRITE_ONLY, GL_TEXTURE_RECTANGLE, 0, tex_name[i], &success);
@@ -2153,7 +2153,7 @@ int main(int argc, char** argv) {
 
 	size_t buffer_devinfo[8];
 
-	if (max_dim > sizeof(buffer_devinfo) / sizeof(buffer_devinfo[0])) {
+	if (max_dim > COUNT_OF(buffer_devinfo)) {
 		stream::cerr << "device max work-item dimensions exceed expectations; bailing out\n";
 		return -1;
 	}
@@ -2188,7 +2188,7 @@ int main(int argc, char** argv) {
 	const size_t latency_hiding_factor = local_ws_multiple * 2 > max_local_ws ? 1 : 2;
 	const size_t combined_item_size_0 = local_ws_multiple * latency_hiding_factor;
 	const size_t global_ws[] = { image_w, image_h };
-	const cl_uint work_dim = sizeof(global_ws) / sizeof(global_ws[0]);
+	const cl_uint work_dim = COUNT_OF(global_ws);
 	size_t local_ws[work_dim];
 	if (latency_hiding_factor > work_item_size_1) {
 		if (combined_item_size_0 > work_item_size_0) {
@@ -2362,9 +2362,9 @@ int main(int argc, char** argv) {
 				action[i--] = action[--action_count];
 
 		// start any pending actions
-		for (; track_cursor < sizeof(track) / sizeof(track[0]) && c::accum_time >= track[track_cursor].start; ++track_cursor)
+		for (; track_cursor < COUNT_OF(track) && c::accum_time >= track[track_cursor].start; ++track_cursor)
 			if (track[track_cursor].action.start(c::accum_time - track[track_cursor].start, track[track_cursor].duration)) {
-				if (action_count == sizeof(action) / sizeof(action[0])) {
+				if (action_count == COUNT_OF(action)) {
 					stream::cerr << "error: too many pending actions\n";
 					return 999;
 				}
@@ -2616,7 +2616,7 @@ int main(int argc, char** argv) {
 		}
 
 		success = clEnqueueNDRangeKernel(queue, kernel, work_dim, 0, global_ws, local_ws,
-			sizeof(event_data_set_ready[0]) / sizeof(event_data_set_ready[0][0]), event_data_set_ready[frame & 1], &event_kernel_complete[frame & 1]);
+			COUNT_OF(event_data_set_ready[0]), event_data_set_ready[frame & 1], &event_kernel_complete[frame & 1]);
 
 		if (reportCLError(success)) {
 			stream::cerr << "error enqueuing kernel\n";

@@ -16,7 +16,7 @@ CFLAGS=(
 #	-fabi-version=6
 # g++-6 warns about ignored attributes in template arguments (e.g. __m256 as a typename template arg to simd::native8)
 #	-Wno-ignored-attributes
-	-ansi
+	-std=c++11
 	-Wno-logical-op-parentheses
 	-Wno-bitwise-op-parentheses
 	-Wno-parentheses
@@ -43,6 +43,8 @@ CFLAGS=(
 #	-DOCL_QUIRK_0004=1
 # OpenCL kernel build full verbosity; macro mandatory
 	-DOCL_KERNEL_BUILD_VERBOSE=0
+# Use buffer copying rather than buffer mapping when not using interop
+	-DOCL_BUFFER_COPY=1
 )
 # For non-native or tweaked architecture targets, comment out 'native' and uncomment the correct target architecture and flags
 TARGET=(

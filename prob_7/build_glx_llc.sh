@@ -15,7 +15,7 @@ SOURCE=(
 	main_cl.cpp
 )
 CFLAGS=(
-	-ansi
+	-std=c++11
 	-Wno-bitwise-op-parentheses
 	-Wno-logical-op-parentheses
 	-Wno-parentheses
@@ -59,6 +59,8 @@ CFLAGS=(
 #	-DOCL_QUIRK_0004=1
 # OpenCL kernel build full verbosity; macro mandatory
 	-DOCL_KERNEL_BUILD_VERBOSE=0
+# Use buffer copying rather than buffer mapping when not using interop
+	-DOCL_BUFFER_COPY=1
 )
 # For non-native or tweaked architecture targets, comment out 'native' and uncomment the correct target architecture and flags
 TARGET=(

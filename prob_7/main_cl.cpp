@@ -1746,7 +1746,7 @@ int main(int argc, char** argv) {
 
 	cl_ushort8* octet_map_buffer[n_buffering];
 
-	for (size_t i = 0; i < sizeof(octet_map_buffer) / sizeof(octet_map_buffer[0]); ++i)
+	for (size_t i = 0; i < COUNT_OF(octet_map_buffer); ++i)
 		octet_map_buffer[i] = octet_map() + i * octet_count;
 
 	// leaf map element:
@@ -1771,7 +1771,7 @@ int main(int argc, char** argv) {
 
 	cl_ushort16* leaf_map_buffer[n_buffering];
 
-	for (size_t i = 0; i < sizeof(leaf_map_buffer) / sizeof(leaf_map_buffer[0]); ++i)
+	for (size_t i = 0; i < COUNT_OF(leaf_map_buffer); ++i)
 		leaf_map_buffer[i] = leaf_map() + i * leaf_count;
 
 	// voxel map element:
@@ -1798,7 +1798,7 @@ int main(int argc, char** argv) {
 
 	cl_float8* voxel_map_buffer[n_buffering];
 
-	for (size_t i = 0; i < sizeof(voxel_map_buffer) / sizeof(voxel_map_buffer[0]); ++i)
+	for (size_t i = 0; i < COUNT_OF(voxel_map_buffer); ++i)
 		voxel_map_buffer[i] = voxel_map() + i * voxel_count;
 
 	// CARB (camera and root bbox) constant buffer element:
@@ -1819,7 +1819,7 @@ int main(int argc, char** argv) {
 
 	cl_float4* carb_map_buffer[n_buffering];
 
-	for (size_t i = 0; i < sizeof(carb_map_buffer) / sizeof(carb_map_buffer[0]); ++i)
+	for (size_t i = 0; i < COUNT_OF(carb_map_buffer); ++i)
 		carb_map_buffer[i] = carb_map() + i * carb_count;
 
 	// create cl mem objects ///////////////////////////////////////////////////
@@ -1884,7 +1884,7 @@ int main(int argc, char** argv) {
 
 	switch (kern_param_type) {
 	case PARAM_TYPE_BUFFER:
-		for (size_t i = 0; i < sizeof(src_a_d) / sizeof(src_a_d[0]); ++i) {
+		for (size_t i = 0; i < COUNT_OF(src_a_d); ++i) {
 			src_a_d[i] = clCreateBuffer(context, src_flags, mem_size_octet, 0, &success);
 
 			if (reportCLError(success)) {
@@ -1895,7 +1895,7 @@ int main(int argc, char** argv) {
 		break;
 
 	case PARAM_TYPE_IMAGE:
-		for (size_t i = 0; i < sizeof(src_a_d) / sizeof(src_a_d[0]); ++i) {
+		for (size_t i = 0; i < COUNT_OF(src_a_d); ++i) {
 			src_a_d[i] = clwrap::clCreateImage(context,
 				src_flags, &src_image_format_ushort4, &src_image_desc_octet, 0, &success);
 
@@ -1914,7 +1914,7 @@ int main(int argc, char** argv) {
 
 	switch (kern_param_type) {
 	case PARAM_TYPE_BUFFER:
-		for (size_t i = 0; i < sizeof(src_b_d) / sizeof(src_b_d[0]); ++i) {
+		for (size_t i = 0; i < COUNT_OF(src_b_d); ++i) {
 			src_b_d[i] = clCreateBuffer(context, src_flags, mem_size_leaf, 0, &success);
 
 			if (reportCLError(success)) {
@@ -1925,7 +1925,7 @@ int main(int argc, char** argv) {
 		break;
 
 	case PARAM_TYPE_IMAGE:
-		for (size_t i = 0; i < sizeof(src_b_d) / sizeof(src_b_d[0]); ++i) {
+		for (size_t i = 0; i < COUNT_OF(src_b_d); ++i) {
 			src_b_d[i] = clwrap::clCreateImage(context,
 				src_flags, &src_image_format_ushort4, &src_image_desc_leaf, 0, &success);
 
@@ -1944,7 +1944,7 @@ int main(int argc, char** argv) {
 
 	switch (kern_param_type) {
 	case PARAM_TYPE_BUFFER:
-		for (size_t i = 0; i < sizeof(src_c_d) / sizeof(src_c_d[0]); ++i) {
+		for (size_t i = 0; i < COUNT_OF(src_c_d); ++i) {
 			src_c_d[i] = clCreateBuffer(context, src_flags, mem_size_voxel, 0, &success);
 
 			if (reportCLError(success)) {
@@ -1955,7 +1955,7 @@ int main(int argc, char** argv) {
 		break;
 
 	case PARAM_TYPE_IMAGE:
-		for (size_t i = 0; i < sizeof(src_c_d) / sizeof(src_c_d[0]); ++i) {
+		for (size_t i = 0; i < COUNT_OF(src_c_d); ++i) {
 			src_c_d[i] = clwrap::clCreateImage(context,
 				src_flags, &src_image_format_float4, &src_image_desc_voxel, 0, &success);
 
@@ -1972,7 +1972,7 @@ int main(int argc, char** argv) {
 
 	const scoped_ptr< cl_mem, scoped_functor > release_src_d(src_d_d);
 
-	for (size_t i = 0; i < sizeof(src_d_d) / sizeof(src_d_d[0]); ++i) {
+	for (size_t i = 0; i < COUNT_OF(src_d_d); ++i) {
 		src_d_d[i] = clCreateBuffer(context, src_flags, mem_size_carb, 0, &success);
 
 		if (reportCLError(success)) {
@@ -1983,6 +1983,8 @@ int main(int argc, char** argv) {
 
 	// output map /////////////////////////////////////////////////////////////////
 	const size_t mem_size_image = image_w * image_h * sizeof(cl_uchar);
+
+#if OCL_BUFFER_COPY != 0
 	const size_t pixel_count = image_w * image_h;
 
 	const scoped_ptr< cl_uchar, generic_free > image_map(
@@ -1995,9 +1997,10 @@ int main(int argc, char** argv) {
 
 	cl_uchar* image_map_buffer[n_buffering];
 
-	for (size_t i = 0; i < sizeof(image_map_buffer) / sizeof(image_map_buffer[0]); ++i)
+	for (size_t i = 0; i < COUNT_OF(image_map_buffer); ++i)
 		image_map_buffer[i] = image_map() + i * pixel_count;
 
+#endif
 	cl_mem_flags dst_flags = CL_MEM_WRITE_ONLY;
 
 	if (device_version >= ocl_ver(1, 2))
@@ -2007,7 +2010,7 @@ int main(int argc, char** argv) {
 
 	const scoped_ptr< cl_mem, scoped_functor > release_dst(dst_d);
 
-	for (size_t i = 0; i < sizeof(dst_d) / sizeof(dst_d[0]); ++i) {
+	for (size_t i = 0; i < COUNT_OF(dst_d); ++i) {
 		dst_d[i] = clCreateBuffer(context, dst_flags, mem_size_image, 0, &success);
 
 		if (reportCLError(success)) {
@@ -2167,7 +2170,7 @@ int main(int argc, char** argv) {
 
 	size_t buffer_devinfo[8];
 
-	if (max_dim > sizeof(buffer_devinfo) / sizeof(buffer_devinfo[0])) {
+	if (max_dim > COUNT_OF(buffer_devinfo)) {
 		stream::cerr << "device max work-item dimensions exceed expectations; bailing out\n";
 		return -1;
 	}
@@ -2202,7 +2205,7 @@ int main(int argc, char** argv) {
 	const size_t latency_hiding_factor = local_ws_multiple * 2 > max_local_ws ? 1 : 2;
 	const size_t combined_item_size_0 = local_ws_multiple * latency_hiding_factor;
 	const size_t global_ws[] = { image_w, image_h };
-	const cl_uint work_dim = sizeof(global_ws) / sizeof(global_ws[0]);
+	const cl_uint work_dim = COUNT_OF(global_ws);
 	size_t local_ws[work_dim];
 	if (latency_hiding_factor > work_item_size_1) {
 		if (combined_item_size_0 > work_item_size_0) {
@@ -2350,7 +2353,11 @@ int main(int argc, char** argv) {
 	//     ...
 	const compile_assert< 2 == n_buffering > assert_double_buffering;
 
+#if OCL_BUFFER_COPY != 0
 	cl_event event_data_set_ready[n_buffering][4] = { { 0 } };
+#else
+	cl_event event_data_set_ready[n_buffering][5] = { { 0 } };
+#endif
 	cl_event event_kernel_complete[n_buffering] = { 0 };
 
 	size_t frame = 0;
@@ -2389,9 +2396,9 @@ int main(int argc, char** argv) {
 				action[i--] = action[--action_count];
 
 		// start any pending actions
-		for (; track_cursor < sizeof(track) / sizeof(track[0]) && c::accum_time >= track[track_cursor].start; ++track_cursor)
+		for (; track_cursor < COUNT_OF(track) && c::accum_time >= track[track_cursor].start; ++track_cursor)
 			if (track[track_cursor].action.start(c::accum_time - track[track_cursor].start, track[track_cursor].duration)) {
-				if (action_count == sizeof(action) / sizeof(action[0])) {
+				if (action_count == COUNT_OF(action)) {
 					stream::cerr << "error: too many pending actions\n";
 					return 999;
 				}
@@ -2551,9 +2558,10 @@ int main(int argc, char** argv) {
 		}
 
 		// show result from one frame ago
-		if (0 != frame) {
+		if (frame != 0) {
 			const size_t ready_frame = frame + 1;
 
+#if OCL_BUFFER_COPY != 0
 			success = clEnqueueReadBuffer(queue, dst_d[ready_frame & 1], CL_TRUE, 0, mem_size_image, image_map_buffer[ready_frame & 1],
 				1, &event_kernel_complete[ready_frame & 1], 0);
 
@@ -2565,6 +2573,28 @@ int main(int argc, char** argv) {
 #if VISUALIZE != 0
 			testbed::monv::render(image_map_buffer[ready_frame & 1]);
 			testbed::swapBuffers();
+
+#endif
+#else
+			void *mapped = clEnqueueMapBuffer(queue, dst_d[ready_frame & 1], CL_TRUE, CL_MAP_READ, 0, mem_size_image,
+				1, &event_kernel_complete[ready_frame & 1], 0, &success);
+
+			if (reportCLError(success)) {
+				stream::cerr << "error enquing ocl map\n";
+				break;
+			}
+
+#if VISUALIZE != 0
+			testbed::monv::render(mapped);
+			testbed::swapBuffers();
+
+#endif
+			success = clEnqueueUnmapMemObject(queue, dst_d[ready_frame & 1], mapped, 0, 0, &event_data_set_ready[ready_frame & 1][4]);
+
+			if (reportCLError(success)) {
+				stream::cerr << "error enquing ocl unmap\n";
+				break;
+			}
 
 #endif
 			// profile the frame
@@ -2627,9 +2657,19 @@ int main(int argc, char** argv) {
 			break;
 		}
 
+#if OCL_BUFFER_COPY != 0
 		success = clEnqueueNDRangeKernel(queue, kernel, work_dim, 0, global_ws, local_ws,
-			sizeof(event_data_set_ready[0]) / sizeof(event_data_set_ready[0][0]), event_data_set_ready[frame & 1], &event_kernel_complete[frame & 1]);
+			COUNT_OF(event_data_set_ready[0]), event_data_set_ready[frame & 1], &event_kernel_complete[frame & 1]);
 
+#else
+		if (frame > 1)
+			success = clEnqueueNDRangeKernel(queue, kernel, work_dim, 0, global_ws, local_ws,
+				COUNT_OF(event_data_set_ready[0]), event_data_set_ready[frame & 1], &event_kernel_complete[frame & 1]);
+		else
+			success = clEnqueueNDRangeKernel(queue, kernel, work_dim, 0, global_ws, local_ws,
+				COUNT_OF(event_data_set_ready[0]) - 1, event_data_set_ready[frame & 1], &event_kernel_complete[frame & 1]);
+
+#endif
 		if (reportCLError(success)) {
 			stream::cerr << "error enqueuing kernel\n";
 			break;
@@ -2647,7 +2687,7 @@ int main(int argc, char** argv) {
 		stream::cout << "elapsed time: " << sec << " s\naverage FPS: " << frame / sec << '\n';
 	}
 
-#if VISUALIZE == 0
+#if VISUALIZE == 0 && OCL_BUFFER_COPY != 0
 	if (frame) {
 		const char* const name = "last_frame.png";
 		stream::cout << "saving framegrab as '" << name << "'\n";

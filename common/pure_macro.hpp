@@ -10,16 +10,9 @@
 	#define	DEBUG_LITERAL 0
 #endif
 
-template < size_t N >
-struct confirm_static_array_type {
-	char arr[N];
-};
-
 template < typename T, size_t N >
-inline confirm_static_array_type< N > confirm_static_array(const T(&)[N]) {
-	return confirm_static_array_type< N >();
-}
+char (& noneval_countof(const T (&)[N]))[N];
 
-#define COUNT_OF(x) sizeof(confirm_static_array(x))
+#define COUNT_OF(x) sizeof(noneval_countof(x))
 
 #endif // pure_macro_H_
