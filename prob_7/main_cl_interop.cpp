@@ -143,9 +143,7 @@ static bool validate_fullscreen(
 	if (0 == string)
 		return false;
 
-	unsigned x = 0;
-	unsigned y = 0;
-	unsigned hz = 0;
+	unsigned x, y, hz;
 
 	if (3 != sscanf(string, "%u %u %u", &x, &y, &hz))
 		return false;
@@ -2129,17 +2127,17 @@ int main(int argc, char** argv) {
 
 	const scoped_ptr< cl_kernel, scoped_functor > release_kernel(&kernel);
 
-	size_t local_ws_multiple = 0;
+	size_t kernel_ws = 0;
 	success = clGetKernelWorkGroupInfo(kernel,
-		device()[device_idx], CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE,
-		sizeof(local_ws_multiple), &local_ws_multiple, 0);
+		device()[device_idx], CL_KERNEL_WORK_GROUP_SIZE,
+		sizeof(kernel_ws), &kernel_ws, 0);
 
 	if (reportCLError(success)) {
-		stream::cerr << "error getting kernel preferred workgroup size multiple info\n";
+		stream::cerr << "error getting kernel preferred workgroup size info\n";
 		return -1;
 	}
 
-	stream::cout << "kernel preferred workgroup size multiple: " << local_ws_multiple << '\n';
+	stream::cout << "kernel preferred workgroup size: " << kernel_ws << '\n';
 
 	cl_uint max_dim = 0;
 	success = clGetDeviceInfo(
@@ -2172,9 +2170,6 @@ int main(int argc, char** argv) {
 		stream::cout << ' ' << buffer_devinfo[i];
 	stream::cout << '\n';
 
-	const size_t work_item_size_0 = buffer_devinfo[0];
-	const size_t work_item_size_1 = buffer_devinfo[1];
-
 	success = clGetDeviceInfo(
 		device()[device_idx], CL_DEVICE_MAX_WORK_GROUP_SIZE,
 		sizeof(buffer_devinfo), buffer_devinfo, 0);
@@ -2184,26 +2179,27 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 
-	const size_t max_local_ws = buffer_devinfo[0];
-	const size_t latency_hiding_factor = local_ws_multiple * 2 > max_local_ws ? 1 : 2;
-	const size_t combined_item_size_0 = local_ws_multiple * latency_hiding_factor;
+	stream::cout << "device max work-group size: " << buffer_devinfo[0] << '\n';
+
 	const size_t global_ws[] = { image_w, image_h };
 	const cl_uint work_dim = COUNT_OF(global_ws);
 	size_t local_ws[work_dim];
-	if (latency_hiding_factor > work_item_size_1) {
-		if (combined_item_size_0 > work_item_size_0) {
-			local_ws[0] = work_item_size_0;
-			local_ws[1] = 1;
-		}
-		else {
-			local_ws[0] = combined_item_size_0;
-			local_ws[1] = 1;
-		}
+
+	if ((kernel_ws & kernel_ws - 1) == 0) {
+		const size_t log2_kernel_ws = 31 - __builtin_clz(kernel_ws);
+
+		local_ws[0] = 1 << log2_kernel_ws / 2 + (log2_kernel_ws & 1);
+		local_ws[1] = 1 << log2_kernel_ws / 2;
 	}
 	else {
-		local_ws[0] = local_ws_multiple;
-		local_ws[1] = latency_hiding_factor;
+		local_ws[0] = kernel_ws / 2;
+		local_ws[1] = 2;
 	}
+
+	stream::cout << "kernel work-item sizes:";
+	for (cl_uint i = 0; i < work_dim; ++i)
+		stream::cout << ' ' << local_ws[i];
+	stream::cout << '\n';
 
 	for (cl_uint i = 0; i < work_dim; ++i)
 		if (0 != global_ws[i] % local_ws[i]) {
