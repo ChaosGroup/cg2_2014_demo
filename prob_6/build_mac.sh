@@ -10,7 +10,7 @@ SOURCE=(
 	main.cpp
 )
 CFLAGS=(
-	-ansi
+	-std=c++11
 	-Wno-logical-op-parentheses
 	-Wno-bitwise-op-parentheses
 	-Wno-parentheses

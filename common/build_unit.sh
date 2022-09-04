@@ -11,7 +11,7 @@ CXXFLAGS=(
 #	-fabi-version=6
 # g++-6 warns about ignored attributes in template arguments (e.g. __m256 as a typename template arg to simd::native8)
 #	-Wno-ignored-attributes
-	-ansi
+	-std=c++11
 	-Wno-logical-op-parentheses
 	-Wno-bitwise-op-parentheses
 	-Wno-parentheses
