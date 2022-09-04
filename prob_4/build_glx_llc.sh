@@ -13,7 +13,7 @@ SOURCE=(
 	main.cpp
 )
 CFLAGS=(
-	-ansi
+	-std=c++11
 	-Wno-bitwise-op-parentheses
 	-Wno-logical-op-parentheses
 	-Wno-parentheses
