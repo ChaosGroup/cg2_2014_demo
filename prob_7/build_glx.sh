@@ -34,8 +34,8 @@ CFLAGS=(
 	-DGLCOREARB_PROTOTYPES
 	-DGL_GLEXT_PROTOTYPES
 	-DDEPRECATED_CreateFromGLTexture2D
-# Framegrab rate
-#	-DFRAMEGRAB_RATE=30
+# Enforce fixed time step based on a fixed frame rate
+#	-DFRAME_RATE=60
 # Case-specific optimisation
 	-DMINIMAL_TREE=1
 # Show on screen what was rendered
@@ -97,7 +97,7 @@ LFLAGS=(
 	`ldconfig -p | grep -m 1 ^[[:space:]]libGL.so | sed "s/^.\+ //"`
 	`ldconfig -p | grep -m 1 ^[[:space:]]libOpenCL.so | sed "s/^.\+ //"`
 	-lX11
-#	-lpng16
+	-lpng16
 )
 
 if [[ $1 == "debug" ]]; then

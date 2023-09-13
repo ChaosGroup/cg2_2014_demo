@@ -25,7 +25,7 @@ CFLAGS=(
 	-pipe
 	-fno-exceptions
 	-fno-rtti
-# Fixed framerate
+# Enforce fixed time step based on a fixed frame rate
 	-DFRAME_RATE=30
 # Case-specific optimisation
 	-DMINIMAL_TREE=1

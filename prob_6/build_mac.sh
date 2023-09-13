@@ -21,7 +21,7 @@ CFLAGS=(
 	-fno-rtti
 # Grab every frame to PNG
 #	-DFRAMEGRAB=1
-# Fixed framerate
+# Enforce fixed time step based on a fixed frame rate
 	-DFRAME_RATE=60
 # Case-specific optimisation
 	-DMINIMAL_TREE=1
