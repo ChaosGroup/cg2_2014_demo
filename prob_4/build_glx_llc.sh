@@ -34,8 +34,6 @@ CFLAGS=(
 	-DGLX_GLXEXT_PROTOTYPES
 	-DGLCOREARB_PROTOTYPES
 	-DGL_GLEXT_PROTOTYPES
-# Framegrab rate
-#	-DFRAMEGRAB_RATE=30
 # Case-specific optimisation
 	-DMINIMAL_TREE=1
 # Show on screen what was rendered
