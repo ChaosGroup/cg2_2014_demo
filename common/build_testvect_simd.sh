@@ -10,7 +10,7 @@ LFLAGS=(
 )
 
 if [[ ${MACHTYPE} =~ "-apple-darwin" ]]; then
-	NUM_LOGICAL_CORES=`sysctl hw.ncpu | sed s/^[^[:digit:]]*//`
+	DEFAULT_NUM_CORES=`sysctl hw.ncpu | sed s/^[^[:digit:]]*//`
 	SOURCE+=(
 		pthread_barrier.cpp
 	)
@@ -21,7 +21,7 @@ if [[ ${MACHTYPE} =~ "-apple-darwin" ]]; then
 	)
 
 elif [[ ${MACHTYPE} =~ "-linux-" ]]; then
-	NUM_LOGICAL_CORES=`lscpu | grep ^"CPU(s)" | sed s/^[^[:digit:]]*//`
+	DEFAULT_NUM_CORES=`lscpu | grep ^"CPU(s):" | sed s/^[^[:digit:]]*//`
 	LFLAGS+=(
 		-lrt
 	)
@@ -29,6 +29,8 @@ else
 	echo Unknown platform
 	exit 255
 fi
+
+NUM_CORES=${NUM_CORES:-$DEFAULT_NUM_CORES}
 
 source cxx_util.sh
 
@@ -44,7 +46,7 @@ CXXFLAGS+=(
 # Perform arithmetic conformace tests as well
 	-DSIMD_TEST_CONFORMANCE
 # Use as many worker threads, including the main thread
-	-DSIMD_NUM_THREADS=$NUM_LOGICAL_CORES
+	-DSIMD_NUM_THREADS=${NUM_CORES}
 # Enforce worker thread affinity; value represents affinity stride (for control over physical/logical CPU distribution)
 #	-DSIMD_THREAD_AFFINITY=1
 # Minimal alignment of any SIMD type (might be overridden in the architecture-dependant sections below)
@@ -194,6 +196,5 @@ else
 		-DNDEBUG)
 fi
 
-BUILD_CMD=$CXX" -o "$TARGET" "${CXXFLAGS[@]}" "${SOURCE[@]}" "${LFLAGS[@]}
-echo $BUILD_CMD
-$BUILD_CMD
+set -x
+${CXX} -o ${TARGET} ${CXXFLAGS[@]} ${SOURCE[@]} ${LFLAGS[@]}
