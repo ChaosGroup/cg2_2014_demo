@@ -104,6 +104,5 @@ elif [[ ${CXX_FILENAME:0:7} == "clang++" ]]; then
 	)
 fi
 
-BUILD_CMD=${CXX}" -o "${BINARY}" "${CXXFLAGS[@]}" "${SOURCE[@]}" "${LFLAGS[@]}
-echo ${BUILD_CMD}
-CCC_ANALYZER_CPLUSPLUS=1 ${BUILD_CMD}
+set -x
+CCC_ANALYZER_CPLUSPLUS=1 ${CXX} -o ${BINARY} ${CXXFLAGS[@]} ${SOURCE[@]} ${LFLAGS[@]}
