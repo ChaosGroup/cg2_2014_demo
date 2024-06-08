@@ -559,12 +559,65 @@ enum {
 	inext
 };
 
-int main(int argc, char**) {
-	const size_t obfuscate = size_t(argc - 1);
+#if __ARM_NEON
+static void fpcr_set(uint64_t flags)
+{
+	uint64_t fpcr;
+	asm volatile("mrs %[fpcr], fpcr" : [fpcr] "=r" (fpcr));
+
+	fpcr |= flags;
+
+	asm volatile("msr fpcr, %[fpcr]" :: [fpcr] "r" (fpcr));
+}
+
+static void fpcr_reset(uint64_t flags)
+{
+	uint64_t fpcr;
+	asm volatile("mrs %[fpcr], fpcr" : [fpcr] "=r" (fpcr));
+
+	fpcr &= ~flags;
+
+	asm volatile("msr fpcr, %[fpcr]" :: [fpcr] "r" (fpcr));
+}
+
+const uint64_t fpcr_fz = 1 << 24 | 1 << 1;
+
+#endif
+int main(int argc, char** argv)
+{
+	size_t obfuscate = 0;
+	asm volatile ("" : "=r" (obfuscate) : "0" (obfuscate));
 
 	stream::cin.open(stdin);
 	stream::cout.open(stdout);
 	stream::cerr.open(stderr);
+
+	static const char arg_fz[] = "--fz";
+
+	for (int i = 1; i < argc; ++i) {
+		if (0 == strcmp(arg_fz, argv[i]) && ++i < argc) {
+			unsigned do_fz;
+
+			if (1 == sscanf(argv[i], "%u", &do_fz)) {
+#if __ARM_NEON
+				if (do_fz)
+					fpcr_set(fpcr_fz);
+				else
+					fpcr_reset(fpcr_fz);
+#else
+				if (do_fz)
+					_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+				else
+					_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF);
+#endif
+				continue;
+			}
+		}
+
+		stream::cerr << "usage: " << argv[0] << " [opt..]\n"
+			"\t" << arg_fz << " u32\t: force FZ/AH to the requested on/off state\n";
+		return -1;
+	}
 
 	stream::cout << stream::hex;
 	stream::cerr << stream::hex;

@@ -241,7 +241,7 @@ inline float32x2_t vec2< float32x2_t, f32 >(
 	const f32 c0,
 	const f32 c1) {
 
-	return float32x2_t{ .n64_f32 = { c0, c1 } };
+	return (float32x2_t){ c0, c1 };
 }
 
 template <>
@@ -249,7 +249,7 @@ inline int32x2_t vec2< int32x2_t, s32 >(
 	const s32 c0,
 	const s32 c1) {
 
-	return int32x2_t{ .n64_i32 = { c0, c1 } };
+	return (int32x2_t){ c0, c1 };
 }
 
 template <>
@@ -257,7 +257,7 @@ inline uint32x2_t vec2< uint32x2_t, u32 >(
 	const u32 c0,
 	const u32 c1) {
 
-	return uint32x2_t{ .n64_u32 = { c0, c1 } };
+	return (uint32x2_t){ c0, c1 };
 }
 
 template <>
@@ -286,7 +286,7 @@ inline float64x2_t vec2< float64x2_t, f64 >(
 	const f64 c0,
 	const f64 c1) {
 
-	return float64x2_t{ .n128_f64 = { c0, c1 } };
+	return (float64x2_t){ c0, c1 };
 }
 
 template <>
@@ -294,7 +294,7 @@ inline int64x2_t vec2< int64x2_t, s64 >(
 	const s64 c0,
 	const s64 c1) {
 
-	return int64x2_t{ .n128_i64 = { c0, c1 } };
+	return (int64x2_t){ c0, c1 };
 }
 
 template <>
@@ -302,7 +302,7 @@ inline uint64x2_t vec2< uint64x2_t, u64 >(
 	const u64 c0,
 	const u64 c1) {
 
-	return uint64x2_t{ .n128_u64 = { c0, c1 } };
+	return (uint64x2_t){ c0, c1 };
 }
 
 template <>
@@ -476,7 +476,7 @@ inline float32x4_t vec4< float32x4_t, f32 >(
 	const f32 c2,
 	const f32 c3) {
 
-	return float32x4_t{ .n128_f32 = { c0, c1, c2, c3 } };
+	return (float32x4_t){ c0, c1, c2, c3 };
 }
 
 template <>
@@ -486,7 +486,7 @@ inline int32x4_t vec4< int32x4_t, s32 >(
 	const s32 c2,
 	const s32 c3) {
 
-	return int32x4_t{ .n128_i32 = { c0, c1, c2, c3 } };
+	return (int32x4_t){ c0, c1, c2, c3 };
 }
 
 template <>
@@ -496,7 +496,7 @@ inline uint32x4_t vec4< uint32x4_t, u32 >(
 	const u32 c2,
 	const u32 c3) {
 
-	return uint32x4_t{ .n128_u32 = { c0, c1, c2, c3 } };
+	return (uint32x4_t){ c0, c1, c2, c3 };
 }
 
 template <>
@@ -506,7 +506,7 @@ inline int16x4_t vec4< int16x4_t, s16 >(
 	const s16 c2,
 	const s16 c3) {
 
-	return int16x4_t{ .n64_i16 = { c0, c1, c2, c3 } };
+	return (int16x4_t){ c0, c1, c2, c3 };
 }
 
 template <>
@@ -516,7 +516,7 @@ inline uint16x4_t vec4< uint16x4_t, u16 >(
 	const u16 c2,
 	const u16 c3) {
 
-	return uint16x4_t{ .n64_u16 = { c0, c1, c2, c3 } };
+	return (uint16x4_t){ c0, c1, c2, c3 };
 }
 
 template <>
@@ -719,7 +719,7 @@ inline int16x8_t vec8< int16x8_t, s16 >(
 	const s16 c6,
 	const s16 c7) {
 
-	return int16x8_t{ .n128_i16 = { c0, c1, c2, c3, c4, c5, c6, c7 } };
+	return (int16x8_t){ c0, c1, c2, c3, c4, c5, c6, c7 };
 }
 
 template <>
@@ -733,7 +733,7 @@ inline uint16x8_t vec8< uint16x8_t, u16 >(
 	const u16 c6,
 	const u16 c7) {
 
-	return uint16x8_t{ .n128_u16 = { c0, c1, c2, c3, c4, c5, c6, c7 } };
+	return (uint16x8_t){ c0, c1, c2, c3, c4, c5, c6, c7 };
 }
 
 template <>

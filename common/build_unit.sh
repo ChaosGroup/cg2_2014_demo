@@ -67,8 +67,6 @@ LFLAGS=(
 # Alias some glibc6 symbols to older ones for better portability
 #	-Wa,-defsym,memcpy=memcpy@GLIBC_2.2.5
 #	-Wa,-defsym,__sqrtf_finite=__sqrtf_finite@GLIBC_2.2.5
-	-lstdc++
-	-ldl
 )
 
 if [[ $1 == "debug" ]]; then
