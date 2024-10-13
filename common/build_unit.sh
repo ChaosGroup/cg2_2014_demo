@@ -20,8 +20,6 @@ CXXFLAGS=(
 	-fno-rtti
 # Clang static code analysis:
 #	--analyze
-# Compiler quirk 0001: control definition location of routines posing entry points to recursion for more efficient inlining
-#	-DCLANG_QUIRK_0001=1
 )
 
 source cxx_util.sh
