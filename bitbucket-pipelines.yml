@@ -1,17 +1,10 @@
-# Template C++ Application
-
-# This template allows you to validate your C++ application.
-# The workflow allows running tests and code linting on the default branch.
-
-
 image: gcc:10.2
-
 
 pipelines:
   default:
     - parallel:
         - step:
-            name: Test
+            name: test
             script:
               - cd common
               - CXX=g++ ./build_unit.sh
