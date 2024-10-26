@@ -10,7 +10,7 @@ CXXFLAGS=(
 # g++-4.8 through 4.9 suffer from a name-mangling conflict in cephes headers; switching to the following ABI version resolves that
 #	-fabi-version=6
 # g++-6 warns about ignored attributes in template arguments (e.g. __m256 as a typename template arg to simd::native8)
-#	-Wno-ignored-attributes
+	-Wno-ignored-attributes
 	-std=c++11
 	-Wno-logical-op-parentheses
 	-Wno-bitwise-op-parentheses
