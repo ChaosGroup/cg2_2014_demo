@@ -81,7 +81,7 @@ Same as above but from branch `better_cpu` and `pocl` patched for good-codegen `
 | AWS Graviton (Cortex-A72)         |  16x Cortex-A72             | 38.4              | 4.049    | pocl 1.3, LLVM 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a72, 2290 MHz                               |
 | AWS Graviton2 (Cortex-A76)        |  64x Cortex-A76             | 40 (tinymembench) | 26.491   | pocl 1.4, LLVM 8.0.0, OCL_KERNEL_TARGET_CPU: cortex-a75, 2500 MHz                               |
 | AWS Xeon Platinum 8175M (Skylake) |  24x Skylake (48x SMT)      | 19 (tinymembench) | 10.335   | pocl 1.5, LLVM 8.0.0, OCL_KERNEL_TARGET_CPU: skylake-avx512, 2500 MHz                           |
-| NVIDIA Tegra Orin (Cortex-A78AE)  |  12x Cortex-A76AE           | 26 (tinymembench) | 5.488    | pocl 1.7, LLVM 9.0.1, OCL_KERNEL_TARGET_CPU: cortex-a76, 2200 MHz                               |
+| NVIDIA Tegra Orin (Cortex-A78AE)  |  12x Cortex-A78AE           | 26 (tinymembench) | 5.488    | pocl 1.7, LLVM 9.0.1, OCL_KERNEL_TARGET_CPU: cortex-a76, 2200 MHz                               |
 
 benchmark build directions
 --------------------------
