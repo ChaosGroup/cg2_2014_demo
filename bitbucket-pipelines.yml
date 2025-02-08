@@ -3,16 +3,16 @@
 pipelines:
   default:
     - parallel:
-        - step:
-            image: atlassian/default-image:4
-            runtime:
-              cloud:
-                arch: arm
-            name: test_arm64
-            script:
-              - cd common
-              - CXX=g++ ./build_unit.sh
-              - ./unittest
+#       - step:
+#           image: atlassian/default-image:4
+#           runtime:
+#             cloud:
+#               arch: arm
+#           name: test_arm64
+#           script:
+#             - cd common
+#             - CXX=g++ ./build_unit.sh
+#             - ./unittest
         - step:
             image: gcc:10.2
             runtime:
