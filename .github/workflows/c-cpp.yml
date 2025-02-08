@@ -7,13 +7,20 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
-
+  build_amd64:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
-    - name: test
+    - name: unittest_amd64
+      run: |
+        cd common
+        CXX=g++ ./build_unit.sh
+        ./unittest
+  build_arm64:
+    runs-on: ubuntu-22.04-arm
+    steps:
+    - uses: actions/checkout@v4
+    - name: unittest_arm64
       run: |
         cd common
         CXX=g++ ./build_unit.sh
