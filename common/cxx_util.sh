@@ -10,7 +10,13 @@ function cxx_uarch_arm() {
 
 	if   [[ $VENDOR == 0x41 ]]; then # Arm Holdings
 		# in order of preference, in case of big.LITTLE
-		if   [ `echo $UARCH | grep -c 0xd0c` -ne 0 ]; then # cortex-n1
+		if   [ `echo $UARCH | grep -c 0xd42` -ne 0 ]; then # cortex-a78AE
+			CXXFLAGS+=(
+				-march=armv8.2-a
+				-mtune=cortex-a78
+				-DCACHELINE_SIZE=64
+			)
+		elif [ `echo $UARCH | grep -c 0xd0c` -ne 0 ]; then # cortex-n1
 			CXXFLAGS+=(
 				-march=armv8.2-a
 				-mtune=cortex-a76
@@ -129,7 +135,13 @@ function cxx_uarch_arm() {
 		fi
 	elif [[ $VENDOR == 0x51 ]]; then # Qualcomm
 		# in order of preference, in case of big.LITTLE
-		if   [ `echo $UARCH | grep -c 0x804` -ne 0 ]; then # kryo 4xx gold
+		if   [ `echo $UARCH | grep -c 0x001` -ne 0 ]; then # oryon
+			CXXFLAGS+=(
+				-march=armv8.4-a
+				-mtune=cyclone
+				-DCACHELINE_SIZE=64
+			)
+		elif [ `echo $UARCH | grep -c 0x804` -ne 0 ]; then # kryo 4xx gold
 			CXXFLAGS+=(
 				-march=armv8.2-a
 				-mtune=cortex-a76
