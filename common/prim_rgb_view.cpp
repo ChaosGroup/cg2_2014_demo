@@ -346,12 +346,16 @@ init_resources(
 	{
 		glBindVertexArray(g_vao[i]);
 
-		if (!setupVertexAttrPointers< Vertex >(g_active_attr_semantics[i]) ||
-			0 == DEBUG_LITERAL && util::reportGLError())
+		if (!setupVertexAttrPointers< Vertex >(g_active_attr_semantics[i]))
 		{
 			stream::cerr << __FUNCTION__ << " failed at setupVertexAttrPointers\n";
 			return false;
 		}
+
+		for (unsigned j = 0; j < g_active_attr_semantics[i].num_active_attr; ++j)
+			glEnableVertexAttribArray(g_active_attr_semantics[i].active_attr[j]);
+
+		DEBUG_GL_ERR()
 	}
 
 	glBindVertexArray(0);
@@ -441,17 +445,7 @@ render(
 
 	DEBUG_GL_ERR()
 
-	for (unsigned i = 0; i < g_active_attr_semantics[prog].num_active_attr; ++i)
-		glEnableVertexAttribArray(g_active_attr_semantics[prog].active_attr[i]);
-
-	DEBUG_GL_ERR()
-
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-	DEBUG_GL_ERR()
-
-	for (unsigned i = 0; i < g_active_attr_semantics[prog].num_active_attr; ++i)
-		glDisableVertexAttribArray(g_active_attr_semantics[prog].active_attr[i]);
 
 	DEBUG_GL_ERR()
 
@@ -491,17 +485,7 @@ render(
 
 	DEBUG_GL_ERR()
 
-	for (unsigned i = 0; i < g_active_attr_semantics[prog].num_active_attr; ++i)
-		glEnableVertexAttribArray(g_active_attr_semantics[prog].active_attr[i]);
-
-	DEBUG_GL_ERR()
-
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-	DEBUG_GL_ERR()
-
-	for (unsigned i = 0; i < g_active_attr_semantics[prog].num_active_attr; ++i)
-		glDisableVertexAttribArray(g_active_attr_semantics[prog].active_attr[i]);
 
 	DEBUG_GL_ERR()
 
@@ -542,17 +526,7 @@ render(
 
 	DEBUG_GL_ERR()
 
-	for (unsigned i = 0; i < g_active_attr_semantics[prog].num_active_attr; ++i)
-		glEnableVertexAttribArray(g_active_attr_semantics[prog].active_attr[i]);
-
-	DEBUG_GL_ERR()
-
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-	DEBUG_GL_ERR()
-
-	for (unsigned i = 0; i < g_active_attr_semantics[prog].num_active_attr; ++i)
-		glDisableVertexAttribArray(g_active_attr_semantics[prog].active_attr[i]);
 
 	DEBUG_GL_ERR()
 
