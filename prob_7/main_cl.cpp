@@ -2397,17 +2397,16 @@ int main(int argc, char** argv) {
 
 #endif
 		// produce source for the new frame
-		const uint64_t tframe = timer_ns();
 
-#if VISUALIZE != 0
+#if FRAME_RATE == 0
+		const uint64_t tframe = timer_ns();
 		const float dt = double(tframe - tlast) * 1e-9;
+		tlast = tframe;
 
 #else
 		const float dt = 1.0 / FRAME_RATE;
 
 #endif
-		tlast = tframe;
-
 		// upate run time (we aren't supposed to run long - fp32 should do) and beat time
 		c::accum_time += dt;
 		c::accum_beat   = wrap_at_period(c::accum_beat   + dt, c::beat_period);
