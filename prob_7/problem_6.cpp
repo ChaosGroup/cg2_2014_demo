@@ -18,11 +18,13 @@ operator <<(
 	std::ostream& str,
 	const simd::native4< SCALAR_T, GENERIC_T, NATIVE_T >& v)
 {
+	enum { dimension = simd::native4< SCALAR_T, GENERIC_T, NATIVE_T >::dimension };
+
 	str << '(';
 
 	size_t i = 0;
 
-	for (; i < v.dimension - 1 && str.good(); ++i)
+	for (; i < dimension - 1 && str.good(); ++i)
 		str << v.get(i) << ", ";
 
 	str << v.get(i) << ')';
@@ -37,9 +39,11 @@ operator >>(
 	std::istream& str,
 	simd::native4< SCALAR_T, GENERIC_T, NATIVE_T >& v)
 {
-	float temp[v.dimension];
+	enum { dimension = simd::native4< SCALAR_T, GENERIC_T, NATIVE_T >::dimension };
 
-	for (size_t i = 0; i < v.dimension; ++i)
+	float temp[dimension];
+
+	for (size_t i = 0; i < dimension; ++i)
 		temp[i] = std::numeric_limits< float >::quiet_NaN();
 
 	char sep;
@@ -50,7 +54,7 @@ operator >>(
 
 	size_t i = 0;
 
-	for (; i < v.dimension - 1 && str.good(); ++i)
+	for (; i < dimension - 1 && str.good(); ++i)
 	{
 		str >> temp[i];
 		str >> sep;
@@ -65,7 +69,7 @@ operator >>(
 	if (')' != sep)
 		str.setstate(std::istream::failbit);
 
-	for (size_t i = 0; i < v.dimension; ++i)
+	for (size_t i = 0; i < dimension; ++i)
 		v.set(i, temp[i]);
 
 	return str;
