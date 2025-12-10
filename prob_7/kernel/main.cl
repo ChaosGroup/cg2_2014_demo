@@ -26,19 +26,20 @@
 	const float3 ray_rcpdir = clamp(1.f / ray_direction, -MAXFLOAT, MAXFLOAT);
 	struct RayHit ray = (struct RayHit){ (struct Ray){ (float4)(ray_origin, as_float(-1U)), (float4)(ray_rcpdir, MAXFLOAT) } };
 	uint result = traverse(get_octet(src_a, 0), src_b, src_c, &root_bbox, &ray.ray, &ray.hit);
-	const int3 axis_sign = (int3)(0x80000000) & ray.hit.min_mask;
-#if OCL_QUIRK_0002
-	const uint a_mask = ray.hit.a_mask;
-	const uint b_mask = ray.hit.b_mask;
-	const float3 normal = b_mask ? (a_mask ? (float3)(1.f, 0.f, 0.f) : (float3)(0.f, 1.f, 0.f)) : (float3)(0.f, 0.f, 1.f);
-#else
-	const uint a_mask = -ray.hit.a_mask;
-	const uint b_mask = -ray.hit.b_mask;
-	const float3 normal = select((float3)(0.f, 0.f, 1.f), select((float3)(0.f, 1.f, 0.f), (float3)(1.f, 0.f, 0.f), (uint3)(a_mask)), (uint3)(b_mask));
-#endif
-	const uint luma = convert_int(max(1.f / 16.f, dot(as_float3(as_int3(normal) ^ axis_sign), sun)) * 255.f);
 
 	if (-1U != result) {
+		const int3 axis_sign = (int3)(0x80000000) & ray.hit.min_mask;
+#if OCL_QUIRK_0002
+		const uint a_mask = ray.hit.a_mask;
+		const uint b_mask = ray.hit.b_mask;
+		const float3 normal = b_mask ? (a_mask ? (float3)(1.f, 0.f, 0.f) : (float3)(0.f, 1.f, 0.f)) : (float3)(0.f, 0.f, 1.f);
+#else
+		const uint a_mask = -ray.hit.a_mask;
+		const uint b_mask = -ray.hit.b_mask;
+		const float3 normal = select((float3)(0.f, 0.f, 1.f), select((float3)(0.f, 1.f, 0.f), (float3)(1.f, 0.f, 0.f), (uint3)(a_mask)), (uint3)(b_mask));
+#endif
+		const uint luma = convert_int(max(1.f / 16.f, dot(as_float3(as_int3(normal) ^ axis_sign), sun)) * 255.f);
+
 		const float dist = ray.ray.rcpdir.w;
 		const float3 ray_rcpdir = clamp(1.f / sun, -MAXFLOAT, MAXFLOAT);
 		const struct Ray ray = (struct Ray){ (float4)(ray_origin + ray_direction * dist, as_float(result)), (float4)(ray_rcpdir, MAXFLOAT) };
