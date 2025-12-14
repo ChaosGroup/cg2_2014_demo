@@ -69,8 +69,6 @@ TARGET=(
 # AMD Jaguar:
 #	btver2
 #	btver2
-# note: Jaguars have 4-wide SIMD, so our avx256 code is not beneficial to them
-#	-mno-avx
 # Intel Core2
 #	core2
 #	core2
@@ -83,9 +81,9 @@ TARGET=(
 # Intel Ivy Bridge
 #	core-avx-i
 #	core-avx-i
-# ARM Cortex-A57/A72
-#	armv8-a
-#	cortex-a57
+# ARM Cortex-A76
+#	armv8.2-a
+#	cortex-a76
 )
 LFLAGS=(
 # Alias some glibc6 symbols to older ones for better portability
@@ -122,6 +120,5 @@ else
 	)
 fi
 
-BUILD_CMD=$CC" -o "$BINARY" "${CFLAGS[@]}" -march="${TARGET[0]}" -mtune="${TARGET[@]:1}" "${SOURCE[@]}" "${LFLAGS[@]}
-echo $BUILD_CMD
-CCC_ANALYZER_CPLUSPLUS=1 $BUILD_CMD
+set -x
+CCC_ANALYZER_CPLUSPLUS=1 ${CC} -o ${BINARY} ${CFLAGS[@]} -march=${TARGET[0]} -mtune=${TARGET[1]} ${SOURCE[@]} ${LFLAGS[@]}
