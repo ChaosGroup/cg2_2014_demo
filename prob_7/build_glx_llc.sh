@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# clang version suffix, e.g. -3.4, -3.5, etc
-VERSION=-3.5
+# clang version suffix, e.g. 3.4, 3.5, etc
+VERSION=${CLANG_VERSION:-3.5}
 BINARY=problem_4
 COMMON=../common
 SOURCE=(
@@ -65,20 +65,28 @@ CFLAGS=(
 # For non-native or tweaked architecture targets, comment out 'native' and uncomment the correct target architecture and flags
 TARGET=(
 	native
+	native
 # AMD Bobcat:
+#	btver1
 #	btver1
 # AMD Jaguar:
 #	btver2
-# note: Jaguars have 4-wide SIMD, so our avx256 code is not beneficial to them
-#	-mno-avx
+#	btver2
 # Intel Core2
+#	core2
 #	core2
 # Intel Nehalem
 #	corei7
+#	corei7
 # Intel Sandy Bridge
+#	corei7-avx
 #	corei7-avx
 # Intel Ivy Bridge
 #	core-avx-i
+#	core-avx-i
+# Arm Cortex-A76
+#	armv8.2-a
+#	cortex-a76
 )
 LFLAGS=(
 # Alias some glibc6 symbols to older ones for better portability
@@ -99,30 +107,22 @@ BITCODE=( "${BITCODE[@]/%/.bc}" )
 
 SOURCE_COUNT=${#SOURCE[@]}
 
+
 for (( i=0; i < $SOURCE_COUNT; i++ )); do
-	BUILD_CMD="clang++"${VERSION}" -c -flto -emit-llvm "${CFLAGS[@]}" -march="${TARGET[@]}" "${SOURCE[$i]}" -o "${BITCODE[$i]}
-	echo $BUILD_CMD
-	$BUILD_CMD
+	(set -x; clang++-${VERSION} -c -flto -emit-llvm ${CFLAGS[@]} -march=${TARGET[0]} ${SOURCE[$i]} -o ${BITCODE[$i]})
 done
 
-LINK_LMD="llvm-link"${VERSION}" -o _"${BINARY}".bc "${BITCODE[@]}
-echo $LINK_LMD
-$LINK_LMD
+(set -x; llvm-link-${VERSION} -o _${BINARY}.bc ${BITCODE[@]})
 
-if [[ ${TARGET[0]} == "native" ]]; then
-	LLC_TARGET=`llc${VERSION} --version | grep "Host CPU:" | sed s/^[[:space:]]*"Host CPU:"[[:space:]]*//`
+if [[ ${TARGET[1]} == "native" ]]; then
+	LLC_TARGET=`llc-${VERSION} --version | grep "Host CPU:" | sed s/^[[:space:]]*"Host CPU:"[[:space:]]*//`
 else
-	LLC_TARGET=${TARGET[0]}
+	LLC_TARGET=${TARGET[1]}
 fi
 
-OPT_LMD="opt"${VERSION}" -filetype=asm -O3 -data-sections -function-sections -enable-unsafe-fp-math -fp-contract=fast -enable-no-infs-fp-math -enable-no-nans-fp-math -enable-misched -mcpu="${LLC_TARGET}" _"${BINARY}".bc -o=__"${BINARY}".bc"
-echo $OPT_LMD
-$OPT_LMD
+set -x
+opt-${VERSION} -filetype=asm -O3 -data-sections -function-sections -enable-unsafe-fp-math -fp-contract=fast -enable-no-infs-fp-math -enable-no-nans-fp-math -enable-misched -mcpu=${LLC_TARGET} _${BINARY}.bc -o=__${BINARY}.bc
 
-BUILD_LMD="llc"${VERSION}" -filetype=obj -O=3 -data-sections -function-sections -enable-unsafe-fp-math -fp-contract=fast -enable-no-infs-fp-math -enable-no-nans-fp-math -enable-misched -mcpu="${LLC_TARGET}" __"${BINARY}".bc"
-echo $BUILD_LMD
-$BUILD_LMD
+llc-${VERSION} -filetype=obj -O=3 -data-sections -function-sections -enable-unsafe-fp-math -fp-contract=fast -enable-no-infs-fp-math -enable-no-nans-fp-math -enable-misched -mcpu=${LLC_TARGET} __${BINARY}.bc
 
-LINK_CMD="clang++"${VERSION}" -o "$BINARY" "${LFLAGS[@]}" __"${BINARY}".o -Wl,--gc-sections"
-echo $LINK_CMD
-$LINK_CMD
+clang++-${VERSION} -o $BINARY ${LFLAGS[@]} __${BINARY}.o -Wl,--gc-sections
