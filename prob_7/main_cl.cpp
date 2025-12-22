@@ -2581,7 +2581,7 @@ int main(int argc, char** argv) {
 
 		// show result from one frame ago
 		if (frame != 0) {
-			const size_t ready_frame = frame + 1;
+			const size_t ready_frame = frame - 1;
 
 #if OCL_BUFFER_COPY != 0
 			success = clEnqueueReadBuffer(queue, dst_d[ready_frame & 1], CL_TRUE, 0, mem_size_image, image_map_buffer[ready_frame & 1],

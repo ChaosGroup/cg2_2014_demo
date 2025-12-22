@@ -2556,7 +2556,7 @@ int main(int argc, char** argv) {
 
 		// show result from one frame ago
 		if (0 != frame) {
-			const size_t ready_frame = frame + 1;
+			const size_t ready_frame = frame - 1;
 
 			cl_event event_ocl_done_with_frame;
 
