@@ -57,6 +57,8 @@ CFLAGS=(
 #	-DOCL_QUIRK_0002=1
 # OpenCL quirk 0004: forced O(logN) add-reduction over native add-reduction
 #	-DOCL_QUIRK_0004=1
+# OpenCL quirk 0005: control child indexing via shuffles at hit-loops
+#	-DOCL_QUIRK_0005=1
 # OpenCL kernel build full verbosity; macro mandatory
 	-DOCL_KERNEL_BUILD_VERBOSE=0
 # Use buffer copying rather than buffer mapping when not using interop

@@ -55,19 +55,31 @@ uint traverself(
 		&child_index);
 
 	float8 distance = child_index.distance;
-	uint8 index = child_index.index;
-	const uint8 leaf_start = convert_uint8(leaf.start);
-	const uint8 leaf_count = convert_uint8(leaf.count);
+#if OCL_QUIRK_0005 != 0
+	ushort8 index = child_index.index;
+#else
+	ushort8 leaf_start = shuffle(leaf.start, child_index.index);
+	ushort8 leaf_count = shuffle(leaf.count, child_index.index);
+#endif
 	const uint prior_id = as_uint(ray->origin.w);
 
 	for (uint i = 0; i < hitCount; ++i) {
-		const uint payload_start = shuffle(leaf_start, (uint8)(index.s0)).s0;
-		const uint payload_count = shuffle(leaf_count, (uint8)(index.s0)).s0;
+#if OCL_QUIRK_0005 != 0
+		const uint payload_start = shuffle(leaf.start, (ushort8)(index.s0)).s0;
+		const uint payload_count = shuffle(leaf.count, (ushort8)(index.s0)).s0;
+#else
+		const uint payload_start = leaf_start.s0;
+		const uint payload_count = leaf_count.s0;
+#endif
 		float nearest_dist = distance.s0;
 
 		distance = distance.s12345677;
+#if OCL_QUIRK_0005 != 0
 		index = index.s12345677;
-
+#else
+		leaf_start = leaf_start.s12345677;
+		leaf_count = leaf_count.s12345677;
+#endif
 		uint voxel_id = -1U;
 		struct Hit maybe_hit;
 
@@ -106,17 +118,28 @@ bool occludelf(
 		ray,
 		&child_index);
 
-	uint8 index = child_index.index;
-	const uint8 leaf_start = convert_uint8(leaf.start);
-	const uint8 leaf_count = convert_uint8(leaf.count);
+#if OCL_QUIRK_0005 != 0
+	ushort8 index = child_index.index;
+#else
+	ushort8 leaf_start = shuffle(leaf.start, child_index.index);
+	ushort8 leaf_count = shuffle(leaf.count, child_index.index);
+#endif
 	const uint prior_id = as_uint(ray->origin.w);
 
 	for (uint i = 0; i < hitCount; ++i) {
-		const uint payload_start = shuffle(leaf_start, (uint8)(index.s0)).s0;
-		const uint payload_count = shuffle(leaf_count, (uint8)(index.s0)).s0;
-
+#if OCL_QUIRK_0005 != 0
+		const uint payload_start = shuffle(leaf.start, (ushort8)(index.s0)).s0;
+		const uint payload_count = shuffle(leaf.count, (ushort8)(index.s0)).s0;
+#else
+		const uint payload_start = leaf_start.s0;
+		const uint payload_count = leaf_count.s0;
+#endif
+#if OCL_QUIRK_0005 != 0
 		index = index.s12345677;
-
+#else
+		leaf_start = leaf_start.s12345677;
+		leaf_count = leaf_count.s12345677;
+#endif
 		for (uint j = payload_start; j < payload_start + payload_count; ++j) {
 			const struct Voxel payload = get_voxel(voxel, j);
 			const struct BBox payload_bbox = { payload.min.xyz, payload.max.xyz };
@@ -147,15 +170,22 @@ uint traverse(
 		&child_index,
 		child_bbox);
 
-	uint8 index = child_index.index;
-	const uint8 octet_child = convert_uint8(octet.child);
-
+	ushort8 index = child_index.index;
+#if OCL_QUIRK_0005 == 0
+	ushort8 octet_child = shuffle(octet.child, index);
+#endif
 	for (uint i = 0; i < hitCount; ++i) {
-		const uint child = shuffle(octet_child, (uint8)(index.s0)).s0;
+#if OCL_QUIRK_0005 != 0
+		const uint child = shuffle(octet.child, (ushort8)(index.s0)).s0;
+#else
+		const uint child = octet_child.s0;
+#endif
 		const uint hitId = traverself(get_leaf(leaf, child), voxel, child_bbox + index.s0, ray, hit);
 
 		index = index.s12345677;
-
+#if OCL_QUIRK_0005 == 0
+		octet_child = octet_child.s12345677;
+#endif
 		if (-1U != hitId)
 			return hitId;
 	}
@@ -179,15 +209,22 @@ bool occlude(
 		&child_index,
 		child_bbox);
 
-	uint8 index = child_index.index;
-	const uint8 octet_child = convert_uint8(octet.child);
-
+	ushort8 index = child_index.index;
+#if OCL_QUIRK_0005 == 0
+	ushort8 octet_child = shuffle(octet.child, index);
+#endif
 	for (uint i = 0; i < hitCount; ++i) {
-		const uint child = shuffle(octet_child, (uint8)(index.s0)).s0;
+#if OCL_QUIRK_0005 != 0
+		const uint child = shuffle(octet.child, (ushort8)(index.s0)).s0;
+#else
+		const uint child = octet_child.s0;
+#endif
 		const struct BBox* const bbox = child_bbox + index.s0;
 
 		index = index.s12345677;
-
+#if OCL_QUIRK_0005 == 0
+		octet_child = octet_child.s12345677;
+#endif
 		if (occludelf(get_leaf(leaf, child), voxel, bbox, ray))
 			return true;
 	}
