@@ -73,7 +73,7 @@ uint traverself(
 
 		for (uint j = payload_start; j < payload_start + payload_count; ++j) {
 			const struct Voxel payload = get_voxel(voxel, j);
-			const struct BBox payload_bbox = (struct BBox){ payload.min.xyz, payload.max.xyz };
+			const struct BBox payload_bbox = { payload.min.xyz, payload.max.xyz };
 			const uint id = as_uint(payload.min.w);
 			const float dist = intersect(&payload_bbox, ray, &maybe_hit);
 
@@ -119,7 +119,7 @@ bool occludelf(
 
 		for (uint j = payload_start; j < payload_start + payload_count; ++j) {
 			const struct Voxel payload = get_voxel(voxel, j);
-			const struct BBox payload_bbox = (struct BBox){ payload.min.xyz, payload.max.xyz };
+			const struct BBox payload_bbox = { payload.min.xyz, payload.max.xyz };
 			const uint id = as_uint(payload.min.w);
 
 			if (id != prior_id & occluded(&payload_bbox, ray))

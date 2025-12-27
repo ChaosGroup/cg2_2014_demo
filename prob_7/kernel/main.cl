@@ -18,13 +18,13 @@
 	const float3 bbox_min   = src_d[4].xyz;
 	const float3 bbox_max   = src_d[5].xyz;
 #endif
-	const struct BBox root_bbox = (struct BBox){ bbox_min, bbox_max };
+	const struct BBox root_bbox = { bbox_min, bbox_max };
 	const float3 ray_direction =
 		cam0 * ((idx * 2 - dimx) * (1.0f / dimx)) +
 		cam1 * ((idy * 2 - dimy) * (1.0f / dimy)) +
 		cam2;
 	const float3 ray_rcpdir = clamp(1.f / ray_direction, -MAXFLOAT, MAXFLOAT);
-	struct RayHit ray = (struct RayHit){ (struct Ray){ (float4)(ray_origin, as_float(-1U)), (float4)(ray_rcpdir, MAXFLOAT) } };
+	struct RayHit ray = { { (float4)(ray_origin, as_float(-1U)), (float4)(ray_rcpdir, MAXFLOAT) } };
 	uint result = traverse(get_octet(src_a, 0), src_b, src_c, &root_bbox, &ray.ray, &ray.hit);
 
 	if (-1U != result) {
@@ -62,7 +62,7 @@
 		const int3 axis_sign = (int3)(0x80000000) & ray.hit.min_mask;
 		const float dist = ray.ray.rcpdir.w;
 		const float3 ray_rcpdir = clamp(1.f / as_float3(as_int3(normal) ^ axis_sign), -MAXFLOAT, MAXFLOAT);
-		const struct Ray ray = (struct Ray){ (float4)(ray_origin + ray_direction * dist, as_float(result)), (float4)(ray_rcpdir, MAXFLOAT) };
+		const struct Ray ray = { (float4)(ray_origin + ray_direction * dist, as_float(result)), (float4)(ray_rcpdir, MAXFLOAT) };
 		result = select(255, 16, occlude(get_octet(src_a, 0), src_b, src_c, &root_bbox, &ray));
 	}
 	else
